@@ -1,10 +1,10 @@
 import "./App.css";
-import Canvas from "./components/Canvas";
+import Room from "./components/Room";
 
 function App(): React.ReactElement {
   return (
     <div className="App">
-      <Canvas />
+      <Room />
     </div>
   );
 }
