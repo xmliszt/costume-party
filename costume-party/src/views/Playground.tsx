@@ -2,10 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Layer, Stage } from "react-konva";
 import Room from "../components/Room";
 import Avatar from "../components/Avatar";
-import {
-  generateAvatarColorLight,
-  generateAvatarPosition,
-} from "../helpers/avatar";
+import { generateAvatarPosition } from "../helpers/avatar";
 import "./Playground.css";
 import IAvatars from "../interfaces/playground";
 import { roomColorMapping } from "../constants";

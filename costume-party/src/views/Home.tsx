@@ -65,7 +65,7 @@ export default function Home(): React.ReactElement {
         break;
     }
     if (_char && position <= 2) {
-      [roomID_1, roomID_2, roomID_3, roomID_4][position + 1].current!.focus({
+      [roomID_1, roomID_2, roomID_3, roomID_4][position + 1].current.focus({
         cursor: "all",
       });
     }
@@ -88,22 +88,6 @@ export default function Home(): React.ReactElement {
         </Button>
       </Space>
     ) : null;
-  };
-
-  const renderRoomID = () => {
-    return (
-      <div>
-        <Divider>
-          <CheckCircleOutlined />
-        </Divider>
-        <Typography.Title>Room ID:</Typography.Title>
-        <Typography.Title code level={1} copyable>
-          {"AAAA"}
-        </Typography.Title>
-        <Typography.Paragraph>Click to copy the roomID</Typography.Paragraph>
-      </div>
-    );
-    return null;
   };
 
   return (
