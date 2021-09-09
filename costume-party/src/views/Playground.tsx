@@ -2,13 +2,11 @@ import React, { useState, useEffect } from "react";
 import { Layer, Stage } from "react-konva";
 import Room from "../components/Room";
 import Avatar from "../components/Avatar";
-import {
-  generateAvatarColorLight,
-  generateAvatarPosition,
-} from "../helpers/avatar";
+import { generateAvatarPosition } from "../helpers/avatar";
 import "./Playground.css";
 import IAvatars from "../interfaces/playground";
 import { roomColorMapping } from "../constants";
+import { Typography } from "antd";
 
 export default function Playground(): React.ReactElement {
   const [avatars, setAvatars] = useState<Array<IAvatars>>([]);
@@ -34,6 +32,14 @@ export default function Playground(): React.ReactElement {
 
   return (
     <div>
+      <div className="title">
+        <Typography.Title level={1} code copyable>
+          {localStorage.getItem("room_id")}
+        </Typography.Title>
+        <Typography.Text style={{ color: "rgba(50, 50, 50, 0.3)" }}>
+          Copy to share the Room ID with friends!
+        </Typography.Text>
+      </div>
       <Stage width={600} height={600} className="playground">
         <Room />
         <Layer>
