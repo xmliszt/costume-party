@@ -1,10 +1,10 @@
 import "./App.css";
-import Room from "./components/Room";
+import Playground from "./views/Playground";
 
 function App(): React.ReactElement {
   return (
     <div className="App">
-      <Room />
+      <Playground />
     </div>
   );
 }
