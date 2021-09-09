@@ -1,5 +1,7 @@
 {
   "projects": {
-    "default": "costume-party-bb2a9"
-  }
+    "default": "costume-party-bb2a9",
+    "costume-party": "costume-party-bb2a9"
+  },
+  "targets": {}
 }
