@@ -56,3 +56,13 @@ export function drawRoomBR(context: Context, shape: Shape<ShapeConfig>): void {
   context.closePath();
   context.fillStrokeShape(shape);
 }
+
+export function getRandomRoomID(): string {
+  let text = "";
+  const charset = "abcdefghijklmnopqrstuvwxyz0123456789";
+  for (let i = 0; i < 4; i++)
+    text += charset
+      .charAt(Math.floor(Math.random() * charset.length))
+      .toUpperCase();
+  return text;
+}
