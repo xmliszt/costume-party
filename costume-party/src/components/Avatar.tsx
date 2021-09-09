@@ -10,6 +10,7 @@ export default function Avatar({
   avatarProps,
 }: {
   avatarProps: {
+    id: number;
     position: IAvatarPosition;
     imageUrl: string;
     strokeColor: string;
@@ -30,8 +31,13 @@ export default function Avatar({
     setRoomColor(roomColorMapping[roomType]);
   };
 
+  const handleDblClick = (ev: KonvaEventObject<MouseEvent>) => {
+    console.log(ev.target.attrs.id);
+  };
+
   return (
     <Image
+      id={`avatar-${avatarProps.id}`}
       x={avatarProps.position.x}
       y={avatarProps.position.y}
       width={40}
@@ -41,6 +47,7 @@ export default function Avatar({
       strokeWidth={5}
       shadowBlur={10}
       draggable
+      onDblClick={handleDblClick}
       onDragEnd={handleDragEnd}
     ></Image>
   );
