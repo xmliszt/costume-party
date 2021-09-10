@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 import { useHistory } from "react-router";
-import { Button, Divider, Input, Space, Typography } from "antd";
+import { Button, Divider, Input, Space, Typography, Select } from "antd";
 import { StarOutlined, UserOutlined } from "@ant-design/icons";
 import "./Home.css";
 import { getRandomRoomID } from "../helpers/room";
@@ -14,6 +14,7 @@ export default function Home(): React.ReactElement {
   const roomID_3 = useRef<any>(null);
   const roomID_4 = useRef<any>(null);
 
+  const [capacity, setCapacity] = useState<number>(2);
   const [nickname, setNickname] = useState<string | null>(null);
   const [id_1, setId_1] = useState("");
   const [id_2, setId_2] = useState("");
@@ -87,9 +88,29 @@ export default function Home(): React.ReactElement {
         {validateNickname(nickname) ? (
           <div>
             <Divider>Create A Room</Divider>
-            <Button size="large" onClick={createRoom}>
-              CREATE
-            </Button>
+            <Space size="large">
+              <Button size="large" onClick={createRoom}>
+                CREATE
+              </Button>
+
+              <Space>
+                <Select
+                  size="large"
+                  defaultValue={2}
+                  value={capacity}
+                  onChange={(val) => {
+                    setCapacity(val);
+                  }}
+                >
+                  {[2, 3, 4, 5, 6, 7, 8].map((i) => (
+                    <Select.Option key={i} value={i}>
+                      {i}
+                    </Select.Option>
+                  ))}
+                </Select>
+                <Typography.Text>players</Typography.Text>
+              </Space>
+            </Space>
             <Divider>Join A Room</Divider>
             <Typography.Title level={3}>Room ID:</Typography.Title>
             <Space>
