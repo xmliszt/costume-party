@@ -6,15 +6,32 @@ import Avatar from "../components/Avatar";
 import "./Playground.css";
 import { Typography } from "antd";
 import { IAvatarProps } from "../interfaces/avatar";
+import { getAllAvatarsProps } from "../services/room";
 
 export default function Playground(): React.ReactElement {
   const [avatars, setAvatars] = useState<Array<IAvatarProps>>([]);
 
   useEffect(() => {
-    const avatarList: Array<IAvatarProps> = [];
-    console.log(avatarList);
-    setAvatars(avatarList);
+    getAllAvatars();
   }, []);
+
+  const getAllAvatars = async (): Promise<void> => {
+    return new Promise((res, rej) => {
+      const roomID = localStorage.getItem("room_id");
+      if (roomID) {
+        getAllAvatarsProps(roomID)
+          .then((avatarList) => {
+            setAvatars(avatarList);
+            res();
+          })
+          .catch((err) => {
+            rej(err);
+          });
+      } else {
+        rej("no room joined");
+      }
+    });
+  };
 
   return (
     <div>

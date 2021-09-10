@@ -243,3 +243,31 @@ export async function initializeGlobals(roomID: string): Promise<boolean> {
       });
   });
 }
+
+export async function getAllAvatarsProps(
+  roomID: string
+): Promise<Array<IAvatarProps>> {
+  return new Promise((res, rej) => {
+    getDocs(collection(db, "rooms", roomID, "avatars"))
+      .then((snapshot) => {
+        const avatars: Array<IAvatarProps> = [];
+        snapshot.forEach((avatarDoc) => {
+          const data = avatarDoc.data();
+          const avatar = {
+            id: data.id,
+            position: {
+              x: data.x,
+              y: data.y,
+            },
+            strokeColor: data.strokeColor,
+            imageUrl: `${process.env.PUBLIC_URL}/avatars/${data.id}.png`,
+          };
+          avatars.push(avatar);
+        });
+        res(avatars);
+      })
+      .catch((err) => {
+        rej(err);
+      });
+  });
+}
