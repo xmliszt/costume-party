@@ -61,4 +61,12 @@
   padding: 20px;
   border-radius: 20px;
   box-shadow: 5px 5px 20px rgba(0, 0, 0, 0.5);
+  overflow-y: scroll;
+  box-sizing: content-box;
+  padding-right: 17px;
+}
+
+.home-card::-webkit-scrollbar {
+  width: 0 !important; /* Remove scrollbar space */
+  background: transparent; /* Optional: just make scrollbar invisible */
 }

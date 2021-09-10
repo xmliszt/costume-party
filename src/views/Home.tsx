@@ -1,14 +1,10 @@
 import React, { useState, useRef } from "react";
 import { useHistory } from "react-router";
 import { Button, Divider, Input, Space, Typography } from "antd";
-import {
-  CheckCircleOutlined,
-  RocketOutlined,
-  StarOutlined,
-  UserOutlined,
-} from "@ant-design/icons";
+import { StarOutlined, UserOutlined } from "@ant-design/icons";
 import "./Home.css";
 import { getRandomRoomID } from "../helpers/room";
+import { validateNickname } from "../controllers/player";
 
 export default function Home(): React.ReactElement {
   const history = useHistory();
@@ -23,15 +19,6 @@ export default function Home(): React.ReactElement {
   const [id_2, setId_2] = useState("");
   const [id_3, setId_3] = useState("");
   const [id_4, setId_4] = useState("");
-  const [openJoinRoom, setOpenJoinRoom] = useState<boolean>(false);
-
-  const validateNickname = (): boolean => {
-    if (nickname) {
-      if (nickname?.trim() === "") return false;
-      if (nickname?.length >= 3) return true;
-    }
-    return false;
-  };
 
   const createRoom = () => {
     const _id = getRandomRoomID();
@@ -71,25 +58,6 @@ export default function Home(): React.ReactElement {
     }
   };
 
-  const renderRoomOptions = () => {
-    return validateNickname() ? (
-      <Space split={<Divider type="vertical" />} size="large">
-        <Button size="large" onClick={createRoom}>
-          Create Room
-        </Button>
-        <Button
-          size="large"
-          onClick={() => {
-            setOpenJoinRoom(true);
-            roomID_1.current?.focus();
-          }}
-        >
-          Join Room
-        </Button>
-      </Space>
-    ) : null;
-  };
-
   return (
     <div className="home">
       <div className="home-card">
@@ -109,24 +77,20 @@ export default function Home(): React.ReactElement {
           allowClear
           required
           onChange={(e) => {
-            setNickname(e.target.value);
+            setNickname(e.target.value.trim());
           }}
         />
         <Typography.Text style={{ color: "rgba(50, 50, 50, 0.3)" }}>
           Nickname should be not less than 3 characters, and not more than 12
           characters.
         </Typography.Text>
-        {validateNickname() ? (
-          <Divider>
-            <CheckCircleOutlined />
-          </Divider>
-        ) : null}
-        {renderRoomOptions()}
-        {openJoinRoom ? (
+        {validateNickname(nickname) ? (
           <div>
-            <Divider>
-              <RocketOutlined />
-            </Divider>
+            <Divider>Create A Room</Divider>
+            <Button size="large" onClick={createRoom}>
+              CREATE
+            </Button>
+            <Divider>Join A Room</Divider>
             <Typography.Title level={3}>Room ID:</Typography.Title>
             <Space>
               <Input
@@ -135,7 +99,6 @@ export default function Home(): React.ReactElement {
                 size="large"
                 value={id_1}
                 maxLength={1}
-                autoFocus
                 onChange={(e) => {
                   updateRoomID(e, 0);
                 }}
