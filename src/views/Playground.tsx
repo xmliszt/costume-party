@@ -2,30 +2,16 @@ import React, { useState, useEffect } from "react";
 import { Layer, Stage } from "react-konva";
 import Room from "../components/Room";
 import Avatar from "../components/Avatar";
-import { generateAvatarPosition } from "../helpers/avatar";
+
 import "./Playground.css";
-import IAvatars from "../interfaces/playground";
-import { roomColorMapping } from "../constants";
 import { Typography } from "antd";
+import { IAvatarProps } from "../interfaces/avatar";
 
 export default function Playground(): React.ReactElement {
-  const [avatars, setAvatars] = useState<Array<IAvatars>>([]);
+  const [avatars, setAvatars] = useState<Array<IAvatarProps>>([]);
 
   useEffect(() => {
-    const avatarList: Array<IAvatars> = [];
-    const rooms = ["TL", "TR", "BL", "BR", "C"];
-    let _id = 1;
-    rooms.forEach((room) => {
-      for (let i = 0; i < 4; i++) {
-        avatarList.push({
-          id: _id,
-          position: generateAvatarPosition(room),
-          imageUrl: `${process.env.PUBLIC_URL}/avatars/${_id}.png`,
-          strokeColor: roomColorMapping[room],
-        });
-        _id++;
-      }
-    });
+    const avatarList: Array<IAvatarProps> = [];
     console.log(avatarList);
     setAvatars(avatarList);
   }, []);
