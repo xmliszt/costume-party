@@ -1,6 +1,14 @@
 import React, { useState, useRef } from "react";
 import { useHistory } from "react-router";
-import { Button, Divider, Input, Space, Typography, Select } from "antd";
+import {
+  Button,
+  Divider,
+  Input,
+  Space,
+  Typography,
+  Select,
+  message,
+} from "antd";
 import { StarOutlined, UserOutlined } from "@ant-design/icons";
 import "./Home.css";
 import { getRandomRoomID } from "../helpers/room";
@@ -29,8 +37,12 @@ export default function Home(): React.ReactElement {
 
   const joinRoom = () => {
     const _id = [id_1, id_2, id_3, id_4].join("");
-    localStorage.setItem("room_id", _id);
-    history.push("/play");
+    if (_id.replaceAll(" ", "").length < 4) {
+      message.error("Invalid Room ID");
+    } else {
+      localStorage.setItem("room_id", _id);
+      history.push("/play");
+    }
   };
 
   const updateRoomID = (
