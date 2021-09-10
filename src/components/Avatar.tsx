@@ -2,19 +2,14 @@ import React, { useState } from "react";
 import useImage from "use-image";
 import { KonvaEventObject } from "konva/lib/Node";
 import { Image } from "react-konva";
-import IAvatarPosition from "../interfaces/avatar";
+import { IAvatarProps } from "../interfaces/avatar";
 import { clipAvatarPosition, isInWhichRoom } from "../helpers/avatar";
 import { roomColorMapping } from "../constants";
 
 export default function Avatar({
   avatarProps,
 }: {
-  avatarProps: {
-    id: number;
-    position: IAvatarPosition;
-    imageUrl: string;
-    strokeColor: string;
-  };
+  avatarProps: IAvatarProps;
 }): React.ReactElement {
   const [image] = useImage(avatarProps.imageUrl);
   const [roomColor, setRoomColor] = useState<string>(avatarProps.strokeColor);
