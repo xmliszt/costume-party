@@ -15,6 +15,8 @@ export async function updateAvatarStatus(
   dead: boolean
 ): Promise<boolean> {
   return new Promise((res, rej) => {
+    console.log(avatarID);
+
     updateDoc(doc(db, "rooms", roomID, "avatars", avatarID), {
       dead,
     })

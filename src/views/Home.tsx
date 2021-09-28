@@ -95,7 +95,8 @@ export default function Home(): React.ReactElement {
       } else if (!(await isRoomExist(_id))) {
         setLoading(false);
         message.error("Room does not exist!");
-      } else if (!localStorage.getItem("room_id")) {
+      } else if (localStorage.getItem("room_id") === _id) {
+        setLoading(false);
         message.error("You have already joined the game!");
       } else {
         await joinRoom(_id, nickname);

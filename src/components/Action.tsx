@@ -21,7 +21,7 @@ export interface IAction {
 }
 
 const Action = forwardRef<IAction, any>((props, ref): React.ReactElement => {
-  const { playerStats, playerTurn, roomCapacity, gameStarted } =
+  const { playerStats, playersData, playerTurn, roomCapacity, gameStarted } =
     useContext<IPlaygroundContext>(PlaygroundContext);
 
   const [action, setAction] = useState<number>(actions.NULL);
@@ -88,9 +88,17 @@ const Action = forwardRef<IAction, any>((props, ref): React.ReactElement => {
         );
       }
     } else {
+      let playingName = "";
+      playersData.forEach((player) => {
+        if (player.status !== "waiting") {
+          playingName = player.nickname;
+        }
+      });
       return (
         <div>
-          <Typography>Other player is playing...</Typography>
+          <Typography.Title level={3}>
+            {playingName} is playing...
+          </Typography.Title>
         </div>
       );
     }

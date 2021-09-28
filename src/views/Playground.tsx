@@ -21,6 +21,14 @@ import {
 } from "../services";
 
 export default function Playground(): React.ReactElement {
+  useEffect(() => {
+    const roomID = localStorage.getItem("room_id");
+    if (!roomID) {
+      message.error("no room joined!");
+      history.push("/");
+    }
+  }, []);
+
   const history = useHistory();
   const avatars = useListenAvatars();
   const [playerStats, playerAvatarProps] = useListenPlayer();
@@ -29,15 +37,6 @@ export default function Playground(): React.ReactElement {
     useListenRoom(playerStats);
 
   const actionRef = useRef<IAction>(null);
-
-  useEffect(() => {
-    const roomID = localStorage.getItem("room_id");
-    if (!roomID) {
-      message.error("no room joined!");
-      history.push("/");
-      return;
-    }
-  }, []);
 
   const onClearAction = (): void => {
     actionRef?.current?.clearAction();
@@ -77,6 +76,7 @@ export default function Playground(): React.ReactElement {
                 avatarProps={avatar}
                 key={avatar.id}
                 isMoving={playerStats?.status === "moving"}
+                isKilling={playerStats?.status === "killing"}
                 onClearAction={onClearAction}
               />
             ))}

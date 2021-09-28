@@ -19,6 +19,7 @@ export function useListenRoom(playerStats: IPlayerProps): DocumentData {
   useEffect(() => {
     const roomID = localStorage.getItem("room_id");
 
+    // Update when room data changed: player move to next turn, player join
     if (roomID) {
       onSnapshot(
         doc(db, "rooms", roomID),
@@ -30,9 +31,10 @@ export function useListenRoom(playerStats: IPlayerProps): DocumentData {
           if (data?.capacity === data?.players.length) {
             setGameStarted(true);
             if (isMyTurn(playerStats?.order, data?.turn, data?.capacity)) {
-              updatePlayerStatus(playerStats?.nickname, "choosing").catch(
-                (err) => console.log(err)
-              );
+              updatePlayerStatus(
+                localStorage.getItem("nickname")!,
+                "choosing"
+              ).catch((err) => console.log(err));
             }
           }
         },
@@ -92,29 +94,31 @@ export function useListenPlayers(): IPlayerProps[] {
   const [players, setPlayers] = useState<Array<IPlayerProps>>([]);
 
   useEffect(() => {
-    onSnapshot(
-      collection(db, "rooms", localStorage.getItem("room_id")!, "players"),
-      (snapshots) => {
-        const _players: Array<IPlayerProps> = [];
+    if (localStorage.getItem("room_id")) {
+      onSnapshot(
+        collection(db, "rooms", localStorage.getItem("room_id")!, "players"),
+        (snapshots) => {
+          const _players: Array<IPlayerProps> = [];
 
-        snapshots.forEach((_doc) => {
-          const data = _doc.data();
-          _players.push({
-            nickname: data.nickname,
-            alive: data.alive,
-            order: data.order,
-            avatar: data.avatar,
-            action: data.action,
-            message: data.message,
-            status: data.status,
+          snapshots.forEach((_doc) => {
+            const data = _doc.data();
+            _players.push({
+              nickname: data.nickname,
+              alive: data.alive,
+              order: data.order,
+              avatar: data.avatar,
+              action: data.action,
+              message: data.message,
+              status: data.status,
+            });
           });
-        });
-        setPlayers(_players);
-      },
-      (err) => {
-        console.log(err);
-      }
-    );
+          setPlayers(_players);
+        },
+        (err) => {
+          console.log(err);
+        }
+      );
+    }
   }, []);
 
   return players;
@@ -125,36 +129,38 @@ export function useListenPlayer(): [IPlayerProps, IAvatarProps] {
   const [playerAvatarProps, setPlayerAvatarProps] = useState<IAvatarProps>();
 
   useEffect(() => {
-    onSnapshot(
-      doc(
-        db,
-        "rooms",
-        localStorage.getItem("room_id")!,
-        "players",
-        localStorage.getItem("nickname")!
-      ),
-      (_doc) => {
-        const data = _doc.data();
+    if (localStorage.getItem("room_id")) {
+      onSnapshot(
+        doc(
+          db,
+          "rooms",
+          localStorage.getItem("room_id")!,
+          "players",
+          localStorage.getItem("nickname")!
+        ),
+        (_doc) => {
+          const data = _doc.data();
 
-        setPlayerStats({
-          nickname: data?.nickname,
-          alive: data?.alive,
-          order: data?.order,
-          avatar: data?.avatar,
-          action: data?.action,
-          message: data?.message,
-          status: data?.status,
-        });
-        getAvatarForPlayer(localStorage.getItem("nickname")!)
-          .then((props) => setPlayerAvatarProps(props))
-          .catch((err) => {
-            console.log(err);
+          setPlayerStats({
+            nickname: data?.nickname,
+            alive: data?.alive,
+            order: data?.order,
+            avatar: data?.avatar,
+            action: data?.action,
+            message: data?.message,
+            status: data?.status,
           });
-      },
-      (err) => {
-        console.log(err);
-      }
-    );
+          getAvatarForPlayer(localStorage.getItem("nickname")!)
+            .then((props) => setPlayerAvatarProps(props))
+            .catch((err) => {
+              console.log(err);
+            });
+        },
+        (err) => {
+          console.log(err);
+        }
+      );
+    }
   }, []);
 
   return [playerStats!, playerAvatarProps!];

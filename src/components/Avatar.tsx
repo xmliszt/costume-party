@@ -7,20 +7,21 @@ import { clipAvatarPosition, isInWhichRoom } from "../helpers/avatar";
 import { roomColorMapping } from "../constants";
 import { updateAvatarProps, updateAvatarStatus } from "../services/avatar";
 import { updatePlayerStatus } from "../services/player";
-import { message } from "antd";
+import { message, Modal } from "antd";
+import { ThunderboltFilled } from "@ant-design/icons";
 import { nextTurn } from "../services/room";
 
 export default function Avatar({
+  isKilling,
   isMoving,
   avatarProps,
   onClearAction,
 }: {
+  isKilling: boolean;
   isMoving: boolean;
   avatarProps: IAvatarProps;
   onClearAction: CallableFunction;
 }): React.ReactElement {
-  const [dead, setDead] = useState(false);
-
   const [image] = useImage(avatarProps.imageUrl);
   const handleDragEnd = (ev: KonvaEventObject<DragEvent>) => {
     const x = ev.target.x();
@@ -47,11 +48,23 @@ export default function Avatar({
     onClearAction();
   };
 
-  const handleDblClick = (ev: KonvaEventObject<MouseEvent>) => {
-    const victimID = ev.target.attrs.id;
-    updateAvatarStatus(localStorage.getItem("room_id")!, victimID, true);
-    setDead(true);
+  const handleKillSelect = (ev: KonvaEventObject<MouseEvent>) => {
+    if (isKilling) {
+      const vid = ev.target.attrs.id;
+      Modal.confirm({
+        title: "Wanna murder this guy?",
+        icon: <ThunderboltFilled />,
+        okText: "Let's do this!",
+        cancelText: "Never Mind",
+        onOk: () => {
+          confirmKilling(vid);
+        },
+      });
+    }
+  };
 
+  const confirmKilling = (vid: string) => {
+    updateAvatarStatus(localStorage.getItem("room_id")!, vid, true);
     updatePlayerStatus(localStorage.getItem("nickname")!, "waiting").catch(
       (err) => message.error(err)
     );
@@ -59,7 +72,7 @@ export default function Avatar({
     onClearAction();
   };
 
-  if (!dead)
+  if (!avatarProps.dead)
     return (
       <Image
         id={avatarProps.id}
@@ -72,7 +85,7 @@ export default function Avatar({
         strokeWidth={5}
         shadowBlur={10}
         draggable={isMoving}
-        onDblClick={handleDblClick}
+        onClick={handleKillSelect}
         onDragEnd={handleDragEnd}
       ></Image>
     );
