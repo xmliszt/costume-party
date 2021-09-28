@@ -1,4 +1,11 @@
-import { collection, getDocs, query, where } from "@firebase/firestore";
+import {
+  collection,
+  doc,
+  getDocs,
+  query,
+  updateDoc,
+  where,
+} from "@firebase/firestore";
 import { db } from "../firebase";
 import { IAvatarProps } from "../interfaces/avatar";
 import IPlayerProps from "../interfaces/player";
@@ -76,6 +83,24 @@ export async function getAvatarForPlayer(
         const avatarID = data.avatar.toString();
         const avatarProps = await getAvatarByID(avatarID);
         res(avatarProps);
+      })
+      .catch((err) => {
+        rej(err);
+      });
+  });
+}
+
+export async function updatePlayerStatus(
+  nickname: string,
+  status: string
+): Promise<boolean> {
+  return new Promise((res, rej) => {
+    updateDoc(
+      doc(db, "rooms", localStorage.getItem("room_id")!, "players", nickname),
+      { status }
+    )
+      .then(() => {
+        res(true);
       })
       .catch((err) => {
         rej(err);

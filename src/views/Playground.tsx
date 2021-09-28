@@ -1,25 +1,34 @@
-import React, { useEffect } from "react";
-import { Layer, Stage } from "react-konva";
-import Room from "../components/Room";
-import Avatar from "../components/Avatar";
-
-import "./Playground.css";
-import { Typography, message, Spin, Divider } from "antd";
-
+import React, { useEffect, useRef, useState } from "react";
 import { useHistory } from "react-router";
+import { Layer, Stage } from "react-konva";
+import { Typography, message, Spin, Divider } from "antd";
 import { LoadingOutlined } from "@ant-design/icons";
 
-import { useListenAvatars, useListenRoom } from "../services";
+import "./Playground.css";
+
+import Room from "../components/Room";
+import Avatar from "../components/Avatar";
 import Persona from "../components/Persona";
-import Action from "../components/Action";
+import Action, { IAction } from "../components/Action";
 import PlayerStatus from "../components/PlayerStatus";
+
+import { PlaygroundContext } from "../context/PlaygroundContext";
+import {
+  useListenAvatars,
+  useListenPlayer,
+  useListenPlayers,
+  useListenRoom,
+} from "../services";
 
 export default function Playground(): React.ReactElement {
   const history = useHistory();
-
   const avatars = useListenAvatars();
+  const [playerStats, playerAvatarProps] = useListenPlayer();
+  const playersData = useListenPlayers();
   const { playerCount, roomCapacity, gameStarted, playerTurn } =
-    useListenRoom();
+    useListenRoom(playerStats);
+
+  const actionRef = useRef<IAction>(null);
 
   useEffect(() => {
     const roomID = localStorage.getItem("room_id");
@@ -30,8 +39,23 @@ export default function Playground(): React.ReactElement {
     }
   }, []);
 
+  const onClearAction = (): void => {
+    actionRef?.current?.clearAction();
+  };
+
   return (
-    <div>
+    <PlaygroundContext.Provider
+      value={{
+        avatars,
+        playersData,
+        playerStats,
+        playerAvatarProps,
+        playerCount,
+        roomCapacity,
+        playerTurn,
+        gameStarted,
+      }}
+    >
       <div className="title">
         <Typography.Title level={1} code copyable>
           {localStorage.getItem("room_id")}
@@ -48,21 +72,26 @@ export default function Playground(): React.ReactElement {
         <Stage width={600} height={600} className="playground">
           <Room />
           <Layer>
-            {avatars.map((avatar) => (
-              <Avatar avatarProps={avatar} key={avatar.id} />
+            {avatars?.map((avatar) => (
+              <Avatar
+                avatarProps={avatar}
+                key={avatar.id}
+                isMoving={playerStats?.status === "moving"}
+                onClearAction={onClearAction}
+              />
             ))}
           </Layer>
         </Stage>
       </Spin>
       <section className="stats">
-        <Persona nickname={localStorage.getItem("nickname")!} />
+        <Persona />
         <div style={{ display: "flex" }}>
           <Divider style={{ height: 200 }} type="vertical" />
-          <Action turn={playerTurn} />
+          <Action ref={actionRef} />
           <Divider style={{ height: 200 }} type="vertical" />
         </div>
         <PlayerStatus />
       </section>
-    </div>
+    </PlaygroundContext.Provider>
   );
 }

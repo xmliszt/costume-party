@@ -3,12 +3,14 @@ import { db } from "../firebase";
 import { IAvatarProps } from "../interfaces/avatar";
 import { doc, collection, DocumentData, onSnapshot } from "@firebase/firestore";
 import IPlayerProps from "../interfaces/player";
+import { getAvatarForPlayer, updatePlayerStatus } from "./player";
+import { isMyTurn } from "../controllers/player";
 
 /**
  * Custom hook that set up a listener to listen to room status change
  * @returns room status data
  */
-export function useListenRoom(): DocumentData {
+export function useListenRoom(playerStats: IPlayerProps): DocumentData {
   const [playerCount, setPlayerCount] = useState(0);
   const [roomCapacity, setRoomCapacity] = useState(0);
   const [gameStarted, setGameStarted] = useState(false);
@@ -22,12 +24,16 @@ export function useListenRoom(): DocumentData {
         doc(db, "rooms", roomID!),
         (doc) => {
           const data = doc.data();
-          console.log(data);
           setRoomCapacity(data?.capacity);
           setPlayerCount(data?.players.length);
           setPlayerTurn(data?.turn);
           if (data?.capacity === data?.players.length) {
             setGameStarted(true);
+            if (isMyTurn(playerStats?.order, data?.turn, data?.capacity)) {
+              updatePlayerStatus(playerStats?.nickname, "choosing").catch(
+                (err) => console.log(err)
+              );
+            }
           }
         },
         (err) => {
@@ -69,8 +75,6 @@ export function useListenAvatars(): IAvatarProps[] {
               imageUrl: `${process.env.PUBLIC_URL}/avatars/${data.id}.png`,
             });
           });
-          console.log(_avatars);
-
           setAvatars(_avatars);
         },
         (err) => {
@@ -113,4 +117,44 @@ export function useListenPlayers(): IPlayerProps[] {
   }, []);
 
   return players;
+}
+
+export function useListenPlayer(): [IPlayerProps, IAvatarProps] {
+  const [playerStats, setPlayerStats] = useState<IPlayerProps>();
+  const [playerAvatarProps, setPlayerAvatarProps] = useState<IAvatarProps>();
+
+  useEffect(() => {
+    onSnapshot(
+      doc(
+        db,
+        "rooms",
+        localStorage.getItem("room_id")!,
+        "players",
+        localStorage.getItem("nickname")!
+      ),
+      (doc) => {
+        const data = doc.data();
+
+        setPlayerStats({
+          nickname: data?.nickname,
+          alive: data?.alive,
+          order: data?.order,
+          avatar: data?.avatar,
+          action: data?.action,
+          message: data?.message,
+          status: data?.status,
+        });
+        getAvatarForPlayer(localStorage.getItem("nickname")!)
+          .then((props) => setPlayerAvatarProps(props))
+          .catch((err) => {
+            console.log(err);
+          });
+      },
+      (err) => {
+        console.log(err);
+      }
+    );
+  }, []);
+
+  return [playerStats!, playerAvatarProps!];
 }

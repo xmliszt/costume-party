@@ -6,11 +6,18 @@ import { IAvatarProps } from "../interfaces/avatar";
 import { clipAvatarPosition, isInWhichRoom } from "../helpers/avatar";
 import { roomColorMapping } from "../constants";
 import { updateAvatarProps } from "../services/avatar";
+import { updatePlayerStatus } from "../services/player";
+import { message } from "antd";
+import { nextTurn } from "../services/room";
 
 export default function Avatar({
+  isMoving,
   avatarProps,
+  onClearAction,
 }: {
+  isMoving: boolean;
   avatarProps: IAvatarProps;
+  onClearAction: CallableFunction;
 }): React.ReactElement {
   const [image] = useImage(avatarProps.imageUrl);
   const handleDragEnd = (ev: KonvaEventObject<DragEvent>) => {
@@ -29,10 +36,22 @@ export default function Avatar({
       clippedPosition.y,
       roomColorMapping[roomType]
     );
+
+    updatePlayerStatus(localStorage.getItem("nickname")!, "waiting").catch(
+      (err) => message.error(err)
+    );
+
+    nextTurn(localStorage.getItem("room_id")!);
+    onClearAction();
   };
 
   const handleDblClick = (ev: KonvaEventObject<MouseEvent>) => {
     console.log(ev.target.attrs.id);
+    updatePlayerStatus(localStorage.getItem("nickname")!, "waiting").catch(
+      (err) => message.error(err)
+    );
+    nextTurn(localStorage.getItem("room_id")!);
+    onClearAction();
   };
 
   return (
@@ -46,7 +65,7 @@ export default function Avatar({
       stroke={avatarProps.strokeColor}
       strokeWidth={5}
       shadowBlur={10}
-      draggable
+      draggable={isMoving}
       onDblClick={handleDblClick}
       onDragEnd={handleDragEnd}
     ></Image>

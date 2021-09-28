@@ -7,6 +7,7 @@ import {
   addDoc,
   getDocs,
   updateDoc,
+  increment,
 } from "@firebase/firestore";
 import { getRandomInt } from "../helpers/number";
 import { IAvatarProps } from "../interfaces/avatar";
@@ -149,7 +150,7 @@ export async function joinRoom(
               if (!playerAvatars.includes(avatarAssigned)) break;
             }
             await addPlayerAvatar(roomID, avatarAssigned);
-            addDoc(collection(db, "rooms", roomID, "players"), {
+            setDoc(doc(db, "rooms", roomID, "players", nickname), {
               nickname,
               avatar: avatarAssigned,
               alive: true,
@@ -291,5 +292,15 @@ export async function getRoomStates(roomID: string): Promise<IRoom> {
       .catch((err) => {
         rej(err);
       });
+  });
+}
+
+export async function nextTurn(roomID: string): Promise<boolean> {
+  return new Promise((res, rej) => {
+    updateDoc(doc(db, "rooms", roomID), { turn: increment(1) })
+      .then(() => {
+        res(true);
+      })
+      .catch((err) => rej(err));
   });
 }
