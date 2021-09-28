@@ -52,6 +52,7 @@ export default function Home(): React.ReactElement {
           position: generateAvatarPosition(room),
           imageUrl: `${process.env.PUBLIC_URL}/avatars/${_id}.png`,
           strokeColor: roomColorMapping[room],
+          dead: false,
         });
         _id++;
       }

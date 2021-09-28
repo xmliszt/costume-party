@@ -1,11 +1,11 @@
-import React from "react";
+import React, { useState } from "react";
 import useImage from "use-image";
 import { KonvaEventObject } from "konva/lib/Node";
 import { Image } from "react-konva";
 import { IAvatarProps } from "../interfaces/avatar";
 import { clipAvatarPosition, isInWhichRoom } from "../helpers/avatar";
 import { roomColorMapping } from "../constants";
-import { updateAvatarProps } from "../services/avatar";
+import { updateAvatarProps, updateAvatarStatus } from "../services/avatar";
 import { updatePlayerStatus } from "../services/player";
 import { message } from "antd";
 import { nextTurn } from "../services/room";
@@ -19,6 +19,8 @@ export default function Avatar({
   avatarProps: IAvatarProps;
   onClearAction: CallableFunction;
 }): React.ReactElement {
+  const [dead, setDead] = useState(false);
+
   const [image] = useImage(avatarProps.imageUrl);
   const handleDragEnd = (ev: KonvaEventObject<DragEvent>) => {
     const x = ev.target.x();
@@ -46,7 +48,10 @@ export default function Avatar({
   };
 
   const handleDblClick = (ev: KonvaEventObject<MouseEvent>) => {
-    console.log(ev.target.attrs.id);
+    const victimID = ev.target.attrs.id;
+    updateAvatarStatus(localStorage.getItem("room_id")!, victimID, true);
+    setDead(true);
+
     updatePlayerStatus(localStorage.getItem("nickname")!, "waiting").catch(
       (err) => message.error(err)
     );
@@ -54,20 +59,22 @@ export default function Avatar({
     onClearAction();
   };
 
-  return (
-    <Image
-      id={avatarProps.id}
-      x={avatarProps.position.x}
-      y={avatarProps.position.y}
-      width={40}
-      height={40}
-      image={image}
-      stroke={avatarProps.strokeColor}
-      strokeWidth={5}
-      shadowBlur={10}
-      draggable={isMoving}
-      onDblClick={handleDblClick}
-      onDragEnd={handleDragEnd}
-    ></Image>
-  );
+  if (!dead)
+    return (
+      <Image
+        id={avatarProps.id}
+        x={avatarProps.position.x}
+        y={avatarProps.position.y}
+        width={40}
+        height={40}
+        image={image}
+        stroke={avatarProps.strokeColor}
+        strokeWidth={5}
+        shadowBlur={10}
+        draggable={isMoving}
+        onDblClick={handleDblClick}
+        onDragEnd={handleDragEnd}
+      ></Image>
+    );
+  else return <></>;
 }

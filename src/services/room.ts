@@ -193,6 +193,7 @@ export async function initializeAvatars(
                   x: avatar.position.x,
                   y: avatar.position.y,
                   strokeColor: avatar.strokeColor,
+                  dead: avatar.dead,
                 }
               );
             });
@@ -270,6 +271,7 @@ export async function getAllAvatarsProps(
             },
             strokeColor: data.strokeColor,
             imageUrl: `${process.env.PUBLIC_URL}/avatars/${data.id}.png`,
+            dead: data.dead,
           };
           avatars.push(avatar);
         });

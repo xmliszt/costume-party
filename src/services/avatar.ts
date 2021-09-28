@@ -9,6 +9,24 @@ import {
 } from "@firebase/firestore";
 import { IAvatarProps } from "../interfaces/avatar";
 
+export async function updateAvatarStatus(
+  roomID: string,
+  avatarID: string,
+  dead: boolean
+): Promise<boolean> {
+  return new Promise((res, rej) => {
+    updateDoc(doc(db, "rooms", roomID, "avatars", avatarID), {
+      dead,
+    })
+      .then(() => {
+        res(true);
+      })
+      .catch((err) => {
+        rej(err);
+      });
+  });
+}
+
 export async function updateAvatarProps(
   roomID: string,
   avatarID: string,
@@ -49,6 +67,7 @@ export async function getAvatarByID(avatarID: string): Promise<IAvatarProps> {
           },
           strokeColor: data.strokeColor,
           imageUrl: `${process.env.PUBLIC_URL}/avatars/${data.id}.png`,
+          dead: data.dead,
         });
       })
       .catch((err) => {

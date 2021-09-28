@@ -21,9 +21,9 @@ export function useListenRoom(playerStats: IPlayerProps): DocumentData {
 
     if (roomID) {
       onSnapshot(
-        doc(db, "rooms", roomID!),
-        (doc) => {
-          const data = doc.data();
+        doc(db, "rooms", roomID),
+        (_doc) => {
+          const data = _doc.data();
           setRoomCapacity(data?.capacity);
           setPlayerCount(data?.players.length);
           setPlayerTurn(data?.turn);
@@ -59,12 +59,12 @@ export function useListenAvatars(): IAvatarProps[] {
 
     if (roomID) {
       onSnapshot(
-        collection(db, "rooms", roomID!, "avatars"),
+        collection(db, "rooms", roomID, "avatars"),
         (snapshots) => {
           const _avatars: Array<IAvatarProps> = [];
 
-          snapshots.forEach((doc) => {
-            const data = doc.data();
+          snapshots.forEach((_doc) => {
+            const data = _doc.data();
             _avatars.push({
               id: data.id,
               position: {
@@ -73,6 +73,7 @@ export function useListenAvatars(): IAvatarProps[] {
               },
               strokeColor: data.strokeColor,
               imageUrl: `${process.env.PUBLIC_URL}/avatars/${data.id}.png`,
+              dead: data.dead,
             });
           });
           setAvatars(_avatars);
@@ -96,8 +97,8 @@ export function useListenPlayers(): IPlayerProps[] {
       (snapshots) => {
         const _players: Array<IPlayerProps> = [];
 
-        snapshots.forEach((doc) => {
-          const data = doc.data();
+        snapshots.forEach((_doc) => {
+          const data = _doc.data();
           _players.push({
             nickname: data.nickname,
             alive: data.alive,
@@ -132,8 +133,8 @@ export function useListenPlayer(): [IPlayerProps, IAvatarProps] {
         "players",
         localStorage.getItem("nickname")!
       ),
-      (doc) => {
-        const data = doc.data();
+      (_doc) => {
+        const data = _doc.data();
 
         setPlayerStats({
           nickname: data?.nickname,
