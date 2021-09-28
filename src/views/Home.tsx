@@ -72,6 +72,7 @@ export default function Home(): React.ReactElement {
       await initializeAvatars(_id, initializeAvatarPositions());
       await initializeGlobals(_id);
       await joinRoom(_id, nickname);
+      localStorage.setItem("nickname", nickname);
       localStorage.setItem("room_id", _id);
       message.success("Room created: " + _id);
       setLoading(false);

@@ -10,6 +10,7 @@ import { useHistory } from "react-router";
 import { LoadingOutlined } from "@ant-design/icons";
 
 import { useListenAvatars, useListenRoom } from "../services";
+import Persona from "../components/Persona";
 
 export default function Playground(): React.ReactElement {
   const history = useHistory();
@@ -51,6 +52,9 @@ export default function Playground(): React.ReactElement {
           </Layer>
         </Stage>
       </Spin>
+      <section className="stats">
+        <Persona nickname={localStorage.getItem("nickname")!} />
+      </section>
     </div>
   );
 }
