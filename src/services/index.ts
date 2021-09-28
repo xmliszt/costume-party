@@ -24,7 +24,9 @@ export function useListen(): DocumentData {
           setRoomCapacity(data?.capacity);
           setPlayerCount(data?.players.length);
           setPlayerTurn(data?.turn);
-          setGameStarted(data?.started);
+          if (data?.capacity === data?.players.length) {
+            setGameStarted(true);
+          }
         },
         (err) => {
           console.log(err);

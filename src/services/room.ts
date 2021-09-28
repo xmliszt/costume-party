@@ -25,7 +25,6 @@ export async function createRoom(
       _id,
       capacity,
       turn: 1,
-      start: false,
       players: [],
     })
       .then(() => {
@@ -136,7 +135,13 @@ export async function joinRoom(
       .then(async (exist) => {
         if (exist) {
           try {
+            const roomStats = await getRoomStates(roomID);
             const count = await getPlayerCount(roomID);
+
+            if (roomStats.capacity <= count) {
+              rej("room is full");
+            }
+
             const playerAvatars = await getPlayerAvatars(roomID);
             let avatarAssigned;
             while (true) {

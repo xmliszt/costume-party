@@ -102,7 +102,7 @@ export default function Home(): React.ReactElement {
     } catch (err: any) {
       setLoading(false);
       console.log(err);
-      message.error("Failed to join a room");
+      message.error(err);
     }
   };
 
