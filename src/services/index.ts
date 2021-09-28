@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { db } from "../firebase";
 import { IAvatarProps } from "../interfaces/avatar";
 import { doc, collection, DocumentData, onSnapshot } from "@firebase/firestore";
+import IPlayerProps from "../interfaces/player";
 
 /**
  * Custom hook that set up a listener to listen to room status change
@@ -80,4 +81,36 @@ export function useListenAvatars(): IAvatarProps[] {
   }, []);
 
   return avatars;
+}
+
+export function useListenPlayers(): IPlayerProps[] {
+  const [players, setPlayers] = useState<Array<IPlayerProps>>([]);
+
+  useEffect(() => {
+    onSnapshot(
+      collection(db, "rooms", localStorage.getItem("room_id")!, "players"),
+      (snapshots) => {
+        const _players: Array<IPlayerProps> = [];
+
+        snapshots.forEach((doc) => {
+          const data = doc.data();
+          _players.push({
+            nickname: data.nickname,
+            alive: data.alive,
+            order: data.order,
+            avatar: data.avatar,
+            action: data.action,
+            message: data.message,
+            status: data.status,
+          });
+        });
+        setPlayers(_players);
+      },
+      (err) => {
+        console.log(err);
+      }
+    );
+  }, []);
+
+  return players;
 }

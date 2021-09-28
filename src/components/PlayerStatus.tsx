@@ -1,21 +1,11 @@
-import { useState, useEffect } from "react";
-import { List, message, Avatar } from "antd";
+import { List, Avatar } from "antd";
+import { QuestionCircleOutlined } from "@ant-design/icons";
 import "./PlayerStatus.css";
-import { getAllPlayers } from "../services/player";
+import { useListenPlayers } from "../services";
 import IPlayerProps from "../interfaces/player";
 
 export default function PlayerStatus(): React.ReactElement {
-  const [statusData, setStatusData] = useState<Array<IPlayerProps>>([]);
-
-  useEffect(() => {
-    getAllPlayers()
-      .then((data) => {
-        setStatusData(data);
-      })
-      .catch((err) => {
-        message.error(err);
-      });
-  }, []);
+  const statusData = useListenPlayers();
 
   return (
     <>
@@ -28,9 +18,9 @@ export default function PlayerStatus(): React.ReactElement {
               <List.Item.Meta
                 avatar={
                   <Avatar
-                    style={{ border: "1px solid grey" }}
                     shape="square"
-                    src={`${process.env.PUBLIC_URL}/avatars/${item.avatar}.png`}
+                    size="large"
+                    icon={<QuestionCircleOutlined />}
                   />
                 }
                 title={item.nickname}
