@@ -4,7 +4,7 @@ export interface IAvatarPosition {
 }
 
 export interface IAvatarProps {
-  id: number;
+  id: string;
   position: IAvatarPosition;
   imageUrl: string;
   strokeColor: string;

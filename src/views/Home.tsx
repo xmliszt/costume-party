@@ -48,7 +48,7 @@ export default function Home(): React.ReactElement {
     rooms.forEach((room) => {
       for (let i = 0; i < 4; i++) {
         avatarList.push({
-          id: _id,
+          id: _id.toString(),
           position: generateAvatarPosition(room),
           imageUrl: `${process.env.PUBLIC_URL}/avatars/${_id}.png`,
           strokeColor: roomColorMapping[room],

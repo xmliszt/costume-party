@@ -1,47 +1,31 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import { Layer, Stage } from "react-konva";
 import Room from "../components/Room";
 import Avatar from "../components/Avatar";
 
 import "./Playground.css";
 import { Typography, message, Spin } from "antd";
-import { IAvatarProps } from "../interfaces/avatar";
-import { getAllAvatarsProps } from "../services/room";
 
 import { useHistory } from "react-router";
 import { LoadingOutlined } from "@ant-design/icons";
 
-import { useListen } from "../services";
+import { useListenAvatars, useListenRoom } from "../services";
 
 export default function Playground(): React.ReactElement {
   const history = useHistory();
 
-  const [avatars, setAvatars] = useState<Array<IAvatarProps>>([]);
-  const { playerCount, roomCapacity, gameStarted, playerTurn } = useListen();
+  const avatars = useListenAvatars();
+  const { playerCount, roomCapacity, gameStarted, playerTurn } =
+    useListenRoom();
 
   useEffect(() => {
-    getAllAvatars();
+    const roomID = localStorage.getItem("room_id");
+    if (!roomID) {
+      message.error("no room joined!");
+      history.push("/");
+      return;
+    }
   }, []);
-
-  const getAllAvatars = async (): Promise<void> => {
-    return new Promise((res, rej) => {
-      const roomID = localStorage.getItem("room_id");
-      if (roomID) {
-        getAllAvatarsProps(roomID)
-          .then((avatarList) => {
-            setAvatars(avatarList);
-            res();
-          })
-          .catch((err) => {
-            rej(err);
-          });
-      } else {
-        message.error("no room joined!");
-        history.push("/");
-        rej("no room joined");
-      }
-    });
-  };
 
   return (
     <div>

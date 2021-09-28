@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { db } from "../firebase";
-import { doc, DocumentData, onSnapshot } from "@firebase/firestore";
+import { IAvatarProps } from "../interfaces/avatar";
+import { doc, collection, DocumentData, onSnapshot } from "@firebase/firestore";
 
 /**
  * Custom hook that set up a listener to listen to room status change
  * @returns room status data
  */
-export function useListen(): DocumentData {
+export function useListenRoom(): DocumentData {
   const [playerCount, setPlayerCount] = useState(0);
   const [roomCapacity, setRoomCapacity] = useState(0);
   const [gameStarted, setGameStarted] = useState(false);
@@ -41,4 +42,42 @@ export function useListen(): DocumentData {
     gameStarted,
     playerTurn,
   };
+}
+
+export function useListenAvatars(): IAvatarProps[] {
+  const [avatars, setAvatars] = useState<Array<IAvatarProps>>([]);
+
+  useEffect(() => {
+    const roomID = localStorage.getItem("room_id");
+
+    if (roomID) {
+      onSnapshot(
+        collection(db, "rooms", roomID!, "avatars"),
+        (snapshots) => {
+          const _avatars: Array<IAvatarProps> = [];
+
+          snapshots.forEach((doc) => {
+            const data = doc.data();
+            _avatars.push({
+              id: data.id,
+              position: {
+                x: data.x,
+                y: data.y,
+              },
+              strokeColor: data.strokeColor,
+              imageUrl: `${process.env.PUBLIC_URL}/avatars/${data.id}.png`,
+            });
+          });
+          console.log(_avatars);
+
+          setAvatars(_avatars);
+        },
+        (err) => {
+          console.log(err);
+        }
+      );
+    }
+  }, []);
+
+  return avatars;
 }
