@@ -97,6 +97,7 @@ export default function Home(): React.ReactElement {
       } else {
         await joinRoom(_id, nickname);
         setLoading(false);
+        localStorage.setItem("nickname", nickname);
         localStorage.setItem("room_id", _id);
         history.push("/play");
       }

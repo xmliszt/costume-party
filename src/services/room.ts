@@ -154,6 +154,9 @@ export async function joinRoom(
               avatar: avatarAssigned,
               alive: true,
               order: count + 1,
+              status: "waiting", // or "playing"
+              action: null, // constants.ts -- actions
+              message: "", // action message
             });
             res(true);
           } catch (err) {

@@ -15,3 +15,11 @@ export const roomColorMapping: tRoomTypes = {
   BR: colors.red,
   C: colors.black,
 };
+
+export const actions = {
+  GREEN: 0,
+  YELLOW: 1,
+  BLUE: 2,
+  RED: 3,
+  BLACK: 4,
+};

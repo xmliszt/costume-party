@@ -17,9 +17,10 @@
 
 .stats {
   display: flex;
-  justify-content: space-between;
+  justify-content: space-evenly;
   height: 200px;
   width: 100vw;
   margin-top: 30px;
-  box-shadow: 0px -10px 20px rgba(0, 0, 0, 0.2);
+  box-shadow: 0px -10px 50px rgba(0, 0, 0, 0.1);
+  text-align: center;
 }

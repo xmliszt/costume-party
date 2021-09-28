@@ -4,13 +4,15 @@ import Room from "../components/Room";
 import Avatar from "../components/Avatar";
 
 import "./Playground.css";
-import { Typography, message, Spin } from "antd";
+import { Typography, message, Spin, Divider } from "antd";
 
 import { useHistory } from "react-router";
 import { LoadingOutlined } from "@ant-design/icons";
 
 import { useListenAvatars, useListenRoom } from "../services";
 import Persona from "../components/Persona";
+import Action from "../components/Action";
+import PlayerStatus from "../components/PlayerStatus";
 
 export default function Playground(): React.ReactElement {
   const history = useHistory();
@@ -54,6 +56,12 @@ export default function Playground(): React.ReactElement {
       </Spin>
       <section className="stats">
         <Persona nickname={localStorage.getItem("nickname")!} />
+        <div style={{ display: "flex" }}>
+          <Divider style={{ height: 200 }} type="vertical" />
+          <Action turn={playerTurn} />
+          <Divider style={{ height: 200 }} type="vertical" />
+        </div>
+        <PlayerStatus />
       </section>
     </div>
   );
