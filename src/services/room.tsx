@@ -7,11 +7,11 @@ import {
   addDoc,
   getDocs,
   updateDoc,
-  onSnapshot,
-} from "firebase/firestore";
+} from "@firebase/firestore";
 import { getRandomInt } from "../helpers/number";
 import { IAvatarProps } from "../interfaces/avatar";
 import { asyncForEach } from "../helpers/async";
+import IRoom from "../interfaces/room";
 
 /**
  * Create a new room
@@ -265,6 +265,20 @@ export async function getAllAvatarsProps(
           avatars.push(avatar);
         });
         res(avatars);
+      })
+      .catch((err) => {
+        rej(err);
+      });
+  });
+}
+
+export async function getRoomStates(roomID: string): Promise<IRoom> {
+  return new Promise((res, rej) => {
+    getDoc(doc(db, "rooms", roomID))
+      .then((roomDoc) => {
+        const data = roomDoc.data() as IRoom;
+        if (data) res(data);
+        else rej("no room data available");
       })
       .catch((err) => {
         rej(err);
