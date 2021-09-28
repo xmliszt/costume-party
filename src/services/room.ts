@@ -210,7 +210,7 @@ export async function initializeGlobals(roomID: string): Promise<boolean> {
       .then(async (exist) => {
         if (exist) {
           const globals: Array<number> = [];
-          await asyncForEach([0, 1, 2], async (_) => {
+          await asyncForEach([0, 1, 2], async () => {
             try {
               const playerAvatars = await getPlayerAvatars(roomID);
               let globalAvatar;
