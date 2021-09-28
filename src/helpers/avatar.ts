@@ -1,4 +1,4 @@
-import IAvatarPosition from "../interfaces/avatar";
+import { IAvatarPosition } from "../interfaces/avatar";
 import { getRandomInt } from "./number";
 
 export function generateAvatarColorLight(): string {
