@@ -34,6 +34,7 @@ const Action = forwardRef<IAction, any>((props, ref): React.ReactElement => {
     useContext<IPlaygroundContext>(PlaygroundContext);
 
   const [action, setAction] = useState<number>(actions.NULL);
+  const isEndingShown = useRef(false); // For controlling the end scene modal
   const isDead = useRef(false); // For internal state reference of the state of player
 
   useImperativeHandle(ref, () => ({
@@ -74,15 +75,8 @@ const Action = forwardRef<IAction, any>((props, ref): React.ReactElement => {
       );
 
     if (gameEnd) {
-      if (localStorage.getItem("nickname")! === winner)
-        return (
-          <div>
-            <Typography.Title level={3}>
-              Congratulations! You Win!
-            </Typography.Title>
-          </div>
-        );
-      else
+      if (!isEndingShown.current) {
+        isEndingShown.current = true;
         setTimeout(() => {
           Modal.success({
             title: "Good Game!",
@@ -99,11 +93,24 @@ const Action = forwardRef<IAction, any>((props, ref): React.ReactElement => {
             },
           });
         }, 2000);
-      return (
-        <div>
-          <Typography.Title level={3}>The winner is: {winner}</Typography.Title>
-        </div>
-      );
+      }
+      if (localStorage.getItem("win")) {
+        return (
+          <div>
+            <Typography.Title level={3}>
+              Congratulations! You Win!
+            </Typography.Title>
+          </div>
+        );
+      } else {
+        return (
+          <div>
+            <Typography.Title level={3}>
+              The winner is: {winner}
+            </Typography.Title>
+          </div>
+        );
+      }
     }
 
     if (isDead.current) {

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useHistory } from "react-router";
 import {
   Button,
@@ -40,6 +40,12 @@ export default function Home(): React.ReactElement {
   const [id_2, setId_2] = useState("");
   const [id_3, setId_3] = useState("");
   const [id_4, setId_4] = useState("");
+
+  useEffect(() => {
+    if (localStorage.getItem("nickname")) {
+      setNickname(localStorage.getItem("nickname")!);
+    }
+  }, []);
 
   const initializeAvatarPositions = (): Array<IAvatarProps> => {
     const avatarList: Array<IAvatarProps> = [];
@@ -151,6 +157,8 @@ export default function Home(): React.ReactElement {
             style={{ marginTop: 15 }}
             size="large"
             placeholder="Enter Your Nickname..."
+            defaultValue={nickname}
+            value={nickname}
             prefix={<UserOutlined />}
             maxLength={12}
             allowClear

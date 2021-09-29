@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { useHistory } from "react-router";
 import { Layer, Stage } from "react-konva";
-import { Typography, message, Spin, Divider, Modal } from "antd";
+import { Typography, message, Spin, Divider } from "antd";
 import { LoadingOutlined } from "@ant-design/icons";
 
 import "./Playground.css";
@@ -26,7 +26,6 @@ import {
   updatePlayerStatus,
 } from "../services/player";
 import {
-  deleteRoom,
   getRoomStates,
   isOnlyOnePlayerAlive,
   nextTurn,
@@ -58,6 +57,10 @@ export default function Playground(): React.ReactElement {
       }
     }
   };
+  const history = useHistory();
+  const avatars = useListenAvatars();
+  const [playerStats, playerAvatarProps] = useListenPlayer();
+  const playersData = useListenPlayers();
 
   const onNextTurn = async (turn: number, capacity: number) => {
     const roomID = localStorage.getItem("room_id")!;
@@ -70,18 +73,8 @@ export default function Playground(): React.ReactElement {
           if (alive) {
             const winCondition = await isOnlyOnePlayerAlive(roomID, capacity);
             if (winCondition) {
+              localStorage.setItem("win", "true");
               await updateRoomGameState(roomID, true, nickname);
-              setTimeout(() => {
-                Modal.success({
-                  title: "Good Game!",
-                  okText: "Back To Home",
-                  onOk: () => {
-                    deleteRoom(roomID);
-                    message.warn("Welcome Back!");
-                    history.push("/");
-                  },
-                });
-              }, 2000);
             } else {
               console.log("Set to choosing");
               updatePlayerStatus(nickname, "choosing");
@@ -96,10 +89,6 @@ export default function Playground(): React.ReactElement {
     }
   };
 
-  const history = useHistory();
-  const avatars = useListenAvatars();
-  const [playerStats, playerAvatarProps] = useListenPlayer();
-  const playersData = useListenPlayers();
   const {
     playerCount,
     roomCapacity,

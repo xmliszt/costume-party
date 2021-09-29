@@ -350,6 +350,8 @@ export async function updateRoomGameState(
 
 export async function deleteRoom(roomID: string): Promise<boolean> {
   return new Promise((res, rej) => {
+    localStorage.removeItem("room_id");
+    localStorage.removeItem("win");
     deleteDoc(doc(db, "rooms", roomID))
       .then(() => res(true))
       .catch((err) => rej(err));
