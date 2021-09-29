@@ -8,4 +8,5 @@ export interface IAvatarProps {
   position: IAvatarPosition;
   imageUrl: string;
   strokeColor: string;
+  dead: boolean;
 }

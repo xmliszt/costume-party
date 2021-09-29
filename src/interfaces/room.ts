@@ -3,5 +3,6 @@ export default interface IRoom {
   turn: number;
   players: Array<number>;
   capacity: number;
-  start: boolean;
+  gameEnd: boolean;
+  winner: string;
 }

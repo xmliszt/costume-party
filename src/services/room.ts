@@ -4,9 +4,10 @@ import {
   collection,
   setDoc,
   getDoc,
-  addDoc,
   getDocs,
   updateDoc,
+  increment,
+  deleteDoc,
 } from "@firebase/firestore";
 import { getRandomInt } from "../helpers/number";
 import { IAvatarProps } from "../interfaces/avatar";
@@ -26,6 +27,8 @@ export async function createRoom(
       capacity,
       turn: 1,
       players: [],
+      gameEnd: false,
+      winner: "",
     })
       .then(() => {
         res(true);
@@ -149,11 +152,14 @@ export async function joinRoom(
               if (!playerAvatars.includes(avatarAssigned)) break;
             }
             await addPlayerAvatar(roomID, avatarAssigned);
-            addDoc(collection(db, "rooms", roomID, "players"), {
+            setDoc(doc(db, "rooms", roomID, "players", nickname), {
               nickname,
               avatar: avatarAssigned,
               alive: true,
               order: count + 1,
+              status: "waiting", // or "playing"
+              action: null, // constants.ts -- actions
+              message: "", // action message
             });
             res(true);
           } catch (err) {
@@ -189,6 +195,7 @@ export async function initializeAvatars(
                   x: avatar.position.x,
                   y: avatar.position.y,
                   strokeColor: avatar.strokeColor,
+                  dead: avatar.dead,
                 }
               );
             });
@@ -266,6 +273,7 @@ export async function getAllAvatarsProps(
             },
             strokeColor: data.strokeColor,
             imageUrl: `${process.env.PUBLIC_URL}/avatars/${data.id}.png`,
+            dead: data.dead,
           };
           avatars.push(avatar);
         });
@@ -288,5 +296,64 @@ export async function getRoomStates(roomID: string): Promise<IRoom> {
       .catch((err) => {
         rej(err);
       });
+  });
+}
+
+export async function nextTurn(roomID: string): Promise<boolean> {
+  return new Promise((res, rej) => {
+    updateDoc(doc(db, "rooms", roomID), { turn: increment(1) })
+      .then(() => {
+        res(true);
+      })
+      .catch((err) => rej(err));
+  });
+}
+
+export async function isOnlyOnePlayerAlive(
+  roomID: string,
+  capacity: number
+): Promise<boolean> {
+  return new Promise((res, rej) => {
+    let counter = 0;
+    getDocs(collection(db, "rooms", roomID, "players"))
+      .then((snapshots) => {
+        if (snapshots.size < capacity) {
+          res(false);
+        } else {
+          snapshots.forEach((player) => {
+            const data = player.data();
+            if (data?.alive) counter++;
+          });
+          console.log(counter);
+          res(counter === 1);
+        }
+      })
+      .catch((err) => rej(err));
+  });
+}
+
+export async function updateRoomGameState(
+  roomID: string,
+  gameEnd: boolean,
+  winner: string
+): Promise<boolean> {
+  return new Promise((res, rej) => {
+    updateDoc(doc(db, "rooms", roomID), { gameEnd, winner })
+      .then(() => {
+        res(true);
+      })
+      .catch((err) => {
+        rej(err);
+      });
+  });
+}
+
+export async function deleteRoom(roomID: string): Promise<boolean> {
+  return new Promise((res, rej) => {
+    localStorage.removeItem("room_id");
+    localStorage.removeItem("win");
+    deleteDoc(doc(db, "rooms", roomID))
+      .then(() => res(true))
+      .catch((err) => rej(err));
   });
 }

@@ -5,12 +5,22 @@ import { Image } from "react-konva";
 import { IAvatarProps } from "../interfaces/avatar";
 import { clipAvatarPosition, isInWhichRoom } from "../helpers/avatar";
 import { roomColorMapping } from "../constants";
-import { updateAvatarProps } from "../services/avatar";
+import { updateAvatarProps, updateAvatarStatus } from "../services/avatar";
+import { updatePlayerStatus } from "../services/player";
+import { message, Modal } from "antd";
+import { ThunderboltFilled } from "@ant-design/icons";
+import { nextTurn } from "../services/room";
 
 export default function Avatar({
+  isKilling,
+  isMoving,
   avatarProps,
+  onClearAction,
 }: {
+  isKilling: boolean;
+  isMoving: boolean;
   avatarProps: IAvatarProps;
+  onClearAction: CallableFunction;
 }): React.ReactElement {
   const [image] = useImage(avatarProps.imageUrl);
   const handleDragEnd = (ev: KonvaEventObject<DragEvent>) => {
@@ -29,26 +39,58 @@ export default function Avatar({
       clippedPosition.y,
       roomColorMapping[roomType]
     );
+
+    updatePlayerStatus(localStorage.getItem("nickname")!, "waiting").catch(
+      (err) => message.error(err)
+    );
+
+    nextTurn(localStorage.getItem("room_id")!);
+    onClearAction();
   };
 
-  const handleDblClick = (ev: KonvaEventObject<MouseEvent>) => {
-    console.log(ev.target.attrs.id);
+  const handleKillSelect = (ev: KonvaEventObject<MouseEvent>) => {
+    if (isKilling) {
+      const vid = ev.target.attrs.id;
+      Modal.confirm({
+        title: "Wanna murder this guy?",
+        icon: <ThunderboltFilled />,
+        okText: "Let's do this!",
+        cancelText: "Never Mind",
+        onOk: () => {
+          confirmKilling(vid);
+        },
+      });
+    }
   };
 
-  return (
-    <Image
-      id={avatarProps.id}
-      x={avatarProps.position.x}
-      y={avatarProps.position.y}
-      width={40}
-      height={40}
-      image={image}
-      stroke={avatarProps.strokeColor}
-      strokeWidth={5}
-      shadowBlur={10}
-      draggable
-      onDblClick={handleDblClick}
-      onDragEnd={handleDragEnd}
-    ></Image>
-  );
+  const confirmKilling = async (vid: string) => {
+    try {
+      updateAvatarStatus(localStorage.getItem("room_id")!, vid, true);
+      updatePlayerStatus(localStorage.getItem("nickname")!, "waiting");
+      await nextTurn(localStorage.getItem("room_id")!);
+    } catch (err) {
+      console.log(err);
+    } finally {
+      onClearAction();
+    }
+  };
+
+  if (!avatarProps.dead)
+    return (
+      <Image
+        id={avatarProps.id}
+        x={avatarProps.position.x}
+        y={avatarProps.position.y}
+        width={40}
+        height={40}
+        image={image}
+        stroke={avatarProps.strokeColor}
+        strokeWidth={5}
+        shadowBlur={10}
+        draggable={isMoving}
+        onClick={handleKillSelect}
+        onDragEnd={handleDragEnd}
+      ></Image>
+    );
+  else return <></>;
 }

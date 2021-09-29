@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useHistory } from "react-router";
 import {
   Button,
@@ -41,6 +41,12 @@ export default function Home(): React.ReactElement {
   const [id_3, setId_3] = useState("");
   const [id_4, setId_4] = useState("");
 
+  useEffect(() => {
+    if (localStorage.getItem("nickname")) {
+      setNickname(localStorage.getItem("nickname")!);
+    }
+  }, []);
+
   const initializeAvatarPositions = (): Array<IAvatarProps> => {
     const avatarList: Array<IAvatarProps> = [];
     const rooms = ["TL", "TR", "BL", "BR", "C"];
@@ -52,6 +58,7 @@ export default function Home(): React.ReactElement {
           position: generateAvatarPosition(room),
           imageUrl: `${process.env.PUBLIC_URL}/avatars/${_id}.png`,
           strokeColor: roomColorMapping[room],
+          dead: false,
         });
         _id++;
       }
@@ -72,6 +79,7 @@ export default function Home(): React.ReactElement {
       await initializeAvatars(_id, initializeAvatarPositions());
       await initializeGlobals(_id);
       await joinRoom(_id, nickname);
+      localStorage.setItem("nickname", nickname);
       localStorage.setItem("room_id", _id);
       message.success("Room created: " + _id);
       setLoading(false);
@@ -88,21 +96,23 @@ export default function Home(): React.ReactElement {
       setLoading(true);
       const _id = [id_1, id_2, id_3, id_4].join("");
       if (_id.replaceAll(" ", "").length < 4) {
-        setLoading(false);
         message.error("Invalid Room ID");
       } else if (!(await isRoomExist(_id))) {
-        setLoading(false);
         message.error("Room does not exist!");
+      } else if (localStorage.getItem("room_id") === _id) {
+        message.error("You have already joined the game!");
       } else {
         await joinRoom(_id, nickname);
-        setLoading(false);
+        localStorage.setItem("nickname", nickname);
         localStorage.setItem("room_id", _id);
+        setLoading(false);
         history.push("/play");
       }
     } catch (err: any) {
-      setLoading(false);
       console.log(err);
-      message.error(err);
+      message.error("Unable to join room");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -147,6 +157,8 @@ export default function Home(): React.ReactElement {
             style={{ marginTop: 15 }}
             size="large"
             placeholder="Enter Your Nickname..."
+            defaultValue={nickname}
+            value={nickname}
             prefix={<UserOutlined />}
             maxLength={12}
             allowClear

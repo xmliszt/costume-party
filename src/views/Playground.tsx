@@ -1,34 +1,121 @@
-import React, { useEffect } from "react";
-import { Layer, Stage } from "react-konva";
-import Room from "../components/Room";
-import Avatar from "../components/Avatar";
-
-import "./Playground.css";
-import { Typography, message, Spin } from "antd";
-
+import React, { useEffect, useRef } from "react";
 import { useHistory } from "react-router";
+import { Layer, Stage } from "react-konva";
+import { Typography, message, Spin, Divider } from "antd";
 import { LoadingOutlined } from "@ant-design/icons";
 
-import { useListenAvatars, useListenRoom } from "../services";
+import "./Playground.css";
+
+import Room from "../components/Room";
+import Avatar from "../components/Avatar";
+import Persona from "../components/Persona";
+import Action, { IAction } from "../components/Action";
+import PlayerStatus from "../components/PlayerStatus";
+
+import { PlaygroundContext } from "../context/PlaygroundContext";
+import { isMyTurn } from "../controllers/player";
+import {
+  useListenAvatars,
+  useListenPlayer,
+  useListenPlayers,
+  useListenRoom,
+} from "../services";
+import {
+  getPlayerByNickname,
+  isPlayerAlive,
+  updatePlayerStatus,
+} from "../services/player";
+import {
+  getRoomStates,
+  isOnlyOnePlayerAlive,
+  nextTurn,
+  updateRoomGameState,
+} from "../services/room";
 
 export default function Playground(): React.ReactElement {
-  const history = useHistory();
-
-  const avatars = useListenAvatars();
-  const { playerCount, roomCapacity, gameStarted, playerTurn } =
-    useListenRoom();
+  const playerOrder = useRef(0);
 
   useEffect(() => {
-    const roomID = localStorage.getItem("room_id");
-    if (!roomID) {
-      message.error("no room joined!");
-      history.push("/");
-      return;
-    }
+    init();
   }, []);
 
+  const init = async () => {
+    const roomID = localStorage.getItem("room_id");
+    const nickname = localStorage.getItem("nickname");
+    if (!roomID || !nickname) {
+      message.error("no room joined!");
+      history.push("/");
+    } else {
+      const player = await getPlayerByNickname(nickname);
+      const room = await getRoomStates(roomID);
+      playerOrder.current = player.order;
+      if (isMyTurn(player.order, room.turn, room.capacity) && player.alive) {
+        updatePlayerStatus(nickname, "choosing").catch((err) =>
+          message.error(err)
+        );
+      }
+    }
+  };
+  const history = useHistory();
+  const avatars = useListenAvatars();
+  const [playerStats, playerAvatarProps] = useListenPlayer();
+  const playersData = useListenPlayers();
+
+  const onNextTurn = async (turn: number, capacity: number) => {
+    const roomID = localStorage.getItem("room_id")!;
+    const nickname = localStorage.getItem("nickname")!;
+    if (nickname && roomID) {
+      try {
+        const alive = await isPlayerAlive(nickname);
+        if (isMyTurn(playerOrder.current, turn, capacity)) {
+          if (alive) {
+            const winCondition = await isOnlyOnePlayerAlive(roomID, capacity);
+            if (winCondition) {
+              localStorage.setItem("win", "true");
+              await updateRoomGameState(roomID, true, nickname);
+            } else {
+              updatePlayerStatus(nickname, "choosing");
+            }
+          } else {
+            nextTurn(localStorage.getItem("room_id")!);
+          }
+        }
+      } catch (err) {
+        message.error("Something is wrong D: Please refresh!");
+      }
+    }
+  };
+
+  const {
+    playerCount,
+    roomCapacity,
+    gameStarted,
+    playerTurn,
+    gameEnd,
+    winner,
+  } = useListenRoom(onNextTurn);
+
+  const actionRef = useRef<IAction>(null);
+
+  const onClearAction = (): void => {
+    actionRef?.current?.clearAction();
+  };
+
   return (
-    <div>
+    <PlaygroundContext.Provider
+      value={{
+        avatars,
+        playersData,
+        playerStats,
+        playerAvatarProps,
+        playerCount,
+        roomCapacity,
+        playerTurn,
+        gameStarted,
+        gameEnd,
+        winner,
+      }}
+    >
       <div className="title">
         <Typography.Title level={1} code copyable>
           {localStorage.getItem("room_id")}
@@ -45,12 +132,27 @@ export default function Playground(): React.ReactElement {
         <Stage width={600} height={600} className="playground">
           <Room />
           <Layer>
-            {avatars.map((avatar) => (
-              <Avatar avatarProps={avatar} key={avatar.id} />
+            {avatars?.map((avatar) => (
+              <Avatar
+                avatarProps={avatar}
+                key={avatar.id}
+                isMoving={playerStats?.status === "moving"}
+                isKilling={playerStats?.status === "killing"}
+                onClearAction={onClearAction}
+              />
             ))}
           </Layer>
         </Stage>
       </Spin>
-    </div>
+      <section className="stats">
+        <Persona />
+        <div style={{ display: "flex" }}>
+          <Divider style={{ height: 200 }} type="vertical" />
+          <Action ref={actionRef} />
+          <Divider style={{ height: 200 }} type="vertical" />
+        </div>
+        <PlayerStatus />
+      </section>
+    </PlaygroundContext.Provider>
   );
 }
