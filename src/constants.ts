@@ -1,4 +1,4 @@
-import { tNumberToString, tRoomTypes } from "./types";
+import { tNumberToString, tRoomTypes, tStringToString } from "./types";
 
 export const colors = {
   green: "#67C23A",
@@ -6,6 +6,14 @@ export const colors = {
   blue: "#409EFF",
   red: "#F56C6C",
   black: "#606266",
+};
+
+export const colorStringToColorMapping: tStringToString = {
+  "#67C23A": "green",
+  "#E6A23C": "yellow",
+  "#409EFF": "blue",
+  "#F56C6C": "red",
+  "#606266": "black",
 };
 
 export const roomColorMapping: tRoomTypes = {

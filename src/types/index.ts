@@ -5,3 +5,7 @@ export type tRoomTypes = {
 export type tNumberToString = {
   [key: number]: string;
 };
+
+export type tStringToString = {
+  [key: string]: string;
+};
