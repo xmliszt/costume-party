@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
 import { useHistory } from "react-router";
 import { Layer, Stage } from "react-konva";
 import { Typography, message, Spin, Divider } from "antd";
@@ -13,28 +13,84 @@ import Action, { IAction } from "../components/Action";
 import PlayerStatus from "../components/PlayerStatus";
 
 import { PlaygroundContext } from "../context/PlaygroundContext";
+import { isMyTurn } from "../controllers/player";
 import {
   useListenAvatars,
   useListenPlayer,
   useListenPlayers,
   useListenRoom,
 } from "../services";
+import {
+  getPlayerByNickname,
+  isPlayerAlive,
+  updatePlayerStatus,
+} from "../services/player";
+import {
+  getRoomStates,
+  isOnlyOnePlayerAlive,
+  updateRoomGameState,
+} from "../services/room";
 
 export default function Playground(): React.ReactElement {
+  const playerOrder = useRef(0);
+
   useEffect(() => {
+    init();
+  }, []);
+
+  const init = async () => {
     const roomID = localStorage.getItem("room_id");
-    if (!roomID) {
+    const nickname = localStorage.getItem("nickname");
+    if (!roomID || !nickname) {
       message.error("no room joined!");
       history.push("/");
+    } else {
+      const player = await getPlayerByNickname(nickname);
+      const room = await getRoomStates(roomID);
+      playerOrder.current = player.order;
+      if (isMyTurn(player.order, room.turn, room.capacity) && player.alive) {
+        console.log("Set to choosing");
+        updatePlayerStatus(nickname, "choosing").catch((err) =>
+          message.error(err)
+        );
+      }
     }
-  }, []);
+  };
+
+  const onNextTurn = async (turn: number, capacity: number) => {
+    const roomID = localStorage.getItem("room_id")!;
+    const nickname = localStorage.getItem("nickname")!;
+    if (nickname && roomID) {
+      try {
+        const alive = await isPlayerAlive(nickname);
+        console.log(playerOrder.current, turn, capacity, alive);
+        if (isMyTurn(playerOrder.current, turn, capacity) && alive) {
+          const winCondition = await isOnlyOnePlayerAlive(roomID);
+          if (winCondition) {
+            await updateRoomGameState(roomID, true, nickname);
+          } else {
+            console.log("Set to choosing");
+            updatePlayerStatus(nickname, "choosing");
+          }
+        }
+      } catch (err) {
+        message.error("Something is wrong D: Please refresh!");
+      }
+    }
+  };
 
   const history = useHistory();
   const avatars = useListenAvatars();
   const [playerStats, playerAvatarProps] = useListenPlayer();
   const playersData = useListenPlayers();
-  const { playerCount, roomCapacity, gameStarted, playerTurn } =
-    useListenRoom(playerStats);
+  const {
+    playerCount,
+    roomCapacity,
+    gameStarted,
+    playerTurn,
+    gameEnd,
+    winner,
+  } = useListenRoom(onNextTurn);
 
   const actionRef = useRef<IAction>(null);
 
@@ -53,6 +109,8 @@ export default function Playground(): React.ReactElement {
         roomCapacity,
         playerTurn,
         gameStarted,
+        gameEnd,
+        winner,
       }}
     >
       <div className="title">

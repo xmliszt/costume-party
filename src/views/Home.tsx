@@ -90,25 +90,23 @@ export default function Home(): React.ReactElement {
       setLoading(true);
       const _id = [id_1, id_2, id_3, id_4].join("");
       if (_id.replaceAll(" ", "").length < 4) {
-        setLoading(false);
         message.error("Invalid Room ID");
       } else if (!(await isRoomExist(_id))) {
-        setLoading(false);
         message.error("Room does not exist!");
       } else if (localStorage.getItem("room_id") === _id) {
-        setLoading(false);
         message.error("You have already joined the game!");
       } else {
         await joinRoom(_id, nickname);
-        setLoading(false);
         localStorage.setItem("nickname", nickname);
         localStorage.setItem("room_id", _id);
+        setLoading(false);
         history.push("/play");
       }
     } catch (err: any) {
-      setLoading(false);
       console.log(err);
-      message.error(err);
+      message.error("Unable to join room");
+    } finally {
+      setLoading(false);
     }
   };
 

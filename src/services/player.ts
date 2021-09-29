@@ -1,6 +1,7 @@
 import {
   collection,
   doc,
+  getDoc,
   getDocs,
   query,
   updateDoc,
@@ -67,6 +68,35 @@ export async function getPlayerByNickname(
   });
 }
 
+export async function getPlayerByAvatarID(
+  avatarID: number
+): Promise<IPlayerProps> {
+  return new Promise((res, rej) => {
+    const q = query(
+      collection(db, "rooms", localStorage.getItem("room_id")!, "players"),
+      where("avatar", "==", avatarID)
+    );
+    getDocs(q)
+      .then((snapshots) => {
+        if (snapshots.size < 1) rej("no player found!");
+        if (snapshots.size > 1) rej("duplicate players!");
+        const data = snapshots.docs[0].data();
+        res({
+          nickname: data.nickname,
+          alive: data.alive,
+          order: data.order,
+          avatar: data.avatar,
+          action: data.action,
+          message: data.message,
+          status: data.status,
+        });
+      })
+      .catch((err) => {
+        rej(err);
+      });
+  });
+}
+
 export async function getAvatarForPlayer(
   nickname: string
 ): Promise<IAvatarProps> {
@@ -101,6 +131,38 @@ export async function updatePlayerStatus(
     )
       .then(() => {
         res(true);
+      })
+      .catch((err) => {
+        rej(err);
+      });
+  });
+}
+
+export async function updatePlayerAliveness(
+  nickname: string,
+  alive: boolean
+): Promise<boolean> {
+  return new Promise((res, rej) => {
+    updateDoc(
+      doc(db, "rooms", localStorage.getItem("room_id")!, "players", nickname),
+      { alive }
+    )
+      .then(() => {
+        res(true);
+      })
+      .catch((err) => {
+        rej(err);
+      });
+  });
+}
+
+export async function isPlayerAlive(nickname: string): Promise<boolean> {
+  return new Promise((res, rej) => {
+    getDoc(
+      doc(db, "rooms", localStorage.getItem("room_id")!, "players", nickname)
+    )
+      .then((player) => {
+        res(player.data()?.alive);
       })
       .catch((err) => {
         rej(err);

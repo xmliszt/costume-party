@@ -2,7 +2,13 @@
  * The action section where the player either throw the dice, or perform action, or watch other player's action status
  */
 import { Button, message, Typography } from "antd";
-import { useState, useContext, useImperativeHandle, forwardRef } from "react";
+import {
+  useState,
+  useContext,
+  useImperativeHandle,
+  forwardRef,
+  useRef,
+} from "react";
 import {
   actions,
   actionToMessageMapping,
@@ -10,10 +16,10 @@ import {
   actionToColorStringMapping,
 } from "../constants";
 import { PlaygroundContext } from "../context/PlaygroundContext";
-import { isMyTurn } from "../controllers/player";
 import { getRandomAction } from "../helpers/action";
 import IPlaygroundContext from "../interfaces/playground";
 import { updatePlayerStatus } from "../services/player";
+import { nextTurn } from "../services/room";
 import "./Action.css";
 
 export interface IAction {
@@ -21,10 +27,11 @@ export interface IAction {
 }
 
 const Action = forwardRef<IAction, any>((props, ref): React.ReactElement => {
-  const { playerStats, playersData, playerTurn, roomCapacity, gameStarted } =
+  const { playerStats, playersData, gameStarted, gameEnd, winner } =
     useContext<IPlaygroundContext>(PlaygroundContext);
 
   const [action, setAction] = useState<number>(actions.NULL);
+  const isDead = useRef(false); // For internal state reference of the state of player
 
   useImperativeHandle(ref, () => ({
     clearAction() {
@@ -37,12 +44,16 @@ const Action = forwardRef<IAction, any>((props, ref): React.ReactElement => {
     setAction(_action);
 
     if (_action === actions.BLACK) {
+      console.log("Set to killing");
+
       updatePlayerStatus(localStorage.getItem("nickname")!, "killing").catch(
         (err) => {
           message.error(err);
         }
       );
     } else {
+      console.log("Set to moving");
+
       updatePlayerStatus(localStorage.getItem("nickname")!, "moving").catch(
         (err) => {
           message.error(err);
@@ -58,21 +69,82 @@ const Action = forwardRef<IAction, any>((props, ref): React.ReactElement => {
           <Typography>Waiting for players to join...</Typography>
         </div>
       );
-    if (isMyTurn(playerStats?.order, playerTurn, roomCapacity)) {
-      if (action === actions.NULL) {
+
+    if (gameEnd) {
+      if (localStorage.getItem("nickname")! === winner)
         return (
           <div>
-            <Typography>
-              <span style={{ color: "rgba(0,0,0,0.3)" }}>
-                Click the button to play!
-              </span>
-            </Typography>
-            <Button size="large" type="primary" danger onClick={onChooseAction}>
-              YOUR TURN
-            </Button>
+            <Typography.Title level={3}>
+              Congratulations! You Win!
+            </Typography.Title>
           </div>
         );
-      } else {
+      else
+        return (
+          <div>
+            <Typography.Title level={3}>
+              The winner is: {winner}
+            </Typography.Title>
+          </div>
+        );
+    }
+
+    if (isDead.current) {
+      return (
+        <div>
+          <Typography.Title level={3}>You are dead</Typography.Title>
+        </div>
+      );
+    }
+
+    switch (playerStats.status) {
+      case "waiting": {
+        let playingName = "";
+        playersData.forEach((player) => {
+          if (player.status !== "waiting" && player.alive) {
+            playingName = player.nickname;
+          }
+        });
+        return (
+          <div>
+            <Typography.Title level={3}>
+              {playingName} is playing...
+            </Typography.Title>
+          </div>
+        );
+      }
+      case "choosing":
+        if (playerStats.alive) {
+          return (
+            <div>
+              <Typography>
+                <span style={{ color: "rgba(0,0,0,0.3)" }}>
+                  Click the button to play!
+                </span>
+              </Typography>
+              <Button
+                size="large"
+                type="primary"
+                danger
+                onClick={onChooseAction}
+              >
+                YOUR TURN
+              </Button>
+            </div>
+          );
+        } else {
+          console.log(`${playerStats.nickname} is dead. Next turn`);
+          isDead.current = true;
+          nextTurn(localStorage.getItem("room_id")!);
+          return (
+            <div>
+              <Typography.Title level={3}>You are dead</Typography.Title>
+            </div>
+          );
+        }
+
+      case "moving":
+      case "killing":
         return (
           <div>
             <Typography.Title level={3}>
@@ -86,21 +158,12 @@ const Action = forwardRef<IAction, any>((props, ref): React.ReactElement => {
             </Typography.Paragraph>
           </div>
         );
-      }
-    } else {
-      let playingName = "";
-      playersData.forEach((player) => {
-        if (player.status !== "waiting") {
-          playingName = player.nickname;
-        }
-      });
-      return (
-        <div>
-          <Typography.Title level={3}>
-            {playingName} is playing...
-          </Typography.Title>
-        </div>
-      );
+      case "dead":
+        return (
+          <div>
+            <Typography.Title level={3}>You are dead</Typography.Title>
+          </div>
+        );
     }
   };
 

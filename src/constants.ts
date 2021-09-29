@@ -30,7 +30,7 @@ export const actionToMessageMapping: tNumberToString = {
   1: "Move anyone out of yellow room to any adjacent room, or move anyone into the yellow room from any adjacent room.",
   2: "Move anyone out of blue room to any adjacent room, or move anyone into the blue room from any adjacent room.",
   3: "Move anyone out of red room to any adjacent room, or move anyone into the red room from any adjacent room.",
-  4: "Double-Click someone in your room to murder!",
+  4: "Click someone in your room to murder!",
 };
 
 export const actionToColorStringMapping: tNumberToString = {

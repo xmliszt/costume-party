@@ -14,7 +14,7 @@ export default function PlayerStatus(): React.ReactElement {
           itemLayout="horizontal"
           dataSource={playersData}
           renderItem={(item) => (
-            <List.Item>
+            <List.Item style={item.alive ? { opacity: 1 } : { opacity: 0.2 }}>
               <List.Item.Meta
                 avatar={
                   <Avatar
@@ -24,7 +24,7 @@ export default function PlayerStatus(): React.ReactElement {
                   />
                 }
                 title={item.nickname}
-                description={item.status + "..."}
+                description={item.alive ? item.status + "..." : "Dead"}
               />
             </List.Item>
           )}

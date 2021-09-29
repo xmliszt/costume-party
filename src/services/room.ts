@@ -4,7 +4,6 @@ import {
   collection,
   setDoc,
   getDoc,
-  addDoc,
   getDocs,
   updateDoc,
   increment,
@@ -27,6 +26,8 @@ export async function createRoom(
       capacity,
       turn: 1,
       players: [],
+      gameEnd: false,
+      winner: "",
     })
       .then(() => {
         res(true);
@@ -304,5 +305,36 @@ export async function nextTurn(roomID: string): Promise<boolean> {
         res(true);
       })
       .catch((err) => rej(err));
+  });
+}
+
+export async function isOnlyOnePlayerAlive(roomID: string): Promise<boolean> {
+  return new Promise((res, rej) => {
+    let counter = 0;
+    getDocs(collection(db, "rooms", roomID, "players"))
+      .then((snapshots) => {
+        snapshots.forEach((player) => {
+          const data = player.data();
+          if (data?.alive) counter++;
+        });
+        res(counter === 1);
+      })
+      .catch((err) => rej(err));
+  });
+}
+
+export async function updateRoomGameState(
+  roomID: string,
+  gameEnd: boolean,
+  winner: string
+): Promise<boolean> {
+  return new Promise((res, rej) => {
+    updateDoc(doc(db, "rooms", roomID), { gameEnd, winner })
+      .then(() => {
+        res(true);
+      })
+      .catch((err) => {
+        rej(err);
+      });
   });
 }

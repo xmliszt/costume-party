@@ -10,4 +10,6 @@ export default interface IPlaygroundContext {
   playerCount: number;
   roomCapacity: number;
   playerTurn: number;
+  gameEnd: boolean;
+  winner: string;
 }

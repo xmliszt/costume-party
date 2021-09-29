@@ -3,46 +3,54 @@ import { db } from "../firebase";
 import { IAvatarProps } from "../interfaces/avatar";
 import { doc, collection, DocumentData, onSnapshot } from "@firebase/firestore";
 import IPlayerProps from "../interfaces/player";
-import { getAvatarForPlayer, updatePlayerStatus } from "./player";
-import { isMyTurn } from "../controllers/player";
+import {
+  getAvatarForPlayer,
+  getPlayerByAvatarID,
+  updatePlayerAliveness,
+  updatePlayerStatus,
+} from "./player";
+import { getPlayerAvatars } from "./room";
 
 /**
  * Custom hook that set up a listener to listen to room status change
  * @returns room status data
  */
-export function useListenRoom(playerStats: IPlayerProps): DocumentData {
+export function useListenRoom(
+  onNextTurn: (turn: number, capacity: number) => void
+): DocumentData {
   const [playerCount, setPlayerCount] = useState(0);
   const [roomCapacity, setRoomCapacity] = useState(0);
   const [gameStarted, setGameStarted] = useState(false);
   const [playerTurn, setPlayerTurn] = useState(0);
+  const [gameEnd, setGameEnd] = useState(false);
+  const [winner, setWinner] = useState("");
 
   useEffect(() => {
-    const roomID = localStorage.getItem("room_id");
+    setTimeout(() => {
+      const roomID = localStorage.getItem("room_id");
 
-    // Update when room data changed: player move to next turn, player join
-    if (roomID) {
-      onSnapshot(
-        doc(db, "rooms", roomID),
-        (_doc) => {
-          const data = _doc.data();
-          setRoomCapacity(data?.capacity);
-          setPlayerCount(data?.players.length);
-          setPlayerTurn(data?.turn);
-          if (data?.capacity === data?.players.length) {
-            setGameStarted(true);
-            if (isMyTurn(playerStats?.order, data?.turn, data?.capacity)) {
-              updatePlayerStatus(
-                localStorage.getItem("nickname")!,
-                "choosing"
-              ).catch((err) => console.log(err));
+      // Update when room data changed: player move to next turn, player join
+      if (roomID) {
+        onSnapshot(
+          doc(db, "rooms", roomID),
+          (_doc) => {
+            const data = _doc.data();
+            setRoomCapacity(data?.capacity);
+            setPlayerCount(data?.players.length);
+            setPlayerTurn(data?.turn);
+            setGameEnd(data?.gameEnd);
+            setWinner(data?.winner);
+            if (data?.capacity === data?.players.length) {
+              !gameStarted && setGameStarted(true);
+              onNextTurn(data?.turn, data?.capacity);
             }
+          },
+          (err) => {
+            console.log(err);
           }
-        },
-        (err) => {
-          console.log(err);
-        }
-      );
-    }
+        );
+      }
+    }, 1000);
   }, []);
 
   return {
@@ -50,6 +58,8 @@ export function useListenRoom(playerStats: IPlayerProps): DocumentData {
     roomCapacity,
     gameStarted,
     playerTurn,
+    gameEnd,
+    winner,
   };
 }
 
@@ -62,10 +72,11 @@ export function useListenAvatars(): IAvatarProps[] {
     if (roomID) {
       onSnapshot(
         collection(db, "rooms", roomID, "avatars"),
-        (snapshots) => {
+        async (snapshots) => {
           const _avatars: Array<IAvatarProps> = [];
+          const playerAvatars = await getPlayerAvatars(roomID);
 
-          snapshots.forEach((_doc) => {
+          snapshots.forEach(async (_doc) => {
             const data = _doc.data();
             _avatars.push({
               id: data.id,
@@ -77,6 +88,17 @@ export function useListenAvatars(): IAvatarProps[] {
               imageUrl: `${process.env.PUBLIC_URL}/avatars/${data.id}.png`,
               dead: data.dead,
             });
+            if (data.dead && playerAvatars.includes(Number(data.id))) {
+              try {
+                console.log("Set to dead");
+
+                const playerStats = await getPlayerByAvatarID(Number(data.id));
+                updatePlayerAliveness(playerStats.nickname, false);
+                updatePlayerStatus(playerStats.nickname, "dead");
+              } catch (err) {
+                console.log(err);
+              }
+            }
           });
           setAvatars(_avatars);
         },
