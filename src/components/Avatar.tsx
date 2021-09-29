@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import useImage from "use-image";
 import { KonvaEventObject } from "konva/lib/Node";
 import { Image } from "react-konva";
@@ -40,13 +40,9 @@ export default function Avatar({
       roomColorMapping[roomType]
     );
 
-    console.log("Set to waiting");
-
     updatePlayerStatus(localStorage.getItem("nickname")!, "waiting").catch(
       (err) => message.error(err)
     );
-
-    console.log("drag end next turn");
 
     nextTurn(localStorage.getItem("room_id")!);
     onClearAction();
@@ -69,12 +65,8 @@ export default function Avatar({
 
   const confirmKilling = async (vid: string) => {
     try {
-      console.log("Set to waiting");
-
       updateAvatarStatus(localStorage.getItem("room_id")!, vid, true);
       updatePlayerStatus(localStorage.getItem("nickname")!, "waiting");
-      console.log("after confirm killing next turn");
-
       await nextTurn(localStorage.getItem("room_id")!);
     } catch (err) {
       console.log(err);

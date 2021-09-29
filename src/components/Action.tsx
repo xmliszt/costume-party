@@ -48,16 +48,12 @@ const Action = forwardRef<IAction, any>((props, ref): React.ReactElement => {
     setAction(_action);
 
     if (_action === actions.BLACK) {
-      console.log("Set to killing");
-
       updatePlayerStatus(localStorage.getItem("nickname")!, "killing").catch(
         (err) => {
           message.error(err);
         }
       );
     } else {
-      console.log("Set to moving");
-
       updatePlayerStatus(localStorage.getItem("nickname")!, "moving").catch(
         (err) => {
           message.error(err);
@@ -157,7 +153,6 @@ const Action = forwardRef<IAction, any>((props, ref): React.ReactElement => {
             </div>
           );
         } else {
-          console.log(`${playerStats.nickname} is dead. Next turn`);
           isDead.current = true;
           nextTurn(localStorage.getItem("room_id")!);
           return (

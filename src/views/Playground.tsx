@@ -50,7 +50,6 @@ export default function Playground(): React.ReactElement {
       const room = await getRoomStates(roomID);
       playerOrder.current = player.order;
       if (isMyTurn(player.order, room.turn, room.capacity) && player.alive) {
-        console.log("Set to choosing");
         updatePlayerStatus(nickname, "choosing").catch((err) =>
           message.error(err)
         );
@@ -68,7 +67,6 @@ export default function Playground(): React.ReactElement {
     if (nickname && roomID) {
       try {
         const alive = await isPlayerAlive(nickname);
-        console.log(playerOrder.current, turn, capacity, alive);
         if (isMyTurn(playerOrder.current, turn, capacity)) {
           if (alive) {
             const winCondition = await isOnlyOnePlayerAlive(roomID, capacity);
@@ -76,7 +74,6 @@ export default function Playground(): React.ReactElement {
               localStorage.setItem("win", "true");
               await updateRoomGameState(roomID, true, nickname);
             } else {
-              console.log("Set to choosing");
               updatePlayerStatus(nickname, "choosing");
             }
           } else {
