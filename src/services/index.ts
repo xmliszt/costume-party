@@ -187,3 +187,11 @@ export function useListenPlayer(): [IPlayerProps, IAvatarProps] {
 
   return [playerStats!, playerAvatarProps!];
 }
+
+export function useExitRoomAction(callbackAction: () => void): void {
+  useEffect(() => {
+    window.onbeforeunload = () => {
+      callbackAction();
+    };
+  }, []);
+}

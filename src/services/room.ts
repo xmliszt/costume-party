@@ -7,6 +7,7 @@ import {
   getDocs,
   updateDoc,
   increment,
+  deleteDoc,
 } from "@firebase/firestore";
 import { getRandomInt } from "../helpers/number";
 import { IAvatarProps } from "../interfaces/avatar";
@@ -308,16 +309,24 @@ export async function nextTurn(roomID: string): Promise<boolean> {
   });
 }
 
-export async function isOnlyOnePlayerAlive(roomID: string): Promise<boolean> {
+export async function isOnlyOnePlayerAlive(
+  roomID: string,
+  capacity: number
+): Promise<boolean> {
   return new Promise((res, rej) => {
     let counter = 0;
     getDocs(collection(db, "rooms", roomID, "players"))
       .then((snapshots) => {
-        snapshots.forEach((player) => {
-          const data = player.data();
-          if (data?.alive) counter++;
-        });
-        res(counter === 1);
+        if (snapshots.size < capacity) {
+          res(false);
+        } else {
+          snapshots.forEach((player) => {
+            const data = player.data();
+            if (data?.alive) counter++;
+          });
+          console.log(counter);
+          res(counter === 1);
+        }
       })
       .catch((err) => rej(err));
   });
@@ -336,5 +345,13 @@ export async function updateRoomGameState(
       .catch((err) => {
         rej(err);
       });
+  });
+}
+
+export async function deleteRoom(roomID: string): Promise<boolean> {
+  return new Promise((res, rej) => {
+    deleteDoc(doc(db, "rooms", roomID))
+      .then(() => res(true))
+      .catch((err) => rej(err));
   });
 }

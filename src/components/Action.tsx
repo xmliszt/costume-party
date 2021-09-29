@@ -1,7 +1,7 @@
 /**
  * The action section where the player either throw the dice, or perform action, or watch other player's action status
  */
-import { Button, message, Typography } from "antd";
+import { Button, message, Modal, Typography } from "antd";
 import {
   useState,
   useContext,
@@ -9,6 +9,7 @@ import {
   forwardRef,
   useRef,
 } from "react";
+import { useHistory } from "react-router";
 import {
   actions,
   actionToMessageMapping,
@@ -19,7 +20,7 @@ import { PlaygroundContext } from "../context/PlaygroundContext";
 import { getRandomAction } from "../helpers/action";
 import IPlaygroundContext from "../interfaces/playground";
 import { updatePlayerStatus } from "../services/player";
-import { nextTurn } from "../services/room";
+import { deleteRoom, nextTurn } from "../services/room";
 import "./Action.css";
 
 export interface IAction {
@@ -27,6 +28,7 @@ export interface IAction {
 }
 
 const Action = forwardRef<IAction, any>((props, ref): React.ReactElement => {
+  const history = useHistory();
   const { playerStats, playersData, gameStarted, gameEnd, winner } =
     useContext<IPlaygroundContext>(PlaygroundContext);
 
@@ -80,13 +82,27 @@ const Action = forwardRef<IAction, any>((props, ref): React.ReactElement => {
           </div>
         );
       else
-        return (
-          <div>
-            <Typography.Title level={3}>
-              The winner is: {winner}
-            </Typography.Title>
-          </div>
-        );
+        setTimeout(() => {
+          Modal.success({
+            title: "Good Game!",
+            okText: "Back To Home",
+            onOk: () => {
+              try {
+                deleteRoom(localStorage.getItem("room_id")!);
+              } catch (e) {
+                console.warn("room is already deleted");
+              } finally {
+                message.warn("Welcome Back!");
+                history.push("/");
+              }
+            },
+          });
+        }, 2000);
+      return (
+        <div>
+          <Typography.Title level={3}>The winner is: {winner}</Typography.Title>
+        </div>
+      );
     }
 
     if (isDead.current) {
