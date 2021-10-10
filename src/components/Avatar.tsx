@@ -54,6 +54,12 @@ export default function Avatar({
       ev.target.y(avatarProps.position.y);
       return;
     }
+    if (!areAdjacentRooms(startRoomType, endRoomType)) {
+      message.warn(`This action is invalid because the two rooms are not adjacent to one another`);
+      ev.target.x(avatarProps.position.x);
+      ev.target.y(avatarProps.position.y);
+      return;
+    }
 
     ev.target.x(clippedEndPosition.x);
     ev.target.y(clippedEndPosition.y);

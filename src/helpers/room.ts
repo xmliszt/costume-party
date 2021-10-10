@@ -1,5 +1,20 @@
-import { Context } from "konva/lib/Context";
-import { ShapeConfig, Shape } from "konva/lib/Shape";
+import {Context} from "konva/lib/Context";
+import {Shape, ShapeConfig} from "konva/lib/Shape";
+
+export function areAdjacentRooms(room1: string, room2: string): boolean {
+  const opposingCornerRooms = [
+    ["TL", "BR"],
+    ["TR", "BL"],
+  ]
+
+  for (const [r1, r2] of opposingCornerRooms) {
+    if ((room1 === r1 && room2 === r2) || (room1 === r2 && room2 === r1)) return false
+  }
+
+  if (room1 === room2) return false;
+
+  return true;
+}
 
 export function drawRoomTF(context: Context, shape: Shape<ShapeConfig>): void {
   context.beginPath();
