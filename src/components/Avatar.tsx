@@ -1,15 +1,18 @@
 import React from "react";
 import useImage from "use-image";
-import { KonvaEventObject } from "konva/lib/Node";
-import { Image } from "react-konva";
-import { IAvatarProps } from "../interfaces/avatar";
-import { clipAvatarPosition, isInWhichRoom } from "../helpers/avatar";
-import { roomColorMapping } from "../constants";
-import { updateAvatarProps, updateAvatarStatus } from "../services/avatar";
-import { updatePlayerStatus } from "../services/player";
-import { message, Modal } from "antd";
-import { ThunderboltFilled } from "@ant-design/icons";
-import { nextTurn } from "../services/room";
+import {KonvaEventObject} from "konva/lib/Node";
+import {Image} from "react-konva";
+import {IAvatarPosition, IAvatarProps} from "../interfaces/avatar";
+import {clipAvatarPosition, isInWhichRoom} from "../helpers/avatar";
+import {actions, actionToColorStringMapping, actionToRoomType, roomColorMapping} from "../constants";
+import {updateAvatarProps, updateAvatarStatus} from "../services/avatar";
+import {updatePlayerStatus} from "../services/player";
+import {message, Modal} from "antd";
+import {ThunderboltFilled} from "@ant-design/icons";
+import {nextTurn} from "../services/room";
+import {useListenPlayer} from "../services";
+import {areAdjacentRooms} from "../helpers/room";
+
 
 export default function Avatar({
   isKilling,
@@ -17,27 +20,50 @@ export default function Avatar({
   avatarProps,
   onClearAction,
 }: {
-  isKilling: boolean;
-  isMoving: boolean;
-  avatarProps: IAvatarProps;
-  onClearAction: CallableFunction;
+    isKilling: boolean;
+    isMoving: boolean;
+    avatarProps: IAvatarProps;
+    onClearAction: CallableFunction;
 }): React.ReactElement {
   const [image] = useImage(avatarProps.imageUrl);
-  const handleDragEnd = (ev: KonvaEventObject<DragEvent>) => {
-    const x = ev.target.x();
-    const y = ev.target.y();
 
-    const roomType = isInWhichRoom({ x, y });
-    const clippedPosition = clipAvatarPosition(roomType, { x, y });
-    ev.target.x(clippedPosition.x);
-    ev.target.y(clippedPosition.y);
+  const [playerStats, _] = useListenPlayer();
+  const action = playerStats?.action || actions.NULL;
+  const startRoomType = isInWhichRoom(avatarProps.position);
+
+  const handleDragEnd = (ev: KonvaEventObject<DragEvent>) => {
+    const endPosition: IAvatarPosition = {
+      x: ev.target.x(),
+      y: ev.target.y(),
+    };
+    const endRoomType = isInWhichRoom(endPosition);
+
+    const clippedEndPosition = clipAvatarPosition(endRoomType, endPosition);
+    if (action === actions.BLACK || action === actions.NULL) {
+      message.error(`Should not be possible for action to be ${action}`);
+      ev.target.x(avatarProps.position.x);
+      ev.target.y(avatarProps.position.y);
+      return;
+    }
+
+    // check if moving action is valid
+    const actionRoomType = actionToRoomType[action];
+    if (actionRoomType !== startRoomType && actionRoomType !== endRoomType) {
+      message.warn(`This action is invalid because you rolled ${actionToColorStringMapping[action]}`);
+      ev.target.x(avatarProps.position.x);
+      ev.target.y(avatarProps.position.y);
+      return;
+    }
+
+    ev.target.x(clippedEndPosition.x);
+    ev.target.y(clippedEndPosition.y);
 
     updateAvatarProps(
-      localStorage.getItem("room_id")!,
-      ev.target.attrs.id,
-      clippedPosition.x,
-      clippedPosition.y,
-      roomColorMapping[roomType]
+            localStorage.getItem("room_id")!,
+            ev.target.attrs.id,
+            clippedEndPosition.x,
+            clippedEndPosition.y,
+            roomColorMapping[endRoomType]
     );
 
     updatePlayerStatus(localStorage.getItem("nickname")!, "waiting").catch(
@@ -46,6 +72,7 @@ export default function Avatar({
 
     nextTurn(localStorage.getItem("room_id")!);
     onClearAction();
+
   };
 
   const handleKillSelect = (ev: KonvaEventObject<MouseEvent>) => {
@@ -53,7 +80,7 @@ export default function Avatar({
       const vid = ev.target.attrs.id;
       Modal.confirm({
         title: "Wanna murder this guy?",
-        icon: <ThunderboltFilled />,
+        icon: <ThunderboltFilled/>,
         okText: "Let's do this!",
         cancelText: "Never Mind",
         onOk: () => {
@@ -90,7 +117,7 @@ export default function Avatar({
         draggable={isMoving}
         onClick={handleKillSelect}
         onDragEnd={handleDragEnd}
-      ></Image>
+      />
     );
   else return <></>;
 }

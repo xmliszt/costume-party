@@ -1,4 +1,4 @@
-import { tNumberToString, tRoomTypes, tStringToString } from "./types";
+import {tNumberToString, tRoomTypes, tStringToString} from "./types";
 
 export const colors = {
   green: "#67C23A",
@@ -32,6 +32,13 @@ export const actions = {
   BLACK: 4,
   NULL: 5,
 };
+
+export const actionToRoomType: tRoomTypes = {
+  0: "BL",
+  1: "TL",
+  2: "TR",
+  3: "BR",
+}
 
 export const actionToMessageMapping: tNumberToString = {
   0: "Move anyone out of green room to any adjacent room, or move anyone into the green room from any adjacent room.",

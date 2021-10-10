@@ -1,16 +1,9 @@
-import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  query,
-  updateDoc,
-  where,
-} from "@firebase/firestore";
-import { db } from "../firebase";
-import { IAvatarProps } from "../interfaces/avatar";
+import {collection, doc, getDoc, getDocs, query, updateDoc, where,} from "@firebase/firestore";
+import {db} from "../firebase";
+import {IAvatarProps} from "../interfaces/avatar";
 import IPlayerProps from "../interfaces/player";
-import { getAvatarByID } from "./avatar";
+import {getAvatarByID} from "./avatar";
+import {actions} from "../constants";
 
 export async function getAllPlayers(): Promise<Array<IPlayerProps>> {
   return new Promise((res, rej) => {
@@ -127,7 +120,28 @@ export async function updatePlayerStatus(
   return new Promise((res, rej) => {
     updateDoc(
       doc(db, "rooms", localStorage.getItem("room_id")!, "players", nickname),
-      { status }
+      {status}
+    )
+      .then(() => {
+        res(true);
+      })
+      .catch((err) => {
+        rej(err);
+      });
+  });
+}
+
+/* updatePlayerAction updates the Player's status as well since they are tied together*/
+export async function updatePlayerAction(
+  nickname: string,
+  action: number,
+): Promise<boolean> {
+  const status = (action === actions.BLACK) ? "killing" : "moving";
+
+  return new Promise((res, rej) => {
+    updateDoc(
+      doc(db, "rooms", localStorage.getItem("room_id")!, "players", nickname),
+      {action, status}
     )
       .then(() => {
         res(true);
@@ -145,7 +159,7 @@ export async function updatePlayerAliveness(
   return new Promise((res, rej) => {
     updateDoc(
       doc(db, "rooms", localStorage.getItem("room_id")!, "players", nickname),
-      { alive }
+      {alive}
     )
       .then(() => {
         res(true);
