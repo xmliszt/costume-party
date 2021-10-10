@@ -1,29 +1,14 @@
-import React, { useState, useRef, useEffect } from "react";
-import { useHistory } from "react-router";
-import {
-  Button,
-  Divider,
-  Input,
-  Space,
-  Typography,
-  Select,
-  message,
-  Spin,
-} from "antd";
-import { LoadingOutlined, StarOutlined, UserOutlined } from "@ant-design/icons";
+import React, {useEffect, useRef, useState} from "react";
+import {useHistory} from "react-router";
+import {Button, Divider, Input, message, Select, Space, Spin, Typography,} from "antd";
+import {LoadingOutlined, StarOutlined, UserOutlined} from "@ant-design/icons";
 import "./Home.css";
-import { getRandomRoomID } from "../helpers/room";
-import { validateNickname } from "../controllers/player";
-import {
-  createRoom,
-  initializeAvatars,
-  initializeGlobals,
-  isRoomExist,
-  joinRoom,
-} from "../services/room";
-import { generateAvatarPosition } from "../helpers/avatar";
-import { roomColorMapping } from "../constants";
-import { IAvatarProps } from "../interfaces/avatar";
+import {getRandomRoomID} from "../helpers/room";
+import {validateNickname} from "../controllers/player";
+import {createRoom, initializeAvatars, initializeGlobals, isRoomExist, joinRoom,} from "../services/room";
+import {generateAvatarPosition} from "../helpers/avatar";
+import {roomColorMapping} from "../constants";
+import {IAvatarProps} from "../interfaces/avatar";
 
 export default function Home(): React.ReactElement {
   const history = useHistory();
@@ -122,18 +107,18 @@ export default function Home(): React.ReactElement {
   ) => {
     const _char = e.target.value.toUpperCase();
     switch (position) {
-      case 0:
-        setId_1(_char);
-        break;
-      case 1:
-        setId_2(_char);
-        break;
-      case 2:
-        setId_3(_char);
-        break;
-      case 3:
-        setId_4(_char);
-        break;
+    case 0:
+      setId_1(_char);
+      break;
+    case 1:
+      setId_2(_char);
+      break;
+    case 2:
+      setId_3(_char);
+      break;
+    case 3:
+      setId_4(_char);
+      break;
     }
     if (_char && position <= 2) {
       [roomID_1, roomID_2, roomID_3, roomID_4][position + 1].current.focus({
@@ -144,22 +129,22 @@ export default function Home(): React.ReactElement {
 
   return (
     <div className="home">
-      <Spin spinning={loading} indicator={<LoadingOutlined />}>
+      <Spin spinning={loading} indicator={<LoadingOutlined/>}>
         <div className="home-card">
           <Typography.Title level={1} code>
-            Welcome To Costume Party!
+                        Welcome To Costume Party!
           </Typography.Title>
           <Divider>
-            <StarOutlined />
+            <StarOutlined/>
           </Divider>
           <Typography.Paragraph>What's Your Name?</Typography.Paragraph>
           <Input
-            style={{ marginTop: 15 }}
+            style={{marginTop: 15}}
             size="large"
             placeholder="Enter Your Nickname..."
             defaultValue={nickname}
             value={nickname}
-            prefix={<UserOutlined />}
+            prefix={<UserOutlined/>}
             maxLength={12}
             allowClear
             required
@@ -167,16 +152,16 @@ export default function Home(): React.ReactElement {
               setNickname(e.target.value.trim());
             }}
           />
-          <Typography.Text style={{ color: "rgba(50, 50, 50, 0.3)" }}>
-            Nickname should be not less than 3 characters, and not more than 12
-            characters.
+          <Typography.Text style={{color: "rgba(50, 50, 50, 0.3)"}}>
+                        Nickname should be not less than 3 characters, and not more than 12
+                        characters.
           </Typography.Text>
           {validateNickname(nickname) ? (
             <div>
               <Divider>Create A Room</Divider>
               <Space size="large">
                 <Button size="large" onClick={createARoom}>
-                  CREATE
+                                    CREATE
                 </Button>
 
                 <Space>
@@ -202,7 +187,7 @@ export default function Home(): React.ReactElement {
               <Space>
                 <Input
                   ref={roomID_1}
-                  style={{ maxWidth: 50 }}
+                  style={{maxWidth: 50}}
                   size="large"
                   value={id_1}
                   maxLength={1}
@@ -212,7 +197,7 @@ export default function Home(): React.ReactElement {
                 />
                 <Input
                   ref={roomID_2}
-                  style={{ maxWidth: 50 }}
+                  style={{maxWidth: 50}}
                   size="large"
                   value={id_2}
                   maxLength={1}
@@ -222,7 +207,7 @@ export default function Home(): React.ReactElement {
                 />
                 <Input
                   ref={roomID_3}
-                  style={{ maxWidth: 50 }}
+                  style={{maxWidth: 50}}
                   size="large"
                   value={id_3}
                   maxLength={1}
@@ -231,7 +216,7 @@ export default function Home(): React.ReactElement {
                   }}
                 />
                 <Input
-                  style={{ maxWidth: 50 }}
+                  style={{maxWidth: 50}}
                   ref={roomID_4}
                   size="large"
                   value={id_4}
@@ -241,9 +226,9 @@ export default function Home(): React.ReactElement {
                   }}
                 />
               </Space>
-              <div style={{ marginTop: 15 }}>
+              <div style={{marginTop: 15}}>
                 <Button size="large" onClick={joinARoom}>
-                  JOIN
+                                    JOIN
                 </Button>
               </div>
             </div>

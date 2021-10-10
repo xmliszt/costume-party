@@ -1,5 +1,5 @@
-import { IAvatarPosition } from "../interfaces/avatar";
-import { getRandomInt } from "./number";
+import {IAvatarPosition} from "../interfaces/avatar";
+import {getRandomInt} from "./number";
 
 export function generateAvatarColorLight(): string {
   const red = Math.floor(((1 + Math.random()) * 256) / 2);
@@ -19,25 +19,25 @@ export function generateAvatarPosition(room: string): IAvatarPosition {
   let x = 0;
   let y = 0;
   switch (room) {
-    case "TL":
-      x = getRandomInt(0, 260);
-      y = getRandomInt(0, 160);
-      break;
-    case "BL":
-      x = getRandomInt(0, 260);
-      y = getRandomInt(400, 560);
-      break;
-    case "TR":
-      x = getRandomInt(300, 560);
-      y = getRandomInt(0, 160);
-      break;
-    case "BR":
-      x = getRandomInt(400, 560);
-      y = getRandomInt(300, 560);
-      break;
-    case "C":
-      x = getRandomInt(200, 360);
-      y = getRandomInt(200, 360);
+  case "TL":
+    x = getRandomInt(0, 260);
+    y = getRandomInt(0, 160);
+    break;
+  case "BL":
+    x = getRandomInt(0, 260);
+    y = getRandomInt(400, 560);
+    break;
+  case "TR":
+    x = getRandomInt(300, 560);
+    y = getRandomInt(0, 160);
+    break;
+  case "BR":
+    x = getRandomInt(400, 560);
+    y = getRandomInt(300, 560);
+    break;
+  case "C":
+    x = getRandomInt(200, 360);
+    y = getRandomInt(200, 360);
   }
   return {
     x,
@@ -90,43 +90,53 @@ export function clipAvatarPosition(
     currentPosition.y = 560;
   }
 
+  /* I think this logic can be greatly simplified to just clip the outer perimeter
+      *  The inner perimeter needs no clipping because if you cross over the boundary, it should have been
+      *  identified as the other roomType.
+      *
+      *  Actually I think a better simplification is to disallow users from releasing the avatar on an unidentified roomType
+      *  then we don't need to clip the avatar position anymore
+      *
+      * Alternatively... use clipAvatarPosition to limit the avatar's position within the big box. Then call
+      * clipAvatarPosition first before calling isInWhichRoom.
+      * */
   switch (roomType) {
-    case "TL":
-      if (currentPosition.x > 260) currentPosition.x = 260;
-      if (currentPosition.y > 160 && currentPosition.x > 200)
-        currentPosition.y = 160;
-      if (currentPosition.y > 200 && currentPosition.x > 160)
-        currentPosition.x = 160;
-      if (currentPosition.y > 260) currentPosition.y = 260;
-      break;
-    case "TR":
-      if (currentPosition.x < 300) currentPosition.x = 300;
-      if (currentPosition.y > 160 && currentPosition.x < 400)
-        currentPosition.y = 160;
-      if (currentPosition.y > 200 && currentPosition.x < 400)
-        currentPosition.x = 400;
-      if (currentPosition.y > 260) currentPosition.y = 260;
-      break;
-    case "BL":
-      if (currentPosition.x > 260) currentPosition.x = 260;
-      if (currentPosition.y < 400 && currentPosition.x > 200)
-        currentPosition.y = 400;
-      if (currentPosition.y < 400 && currentPosition.x > 160)
-        currentPosition.x = 160;
-      if (currentPosition.y < 300) currentPosition.y = 300;
-      break;
-    case "BR":
-      if (currentPosition.x < 300) currentPosition.x = 300;
-      if (currentPosition.y < 400 && currentPosition.x < 400)
-        currentPosition.y = 400;
-      if (currentPosition.y < 400 && currentPosition.x < 400)
-        currentPosition.x = 400;
-      if (currentPosition.y < 300) currentPosition.y = 300;
-      break;
-    case "C":
-      if (currentPosition.x > 360) currentPosition.x = 360;
-      if (currentPosition.y > 360) currentPosition.y = 360;
-      break;
+  case "TL":
+    if (currentPosition.x > 260) currentPosition.x = 260;
+    if (currentPosition.y > 160 && currentPosition.x > 200)
+      currentPosition.y = 160;
+    if (currentPosition.y > 200 && currentPosition.x > 160)
+      currentPosition.x = 160;
+    if (currentPosition.y > 260) currentPosition.y = 260;
+    break;
+  case "TR":
+    if (currentPosition.x < 300) currentPosition.x = 300;
+    if (currentPosition.y > 160 && currentPosition.x < 400)
+      currentPosition.y = 160;
+    if (currentPosition.y > 200 && currentPosition.x < 400)
+      currentPosition.x = 400;
+    if (currentPosition.y > 260) currentPosition.y = 260;
+    break;
+  case "BL":
+    if (currentPosition.x > 260) currentPosition.x = 260;
+    if (currentPosition.y < 400 && currentPosition.x > 200)
+      currentPosition.y = 400;
+    if (currentPosition.y < 400 && currentPosition.x > 160)
+      currentPosition.x = 160;
+    if (currentPosition.y < 300) currentPosition.y = 300;
+    break;
+  case "BR":
+    if (currentPosition.x < 300) currentPosition.x = 300;
+    if (currentPosition.y < 400 && currentPosition.x < 400)
+      currentPosition.y = 400;
+    if (currentPosition.y < 400 && currentPosition.x < 400)
+      currentPosition.x = 400;
+    if (currentPosition.y < 300) currentPosition.y = 300;
+    break;
+  case "C":
+    if (currentPosition.x > 360) currentPosition.x = 360;
+    if (currentPosition.y > 360) currentPosition.y = 360;
+    break;
   }
 
   return currentPosition;

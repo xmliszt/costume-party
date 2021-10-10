@@ -1,37 +1,25 @@
 /**
  * The action section where the player either throw the dice, or perform action, or watch other player's action status
  */
-import { Button, message, Modal, Typography } from "antd";
-import {
-  useState,
-  useContext,
-  useImperativeHandle,
-  forwardRef,
-  useRef,
-} from "react";
-import { useHistory } from "react-router";
-import {
-  actions,
-  actionToMessageMapping,
-  actionToColorMapping,
-  actionToColorStringMapping,
-} from "../constants";
-import { PlaygroundContext } from "../context/PlaygroundContext";
-import { isMyTurn } from "../controllers/player";
-import { getRandomAction } from "../helpers/action";
+import {Button, message, Modal, Typography} from "antd";
+import {forwardRef, useContext, useImperativeHandle, useRef, useState,} from "react";
+import {useHistory} from "react-router";
+import {actions, actionToColorMapping, actionToColorStringMapping, actionToMessageMapping,} from "../constants";
+import {PlaygroundContext} from "../context/PlaygroundContext";
+import {getRandomAction} from "../helpers/action";
 import IPlaygroundContext from "../interfaces/playground";
-import { updatePlayerStatus } from "../services/player";
-import { deleteRoom, nextTurn } from "../services/room";
+import {updatePlayerAction} from "../services/player";
+import {deleteRoom, nextTurn} from "../services/room";
 import "./Action.css";
 
 export interface IAction {
-  clearAction(): void;
+    clearAction(): void;
 }
 
 const Action = forwardRef<IAction, any>((props, ref): React.ReactElement => {
   const history = useHistory();
-  const { playerStats, playersData, gameStarted, gameEnd, winner } =
-    useContext<IPlaygroundContext>(PlaygroundContext);
+  const {playerStats, playersData, gameStarted, gameEnd, winner} =
+        useContext<IPlaygroundContext>(PlaygroundContext);
 
   const [action, setAction] = useState<number>(actions.NULL);
   const isEndingShown = useRef(false); // For controlling the end scene modal
@@ -47,19 +35,7 @@ const Action = forwardRef<IAction, any>((props, ref): React.ReactElement => {
     const _action = getRandomAction();
     setAction(_action);
 
-    if (_action === actions.BLACK) {
-      updatePlayerStatus(localStorage.getItem("nickname")!, "killing").catch(
-        (err) => {
-          message.error(err);
-        }
-      );
-    } else {
-      updatePlayerStatus(localStorage.getItem("nickname")!, "moving").catch(
-        (err) => {
-          message.error(err);
-        }
-      );
-    }
+    updatePlayerAction(localStorage.getItem("nickname")!, _action).catch(err => message.error(err));
   };
 
   const renderAction = () => {
@@ -94,7 +70,7 @@ const Action = forwardRef<IAction, any>((props, ref): React.ReactElement => {
         return (
           <div>
             <Typography.Title level={3}>
-              Congratulations! You Win!
+                            Congratulations! You Win!
             </Typography.Title>
           </div>
         );
@@ -102,7 +78,7 @@ const Action = forwardRef<IAction, any>((props, ref): React.ReactElement => {
         return (
           <div>
             <Typography.Title level={3}>
-              The winner is: {winner}
+                            The winner is: {winner}
             </Typography.Title>
           </div>
         );
@@ -118,71 +94,71 @@ const Action = forwardRef<IAction, any>((props, ref): React.ReactElement => {
     }
 
     switch (playerStats.status) {
-      case "waiting": {
-        let playingName = "";
-        playersData.forEach((player) => {
-          if (player.status !== "waiting" && player.alive) {
-            playingName = player.nickname;
-          }
-        });
-        return (
-          <div>
-            <Typography.Title level={3}>
-              {playingName} is playing...
-            </Typography.Title>
-          </div>
-        );
-      }
-      case "choosing":
-        if (playerStats.alive) {
-          return (
-            <div>
-              <Typography>
-                <span style={{ color: "rgba(0,0,0,0.3)" }}>
-                  Click the button to play!
-                </span>
-              </Typography>
-              <Button
-                size="large"
-                type="primary"
-                danger
-                onClick={onChooseAction}
-              >
-                YOUR TURN
-              </Button>
-            </div>
-          );
-        } else {
-          isDead.current = true;
-          nextTurn(localStorage.getItem("room_id")!);
-          return (
-            <div>
-              <Typography.Title level={3}>You are dead</Typography.Title>
-            </div>
-          );
+    case "waiting": {
+      let playingName = "";
+      playersData.forEach((player) => {
+        if (player.status !== "waiting" && player.alive) {
+          playingName = player.nickname;
         }
-
-      case "moving":
-      case "killing":
+      });
+      return (
+        <div>
+          <Typography.Title level={3}>
+            {playingName} is playing...
+          </Typography.Title>
+        </div>
+      );
+    }
+    case "choosing":
+      if (playerStats.alive) {
         return (
           <div>
-            <Typography.Title level={3}>
-              You chose{" "}
-              <span style={{ color: actionToColorMapping[action] }}>
-                {actionToColorStringMapping[action]}
+            <Typography>
+              <span style={{color: "rgba(0,0,0,0.3)"}}>
+                  Click the button to play!
               </span>
-            </Typography.Title>
-            <Typography.Paragraph>
-              {actionToMessageMapping[action]}
-            </Typography.Paragraph>
+            </Typography>
+            <Button
+              size="large"
+              type="primary"
+              danger
+              onClick={onChooseAction}
+            >
+                                YOUR TURN
+            </Button>
           </div>
         );
-      case "dead":
+      } else {
+        isDead.current = true;
+        nextTurn(localStorage.getItem("room_id")!);
         return (
           <div>
             <Typography.Title level={3}>You are dead</Typography.Title>
           </div>
         );
+      }
+
+    case "moving":
+    case "killing":
+      return (
+        <div>
+          <Typography.Title level={3}>
+                            You chose{" "}
+            <span style={{color: actionToColorMapping[action]}}>
+              {actionToColorStringMapping[action]}
+            </span>
+          </Typography.Title>
+          <Typography.Paragraph>
+            {actionToMessageMapping[action]}
+          </Typography.Paragraph>
+        </div>
+      );
+    case "dead":
+      return (
+        <div>
+          <Typography.Title level={3}>You are dead</Typography.Title>
+        </div>
+      );
     }
   };
 
