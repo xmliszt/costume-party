@@ -1,7 +1,7 @@
 /**
  * The action section where the player either throw the dice, or perform action, or watch other player's action status
  */
-import { Button, message, Modal, Typography } from "antd";
+import { Button, message, Modal, Typography, Space } from "antd";
 import {
   useState,
   useContext,
@@ -9,6 +9,7 @@ import {
   forwardRef,
   useRef,
 } from "react";
+import { isMobile } from "react-device-detect";
 import { useHistory } from "react-router";
 import {
   actions,
@@ -42,6 +43,8 @@ const Action = forwardRef<IAction, any>((props, ref): React.ReactElement => {
       setAction(actions.NULL);
     },
   }));
+
+  const typographyLevel = isMobile ? 5 : 3;
 
   const onChooseAction = () => {
     const _action = getRandomAction();
@@ -93,7 +96,7 @@ const Action = forwardRef<IAction, any>((props, ref): React.ReactElement => {
       if (localStorage.getItem("win")) {
         return (
           <div>
-            <Typography.Title level={3}>
+            <Typography.Title level={typographyLevel}>
               Congratulations! You Win!
             </Typography.Title>
           </div>
@@ -101,7 +104,7 @@ const Action = forwardRef<IAction, any>((props, ref): React.ReactElement => {
       } else {
         return (
           <div>
-            <Typography.Title level={3}>
+            <Typography.Title level={typographyLevel}>
               The winner is: {winner}
             </Typography.Title>
           </div>
@@ -112,7 +115,9 @@ const Action = forwardRef<IAction, any>((props, ref): React.ReactElement => {
     if (isDead.current) {
       return (
         <div>
-          <Typography.Title level={3}>You are dead</Typography.Title>
+          <Typography.Title level={typographyLevel}>
+            You are dead
+          </Typography.Title>
         </div>
       );
     }
@@ -127,7 +132,7 @@ const Action = forwardRef<IAction, any>((props, ref): React.ReactElement => {
         });
         return (
           <div>
-            <Typography.Title level={3}>
+            <Typography.Title level={typographyLevel}>
               {playingName} is playing...
             </Typography.Title>
           </div>
@@ -137,19 +142,24 @@ const Action = forwardRef<IAction, any>((props, ref): React.ReactElement => {
         if (playerStats.alive) {
           return (
             <div>
-              <Typography>
-                <span style={{ color: "rgba(0,0,0,0.3)" }}>
-                  Click the button to play!
-                </span>
-              </Typography>
-              <Button
-                size="large"
-                type="primary"
-                danger
-                onClick={onChooseAction}
+              <Space
+                direction="vertical"
+                size="middle"
+                style={{ display: "flex" }}
               >
-                YOUR TURN
-              </Button>
+                <Typography>
+                  <span style={{ color: "rgba(0,0,0,0.3)" }}>
+                    Roll Your Next Move!
+                  </span>
+                </Typography>
+                <Button
+                  size={isMobile ? "small" : "large"}
+                  type="primary"
+                  onClick={onChooseAction}
+                >
+                  ROLL
+                </Button>
+              </Space>
             </div>
           );
         } else {
@@ -157,7 +167,9 @@ const Action = forwardRef<IAction, any>((props, ref): React.ReactElement => {
           nextTurn(localStorage.getItem("room_id")!);
           return (
             <div>
-              <Typography.Title level={3}>You are dead</Typography.Title>
+              <Typography.Title level={typographyLevel}>
+                You are dead
+              </Typography.Title>
             </div>
           );
         }
@@ -166,7 +178,7 @@ const Action = forwardRef<IAction, any>((props, ref): React.ReactElement => {
       case "killing":
         return (
           <div>
-            <Typography.Title level={3}>
+            <Typography.Title level={typographyLevel}>
               You chose{" "}
               <span style={{ color: actionToColorMapping[action] }}>
                 {actionToColorStringMapping[action]}
@@ -188,7 +200,9 @@ const Action = forwardRef<IAction, any>((props, ref): React.ReactElement => {
 
   return (
     <>
-      <div className="action">{renderAction()}</div>
+      <div className={isMobile ? "action-mobile" : "action"}>
+        {renderAction()}
+      </div>
     </>
   );
 });

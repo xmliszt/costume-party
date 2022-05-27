@@ -12,7 +12,7 @@ import {
 import { getRandomInt } from "../helpers/number";
 import { IAvatarProps } from "../interfaces/avatar";
 import { asyncForEach } from "../helpers/async";
-import IRoom from "../interfaces/room";
+import { IRoom } from "../interfaces/room";
 
 /**
  * Create a new room

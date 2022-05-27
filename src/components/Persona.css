@@ -1,6 +1,19 @@
 .persona {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
   width: 200px;
   height: 200px;
   padding: 10px;
+}
+
+.persona-mobile {
+  display: flex;
+  justify-content: center;
+  align-items: center;
   text-align: center;
+  width: 200px;
+  height: 80px;
+  margin-top: -50px;
 }

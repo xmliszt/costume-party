@@ -6,10 +6,6 @@
   text-align: center;
 }
 
-.playground canvas {
-  border: 20px solid rgb(44, 44, 44) !important;
-}
-
 .title {
   margin-top: 40px;
   margin-bottom: 20px;
@@ -21,6 +17,17 @@
   height: 200px;
   width: 100vw;
   margin-top: 30px;
-  box-shadow: 0px -10px 50px rgba(0, 0, 0, 0.1);
+  box-shadow: 0px 0px 30px rgba(0, 0, 0, 0.2);
   text-align: center;
+  background-color: white;
+}
+
+.stats-mobile {
+  display: block;
+  height: 60px;
+  width: 100vw;
+  margin-top: 30px;
+  box-shadow: 0px 0px 30px rgba(0, 0, 0, 0.2);
+  text-align: center;
+  background-color: white;
 }

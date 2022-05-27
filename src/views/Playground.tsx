@@ -30,6 +30,7 @@ import {
   nextTurn,
   updateRoomGameState,
 } from "../services/room";
+import { isMobile } from "react-device-detect";
 
 export default function Playground(): React.ReactElement {
   const playerOrder = useRef(0);
@@ -100,6 +101,38 @@ export default function Playground(): React.ReactElement {
     actionRef?.current?.clearAction();
   };
 
+  const renderStats = () => {
+    if (isMobile) {
+      return (
+        <section className="stats-mobile">
+          <Action ref={actionRef} />
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <Persona />
+            <PlayerStatus />
+          </div>
+        </section>
+      );
+    } else {
+      return (
+        <section className="stats">
+          <Persona />
+          <div style={{ display: "flex" }}>
+            <Divider style={{ height: 200 }} type="vertical" />
+            <Action ref={actionRef} />
+            <Divider style={{ height: 200 }} type="vertical" />
+          </div>
+          <PlayerStatus />
+        </section>
+      );
+    }
+  };
+
   return (
     <PlaygroundContext.Provider
       value={{
@@ -128,20 +161,9 @@ export default function Playground(): React.ReactElement {
         indicator={<LoadingOutlined />}
         tip={`Waiting for players to join... ${playerCount}/${roomCapacity}`}
       >
-        <div>
-          PLAYGROUND
-          <Room />
-        </div>
+        <Room />
       </Spin>
-      <section className="stats">
-        <Persona />
-        <div style={{ display: "flex" }}>
-          <Divider style={{ height: 200 }} type="vertical" />
-          <Action ref={actionRef} />
-          <Divider style={{ height: 200 }} type="vertical" />
-        </div>
-        <PlayerStatus />
-      </section>
+      {renderStats()}
     </PlaygroundContext.Provider>
   );
 }

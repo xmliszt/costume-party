@@ -1,6 +1,11 @@
 import { tNumberToString, tRoomTypes, tStringToString } from "./types";
 
-export const colors = {
+export const GRID = {
+  GRID_ROW_LENGTH: 12,
+  GRID_CLN_LENGTH: 12,
+};
+
+export const COLORS = {
   green: "#67C23A",
   yellow: "#E6A23C",
   blue: "#409EFF",
@@ -17,11 +22,11 @@ export const colorStringToColorMapping: tStringToString = {
 };
 
 export const roomColorMapping: tRoomTypes = {
-  TL: colors.yellow,
-  TR: colors.blue,
-  BL: colors.green,
-  BR: colors.red,
-  C: colors.black,
+  TL: COLORS.yellow,
+  TR: COLORS.blue,
+  BL: COLORS.green,
+  BR: COLORS.red,
+  C: COLORS.black,
 };
 
 export const actions = {

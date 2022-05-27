@@ -11,5 +11,14 @@
   width: 200px;
   height: 100px;
   border-radius: 10px;
-  font-size: 20px;
+  font-size: 40px;
+  font-weight: bold;
+}
+
+.action-mobile {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px;
+  height: 60px;
 }
