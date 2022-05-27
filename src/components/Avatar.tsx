@@ -1,7 +1,5 @@
 import React from "react";
 import useImage from "use-image";
-import { KonvaEventObject } from "konva/lib/Node";
-import { Image } from "react-konva";
 import { IAvatarProps } from "../interfaces/avatar";
 import { clipAvatarPosition, isInWhichRoom } from "../helpers/avatar";
 import { roomColorMapping } from "../constants";
@@ -23,74 +21,9 @@ export default function Avatar({
   onClearAction: CallableFunction;
 }): React.ReactElement {
   const [image] = useImage(avatarProps.imageUrl);
-  const handleDragEnd = (ev: KonvaEventObject<DragEvent>) => {
-    const x = ev.target.x();
-    const y = ev.target.y();
 
-    const roomType = isInWhichRoom({ x, y });
-    const clippedPosition = clipAvatarPosition(roomType, { x, y });
-    ev.target.x(clippedPosition.x);
-    ev.target.y(clippedPosition.y);
+  // Handle drag / position / place / kill
 
-    updateAvatarProps(
-      localStorage.getItem("room_id")!,
-      ev.target.attrs.id,
-      clippedPosition.x,
-      clippedPosition.y,
-      roomColorMapping[roomType]
-    );
-
-    updatePlayerStatus(localStorage.getItem("nickname")!, "waiting").catch(
-      (err) => message.error(err)
-    );
-
-    nextTurn(localStorage.getItem("room_id")!);
-    onClearAction();
-  };
-
-  const handleKillSelect = (ev: KonvaEventObject<MouseEvent>) => {
-    if (isKilling) {
-      const vid = ev.target.attrs.id;
-      Modal.confirm({
-        title: "Wanna murder this guy?",
-        icon: <ThunderboltFilled />,
-        okText: "Let's do this!",
-        cancelText: "Never Mind",
-        onOk: () => {
-          confirmKilling(vid);
-        },
-      });
-    }
-  };
-
-  const confirmKilling = async (vid: string) => {
-    try {
-      updateAvatarStatus(localStorage.getItem("room_id")!, vid, true);
-      updatePlayerStatus(localStorage.getItem("nickname")!, "waiting");
-      await nextTurn(localStorage.getItem("room_id")!);
-    } catch (err) {
-      console.log(err);
-    } finally {
-      onClearAction();
-    }
-  };
-
-  if (!avatarProps.dead)
-    return (
-      <Image
-        id={avatarProps.id}
-        x={avatarProps.position.x}
-        y={avatarProps.position.y}
-        width={40}
-        height={40}
-        image={image}
-        stroke={avatarProps.strokeColor}
-        strokeWidth={5}
-        shadowBlur={10}
-        draggable={isMoving}
-        onClick={handleKillSelect}
-        onDragEnd={handleDragEnd}
-      ></Image>
-    );
+  if (!avatarProps.dead) return <div>AVATAR</div>;
   else return <></>;
 }

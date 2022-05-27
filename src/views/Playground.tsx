@@ -1,6 +1,5 @@
 import React, { useEffect, useRef } from "react";
 import { useHistory } from "react-router";
-import { Layer, Stage } from "react-konva";
 import { Typography, message, Spin, Divider } from "antd";
 import { LoadingOutlined } from "@ant-design/icons";
 
@@ -129,20 +128,10 @@ export default function Playground(): React.ReactElement {
         indicator={<LoadingOutlined />}
         tip={`Waiting for players to join... ${playerCount}/${roomCapacity}`}
       >
-        <Stage width={600} height={600} className="playground">
+        <div>
+          PLAYGROUND
           <Room />
-          <Layer>
-            {avatars?.map((avatar) => (
-              <Avatar
-                avatarProps={avatar}
-                key={avatar.id}
-                isMoving={playerStats?.status === "moving"}
-                isKilling={playerStats?.status === "killing"}
-                onClearAction={onClearAction}
-              />
-            ))}
-          </Layer>
-        </Stage>
+        </div>
       </Spin>
       <section className="stats">
         <Persona />
