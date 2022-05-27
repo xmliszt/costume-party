@@ -1,3 +1,21 @@
 .playground-wrapper {
   border: 1px solid black;
 }
+
+.ant-btn-icon-only {
+  vertical-align: 1px;
+}
+
+.slot {
+  transition: 0.3s;
+  transform: scale(0.9);
+}
+
+.slot-focus::before {
+  box-shadow: 0 0 15px #78d897;
+}
+
+.slot-focus {
+  transform: scale(1.02);
+  box-shadow: 0 0 5px #78d897;
+}

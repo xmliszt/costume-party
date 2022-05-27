@@ -41,8 +41,10 @@ export function useListenRoom(
             setGameEnd(data?.gameEnd);
             setWinner(data?.winner);
             if (data?.capacity === data?.players.length) {
-              !gameStarted && setGameStarted(true);
-              onNextTurn(data?.turn, data?.capacity);
+              if (!gameStarted) {
+                setGameStarted(true);
+                localStorage.setItem("gameStarted", "true");
+              }
             }
           },
           (err) => {
@@ -80,10 +82,7 @@ export function useListenAvatars(): IAvatarProps[] {
             const data = _doc.data();
             _avatars.push({
               id: data.id,
-              position: {
-                x: data.x,
-                y: data.y,
-              },
+              positionIdx: data.positionIdx,
               strokeColor: data.strokeColor,
               imageUrl: `${process.env.PUBLIC_URL}/avatars/${data.id}.png`,
               dead: data.dead,

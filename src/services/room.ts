@@ -192,8 +192,7 @@ export async function initializeAvatars(
                 doc(db, "rooms", roomID, "avatars", avatar.id.toString()),
                 {
                   id: avatar.id,
-                  x: avatar.position.x,
-                  y: avatar.position.y,
+                  positionIdx: avatar.positionIdx,
                   strokeColor: avatar.strokeColor,
                   dead: avatar.dead,
                 }
@@ -267,10 +266,7 @@ export async function getAllAvatarsProps(
           const data = avatarDoc.data();
           const avatar = {
             id: data.id,
-            position: {
-              x: data.x,
-              y: data.y,
-            },
+            positionIdx: data.positionIdx,
             strokeColor: data.strokeColor,
             imageUrl: `${process.env.PUBLIC_URL}/avatars/${data.id}.png`,
             dead: data.dead,

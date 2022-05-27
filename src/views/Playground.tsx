@@ -5,8 +5,7 @@ import { LoadingOutlined } from "@ant-design/icons";
 
 import "./Playground.css";
 
-import Room from "../components/Room";
-import Avatar from "../components/Avatar";
+import Room, { IRoomRef } from "../components/Room";
 import Persona from "../components/Persona";
 import Action, { IAction } from "../components/Action";
 import PlayerStatus from "../components/PlayerStatus";
@@ -101,11 +100,16 @@ export default function Playground(): React.ReactElement {
     actionRef?.current?.clearAction();
   };
 
+  const roomRef = useRef<IRoomRef>(null);
+
   const renderStats = () => {
     if (isMobile) {
       return (
         <section className="stats-mobile">
-          <Action ref={actionRef} />
+          <Action
+            ref={actionRef}
+            onPlayerMove={roomRef.current?.onPlayerMove}
+          />
           <div
             style={{
               display: "flex",
@@ -124,7 +128,10 @@ export default function Playground(): React.ReactElement {
           <Persona />
           <div style={{ display: "flex" }}>
             <Divider style={{ height: 200 }} type="vertical" />
-            <Action ref={actionRef} />
+            <Action
+              ref={actionRef}
+              onPlayerMove={roomRef.current?.onPlayerMove}
+            />
             <Divider style={{ height: 200 }} type="vertical" />
           </div>
           <PlayerStatus />
@@ -161,7 +168,7 @@ export default function Playground(): React.ReactElement {
         indicator={<LoadingOutlined />}
         tip={`Waiting for players to join... ${playerCount}/${roomCapacity}`}
       >
-        <Room />
+        <Room ref={roomRef} />
       </Spin>
       {renderStats()}
     </PlaygroundContext.Provider>

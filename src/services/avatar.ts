@@ -12,12 +12,12 @@ import { IAvatarProps } from "../interfaces/avatar";
 export async function updateAvatarStatus(
   roomID: string,
   avatarID: string,
+  positionIdx: number,
   dead: boolean
 ): Promise<boolean> {
   return new Promise((res, rej) => {
-    console.log(avatarID);
-
     updateDoc(doc(db, "rooms", roomID, "avatars", avatarID), {
+      positionIdx,
       dead,
     })
       .then(() => {
@@ -32,14 +32,12 @@ export async function updateAvatarStatus(
 export async function updateAvatarProps(
   roomID: string,
   avatarID: string,
-  x: number,
-  y: number,
+  positionIdx: number,
   strokeColor: string
 ): Promise<boolean> {
   return new Promise((res, rej) => {
     updateDoc(doc(db, "rooms", roomID, "avatars", avatarID), {
-      x,
-      y,
+      positionIdx,
       strokeColor,
     })
       .then(() => {
@@ -63,10 +61,7 @@ export async function getAvatarByID(avatarID: string): Promise<IAvatarProps> {
         const data = snapshots.docs[0].data();
         res({
           id: data.id,
-          position: {
-            x: data.x,
-            y: data.y,
-          },
+          positionIdx: data.positionIdx,
           strokeColor: data.strokeColor,
           imageUrl: `${process.env.PUBLIC_URL}/avatars/${data.id}.png`,
           dead: data.dead,
