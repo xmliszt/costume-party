@@ -35,7 +35,7 @@ export interface IAction {
 }
 
 const Action = forwardRef<IAction, any>(
-  ({ onPlayerPick, onPlayerMove }, ref): React.ReactElement => {
+  ({ onPlayerPick, onPlayerMove, onPlayerKill }, ref): React.ReactElement => {
     const history = useHistory();
     const { playerStats, playersData, gameStarted, gameEnd, winner } =
       useContext<IPlaygroundContext>(PlaygroundContext);
@@ -58,6 +58,7 @@ const Action = forwardRef<IAction, any>(
       setAction(_action);
 
       if (_action === actions.black) {
+        onPlayerKill(_action);
         updatePlayerStatus(localStorage.getItem("nickname")!, "killing").catch(
           (err) => {
             message.error(err);

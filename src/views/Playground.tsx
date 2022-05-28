@@ -112,6 +112,7 @@ export default function Playground(): React.ReactElement {
             ref={actionRef}
             onPlayerMove={roomRef.current?.onPlayerMove}
             onPlayerPick={roomRef.current?.onPlayerPick}
+            onPlayerKill={roomRef.current?.onPlayerKill}
           />
           <div
             style={{
@@ -135,6 +136,7 @@ export default function Playground(): React.ReactElement {
               ref={actionRef}
               onPlayerMove={roomRef.current?.onPlayerMove}
               onPlayerPick={roomRef.current?.onPlayerPick}
+              onPlayerKill={roomRef.current?.onPlayerKill}
             />
             <Divider style={{ height: 200 }} type="vertical" />
           </div>

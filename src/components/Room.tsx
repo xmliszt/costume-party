@@ -1,4 +1,4 @@
-import { Button, Row, Col, Space, Spin, message } from "antd";
+import { Button, Row, Col, Space, Spin, message, Modal } from "antd";
 import React, {
   forwardRef,
   useEffect,
@@ -15,24 +15,26 @@ import {
 } from "../constants";
 import {
   generateRoomToPositionIdx,
-  getAllAvatarPositions,
   getAvailableMovingRooms,
   getAvailablePickingRooms,
-  getAvatarPositionMap,
   isInWhichRoom,
   makeSlotProps,
 } from "../helpers/room";
 import { isMobile } from "react-device-detect";
 import { updatePlayerStatus } from "../services/player";
 import { ISlot } from "../interfaces/room";
-import { LoadingOutlined } from "@ant-design/icons";
+import { LoadingOutlined, ThunderboltFilled } from "@ant-design/icons";
 import { useListenAvatars, useListenPlayer } from "../services";
-import { updateAvatarProps } from "../services/avatar";
+import { updateAvatarProps, updateAvatarStatus } from "../services/avatar";
 import { nextTurn } from "../services/room";
+import { getAllAvatarPositions, getAvatarPositionMap } from "../helpers/avatar";
+import Avatar from "antd/lib/avatar/avatar";
+import { IAvatarProps } from "../interfaces/avatar";
 
 export interface IRoomRef {
   onPlayerMove(_action: number): void;
   onPlayerPick(_action: number): void;
+  onPlayerKill(_action: number): void;
   onGameStarted(state: boolean): void;
 }
 
@@ -48,6 +50,7 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
     useImperativeHandle(ref, () => ({
       onPlayerMove,
       onPlayerPick,
+      onPlayerKill,
       onGameStarted,
     }));
 
@@ -181,6 +184,26 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
           }
         );
         onClearAction();
+      } else if (playerStats && playerStats.status === "killing") {
+        const avatarPositionMap = getAvatarPositionMap(avatars);
+        const killedAvatar = avatarPositionMap[slotIdx];
+
+        // Confirmation
+        Modal.confirm({
+          title: "Wanna murder this guy?",
+          icon: (
+            <Avatar
+              className="drop-shadow"
+              size={50}
+              src={killedAvatar.imageUrl}
+            />
+          ),
+          okText: "Let's do this!",
+          cancelText: "Never Mind",
+          onOk: () => {
+            conductMurder(killedAvatar);
+          },
+        });
       }
     };
 
@@ -339,6 +362,50 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
       }
     };
 
+    const conductMurder = (avatarToKill: IAvatarProps) => {
+      // Kill the chosen target
+      updateAvatarStatus(
+        localStorage.getItem("room_id")!,
+        avatarToKill.id,
+        true
+      );
+
+      // Remove it from the board
+      setSlotsBackground((slots) => {
+        const _slots = { ...slots };
+        _slots[avatarToKill.positionIdx] = "none";
+        return _slots;
+      });
+      setSlotBorders((slots) => {
+        const _slots = { ...slots };
+        _slots[avatarToKill.positionIdx] = "none";
+        return _slots;
+      });
+
+      // Reset the board
+      setPickedSlot(null);
+      setRolledRoom(null);
+      setHasUndo(false);
+
+      // reset all tiles back to normal
+      for (
+        let index = 0;
+        index < GRID.GRID_ROW_LENGTH * GRID.GRID_CLN_LENGTH;
+        index++
+      ) {
+        resetSlot(index);
+      }
+
+      // pass the turn
+      nextTurn(localStorage.getItem("room_id")!);
+      updatePlayerStatus(localStorage.getItem("nickname")!, "waiting").catch(
+        (err) => {
+          message.error(err);
+        }
+      );
+      onClearAction();
+    };
+
     const onPlayerPick = (_action: number) => {
       setActionSelected(_action);
       const roomType =
@@ -349,7 +416,37 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
 
     const onPlayerMove = (_action: number) => {
       setActionSelected(_action);
-      console.log("Player moving! " + _action);
+    };
+
+    const onPlayerKill = (_action: number) => {
+      setActionSelected(_action);
+      // disable everything first
+      for (
+        let index = 0;
+        index < GRID.GRID_ROW_LENGTH * GRID.GRID_CLN_LENGTH;
+        index++
+      ) {
+        disableSlot(index);
+      }
+      // highlight available avatars only in current player's avatar's room
+      const avatarPositions = getAllAvatarPositions(avatars);
+      const playerInRoom = isInWhichRoom(playerAvatar!.positionIdx);
+      let count = 0;
+      for (const avatarIdx of avatarPositions) {
+        const room = isInWhichRoom(avatarIdx);
+        if (room === playerInRoom && avatarIdx !== playerAvatar!.positionIdx) {
+          highlighSlot(avatarIdx);
+          count++;
+        } else if (avatarIdx === playerAvatar!.positionIdx) {
+          resetSlot(avatarIdx);
+        }
+      }
+
+      // Suicide case
+      if (count === 0) {
+        // self kill
+        conductMurder(playerAvatar!);
+      }
     };
 
     return (

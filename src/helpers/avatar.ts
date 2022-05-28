@@ -1,3 +1,4 @@
+import { IAvatarProps } from "../interfaces/avatar";
 import { generateRoomToPositionIdx } from "./room";
 
 export function generateAvatarColorLight(): string {
@@ -19,4 +20,24 @@ export function generateAvatarPosition(room: string): number {
   const positions = roomToPositionIdx[room];
 
   return positions[Math.floor(Math.random() * positions.length)];
+}
+
+export function getAllAvatarPositions(avatars: IAvatarProps[]): number[] {
+  const results = [];
+  for (const avatar of avatars) {
+    if (!avatar.dead) {
+      results.push(avatar.positionIdx);
+    }
+  }
+  return results;
+}
+
+export function getAvatarPositionMap(avatars: IAvatarProps[]): {
+  [key: number]: IAvatarProps;
+} {
+  const results: { [key: number]: IAvatarProps } = {};
+  for (const avatar of avatars) {
+    results[avatar.positionIdx] = avatar;
+  }
+  return results;
 }
