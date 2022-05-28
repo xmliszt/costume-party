@@ -37,7 +37,7 @@ export default function Playground(): React.ReactElement {
   const playerOrder = useRef(0);
   const history = useHistory();
   const avatars = useListenAvatars();
-  const [playerStats, playerAvatarProps] = useListenPlayer();
+  const { playerStats, playerAvatar } = useListenPlayer();
   const playersData = useListenPlayers();
 
   const onNextTurn = async (turn: number, capacity: number) => {
@@ -150,7 +150,7 @@ export default function Playground(): React.ReactElement {
         avatars,
         playersData,
         playerStats,
-        playerAvatarProps,
+        playerAvatar,
         playerCount,
         roomCapacity,
         playerTurn,
@@ -172,7 +172,7 @@ export default function Playground(): React.ReactElement {
         indicator={<LoadingOutlined />}
         tip={`Waiting for players to join... ${playerCount}/${roomCapacity}`}
       >
-        <Room ref={roomRef} />
+        <Room ref={roomRef} onClearAction={onClearAction} />
       </Spin>
       {renderStats()}
     </PlaygroundContext.Provider>

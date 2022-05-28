@@ -6,7 +6,7 @@ import { PlaygroundContext } from "../context/PlaygroundContext";
 import "./Persona.css";
 
 export default function Persona(): React.ReactElement {
-  const { playerAvatarProps, playerStats } = useContext(PlaygroundContext);
+  const { playerAvatar, playerStats } = useContext(PlaygroundContext);
 
   return (
     <>
@@ -22,11 +22,11 @@ export default function Persona(): React.ReactElement {
               {playerStats?.nickname}
             </Typography.Title>
             <Avatar
-              style={{ border: `5px solid ${playerAvatarProps?.strokeColor}` }}
+              style={{ border: `5px solid ${playerAvatar?.strokeColor}` }}
               shape="square"
               size={isMobile ? 50 : 100}
               icon={<UserOutlined />}
-              src={playerAvatarProps?.imageUrl}
+              src={playerAvatar?.imageUrl}
               alt="No Image"
             />
           </div>

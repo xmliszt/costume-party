@@ -54,6 +54,7 @@ export function useListenRoom(
                 setGameStarted(true);
                 onGameStarted(true);
               }
+              onNextTurn(data?.turn, data?.capacity);
             }
           },
           (err) => {
@@ -153,10 +154,14 @@ export function useListenPlayers(): IPlayerProps[] {
 
   return players;
 }
+interface IPlayerData {
+  playerStats: IPlayerProps | null;
+  playerAvatar: IAvatarProps | null;
+}
 
-export function useListenPlayer(): [IPlayerProps, IAvatarProps] {
-  const [playerStats, setPlayerStats] = useState<IPlayerProps>();
-  const [playerAvatarProps, setPlayerAvatarProps] = useState<IAvatarProps>();
+export function useListenPlayer(): IPlayerData {
+  const [playerStats, setPlayerStats] = useState<IPlayerProps | null>(null);
+  const [playerAvatar, setPlayerAvatar] = useState<IAvatarProps | null>(null);
 
   useEffect(() => {
     if (localStorage.getItem("room_id")) {
@@ -181,7 +186,7 @@ export function useListenPlayer(): [IPlayerProps, IAvatarProps] {
             status: data?.status,
           });
           getAvatarForPlayer(localStorage.getItem("nickname")!)
-            .then((props) => setPlayerAvatarProps(props))
+            .then((props) => setPlayerAvatar(props))
             .catch((err) => {
               console.log(err);
             });
@@ -193,7 +198,10 @@ export function useListenPlayer(): [IPlayerProps, IAvatarProps] {
     }
   }, []);
 
-  return [playerStats!, playerAvatarProps!];
+  return {
+    playerStats,
+    playerAvatar,
+  };
 }
 
 export function useExitRoomAction(callbackAction: () => void): void {

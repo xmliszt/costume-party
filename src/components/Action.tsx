@@ -1,5 +1,12 @@
 /**
- * The action section where the player either throw the dice, or perform action, or watch other player's action status
+ * The action section where the player either throw the dice, or perform action, or watch other player's action status\
+ * State Machine: (status)
+ * - waiting
+ * - choosing
+ * - picking
+ * - moving
+ * - killing
+ * - dead
  */
 import { Button, message, Modal, Typography, Space } from "antd";
 import {
@@ -13,12 +20,10 @@ import { isMobile } from "react-device-detect";
 import { useHistory } from "react-router";
 import {
   actions,
-  actionToMessageMapping,
   actionToColorMapping,
   actionToColorStringMapping,
 } from "../constants";
 import { PlaygroundContext } from "../context/PlaygroundContext";
-import { isMyTurn } from "../controllers/player";
 import { getRandomAction } from "../helpers/action";
 import IPlaygroundContext from "../interfaces/playground";
 import { updatePlayerStatus } from "../services/player";
@@ -49,11 +54,6 @@ const Action = forwardRef<IAction, any>(
     const typographyLevel = isMobile ? 5 : 3;
 
     const onChooseAction = () => {
-      console.log(
-        "Player choosing action... Current status of player: " +
-          playerStats.status
-      );
-
       const _action = getRandomAction();
       setAction(_action);
 
@@ -204,26 +204,28 @@ const Action = forwardRef<IAction, any>(
               </Typography.Paragraph>
             </div>
           );
-
-        case "moving":
         case "killing":
           return (
             <div>
               <Typography.Title level={typographyLevel}>
-                You rolled{" "}
-                <span style={{ color: actionToColorMapping[action] }}>
-                  {actionToColorStringMapping[action]}
-                </span>
+                Click someone in your room to murder
               </Typography.Title>
-              <Typography.Paragraph>
-                {actionToMessageMapping[action]}
-              </Typography.Paragraph>
+            </div>
+          );
+        case "moving":
+          return (
+            <div>
+              <Typography.Title level={typographyLevel}>
+                Move to any of the highlighted slots
+              </Typography.Title>
             </div>
           );
         case "dead":
           return (
             <div>
-              <Typography.Title level={3}>You are dead</Typography.Title>
+              <Typography.Title level={typographyLevel}>
+                You are dead
+              </Typography.Title>
             </div>
           );
       }

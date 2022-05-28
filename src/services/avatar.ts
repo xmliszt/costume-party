@@ -12,12 +12,10 @@ import { IAvatarProps } from "../interfaces/avatar";
 export async function updateAvatarStatus(
   roomID: string,
   avatarID: string,
-  positionIdx: number,
   dead: boolean
 ): Promise<boolean> {
   return new Promise((res, rej) => {
     updateDoc(doc(db, "rooms", roomID, "avatars", avatarID), {
-      positionIdx,
       dead,
     })
       .then(() => {

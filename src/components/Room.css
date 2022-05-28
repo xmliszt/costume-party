@@ -21,7 +21,7 @@
 
 .slot-disabled {
   transition: 0.3s;
-  transform: scale(0.95);
+  transform: scale(0.85);
   box-shadow: none;
   opacity: 0.3;
 }
