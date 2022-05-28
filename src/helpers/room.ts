@@ -1,4 +1,5 @@
 import { GRID, roomColorMapping } from "../constants";
+import { IAvatarProps } from "../interfaces/avatar";
 import { ISlot } from "../interfaces/room";
 
 export function makeSlotProps(index: number, row: number, col: number): ISlot {
@@ -171,4 +172,22 @@ export function getUnAvailablePickingRooms(currentRoomType: string): string[] {
     default:
       return [];
   }
+}
+
+export function getAllAvatarPositions(avatars: IAvatarProps[]): number[] {
+  const results = [];
+  for (const avatar of avatars) {
+    results.push(avatar.positionIdx);
+  }
+  return results;
+}
+
+export function getAvatarPositionMap(avatars: IAvatarProps[]): {
+  [key: number]: IAvatarProps;
+} {
+  const results: { [key: number]: IAvatarProps } = {};
+  for (const avatar of avatars) {
+    results[avatar.positionIdx] = avatar;
+  }
+  return results;
 }

@@ -1,4 +1,4 @@
-import { Button, Row, Col, Space } from "antd";
+import { Button, Row, Col, Space, Spin } from "antd";
 import React, {
   forwardRef,
   useEffect,
@@ -16,18 +16,22 @@ import {
 } from "../constants";
 import {
   generateRoomToPositionIdx,
+  getAllAvatarPositions,
   getAvailableMovingRooms,
   getAvailablePickingRooms,
+  getAvatarPositionMap,
   getUnAvailableMovingRooms,
   isInWhichRoom,
   makeSlotProps,
 } from "../helpers/room";
 import { isMobile } from "react-device-detect";
 import { IAvatarProps } from "../interfaces/avatar";
-import { getAllAvatarsProps } from "../services/room";
 import { getAvatarForPlayer } from "../services/player";
 import { ISlot } from "../interfaces/room";
 import { v4 as uuidv4 } from "uuid";
+import { getAllAvatarsProps } from "../services/room";
+import { LoadingOutlined } from "@ant-design/icons";
+import { useListenAvatars, useListenPlayer } from "../services";
 
 export interface IRoomRef {
   onPlayerMove(_action: number): void;
@@ -36,6 +40,9 @@ export interface IRoomRef {
 }
 
 const Room = forwardRef<IRoomRef, any>((props, ref): React.ReactElement => {
+  const avatars = useListenAvatars();
+  const [playerStats, playerAvatar] = useListenPlayer();
+
   useImperativeHandle(ref, () => ({
     onPlayerMove,
     onPlayerPick,
@@ -43,6 +50,7 @@ const Room = forwardRef<IRoomRef, any>((props, ref): React.ReactElement => {
   }));
 
   const [gameStarted, setGameStarted] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
   const [grid, setGrid] = useState<ISlot[][]>([]);
   const [slotsEnabled, setSlotsEnabled] = useState<{
     [key: number]: boolean;
@@ -52,11 +60,6 @@ const Room = forwardRef<IRoomRef, any>((props, ref): React.ReactElement => {
   }>({});
   const [slotsStyles, setSlotsStyles] = useState<{
     [key: number]: { [key: string]: string };
-  }>({});
-  const [avatars, setAvatars] = useState<IAvatarProps[]>([]);
-  const [avatarsIds, setAvatarsIds] = useState<Array<number>>([]);
-  const [avatarsMap, setAvatarsMap] = useState<{
-    [key: number]: IAvatarProps;
   }>({});
   const [hasUndo, setHasUndo] = useState<boolean>(false);
   const [slotSelected, setSlotSelected] = useState<number | null>(null);
@@ -96,13 +99,12 @@ const Room = forwardRef<IRoomRef, any>((props, ref): React.ReactElement => {
       index < GRID.GRID_ROW_LENGTH * GRID.GRID_CLN_LENGTH;
       index++
     ) {
-      console.log(slotIdx, index);
-
+      const avatarsPositions = getAllAvatarPositions(avatars);
       if (index !== slotIdx) {
         const roomType = isInWhichRoom(index);
         if (
           availableMovingRooms.includes(roomType!) &&
-          !avatarsIds.includes(index)
+          !avatarsPositions.includes(index)
         ) {
           highlighSlot(index);
         } else {
@@ -147,42 +149,29 @@ const Room = forwardRef<IRoomRef, any>((props, ref): React.ReactElement => {
 
   const init = async () => {
     clearAllSlots();
-    const tmpAvatarsMap: { [key: number]: IAvatarProps } = {};
-    const avatars = await getAllAvatarsProps(localStorage.getItem("room_id")!);
-    setAvatars(avatars);
-    const avatarPositionIdxs: Array<number> = [];
-    avatars.forEach((avatar) => {
-      avatarPositionIdxs.push(avatar.positionIdx);
-      tmpAvatarsMap[avatar.positionIdx] = avatar;
-    });
-
-    setAvatarsIds(avatarPositionIdxs);
-    setAvatarsMap(tmpAvatarsMap);
-
     const tmpGrid = [];
     const tmpSlotsEnabled: { [key: number]: boolean } = {};
     const tmpSlotsClassName: { [key: number]: string } = {};
     const tmpSlotsStyles: { [key: number]: { [key: string]: string } } = {};
-
-    const avatarForPlayer = await getAvatarForPlayer(
-      localStorage.getItem("nickname")!
-    );
+    const avatarPositions = getAllAvatarPositions(avatars);
+    const avatarPositionMap = getAvatarPositionMap(avatars);
     let index = 0;
     for (let row = 0; row < GRID.GRID_ROW_LENGTH; row++) {
       const currentRow = [];
       for (let col = 0; col < GRID.GRID_CLN_LENGTH; col++) {
         const slotProps = makeSlotProps(index, row, col);
         currentRow.push(slotProps);
-        const imgUrl =
-          tmpAvatarsMap[index] == null ? null : tmpAvatarsMap[index].imageUrl;
+        const imgUrl = !avatarPositions.includes(index)
+          ? null
+          : avatarPositionMap[index].imageUrl;
         const slotStyle = {
           backgroundImage: imgUrl == null ? "none" : `url(${imgUrl})`,
           backgroundColor: roomColorMapping[slotProps.roomType] + "70",
           backgroundSize: "contain",
           backgroundRepeat: "no-repeat",
           border:
-            index === avatarForPlayer.positionIdx
-              ? `5px solid ${avatarForPlayer.strokeColor}`
+            index === playerAvatar.positionIdx
+              ? `5px solid ${playerAvatar.strokeColor}`
               : "0px",
         };
         tmpSlotsEnabled[index] = true;
@@ -200,8 +189,13 @@ const Room = forwardRef<IRoomRef, any>((props, ref): React.ReactElement => {
   };
 
   useEffect(() => {
+    async function asyncInit() {
+      setLoading(true);
+      await init();
+      setLoading(false);
+    }
     if (gameStarted) {
-      init();
+      asyncInit();
     }
   }, [gameStarted]);
 
@@ -245,14 +239,13 @@ const Room = forwardRef<IRoomRef, any>((props, ref): React.ReactElement => {
   };
 
   const highlightAvailableAvatarSlots = (roomType: string) => {
+    const avatarsPositions = getAllAvatarPositions(avatars);
     const roomPositionsMap = generateRoomToPositionIdx();
     const availableRoomsToPick = getAvailablePickingRooms(roomType);
     for (const [_roomType, _positions] of Object.entries(roomPositionsMap)) {
       for (const positionIdx of _positions) {
         if (availableRoomsToPick.includes(_roomType)) {
-          console.log(avatarsIds);
-
-          if (avatarsIds.includes(positionIdx)) {
+          if (avatarsPositions.includes(positionIdx)) {
             // Available for picking - highlight the slot
             highlighSlot(positionIdx);
           } else {
@@ -265,7 +258,7 @@ const Room = forwardRef<IRoomRef, any>((props, ref): React.ReactElement => {
     }
   };
 
-  const onPlayerPick = async (_action: number) => {
+  const onPlayerPick = (_action: number) => {
     setActionSelected(_action);
     const roomType =
       colorRoomMapping[COLORS[actionToColorStringMapping[_action]]];
@@ -273,37 +266,37 @@ const Room = forwardRef<IRoomRef, any>((props, ref): React.ReactElement => {
     highlightAvailableAvatarSlots(roomType);
   };
 
-  const onPlayerMove = async (_action: number) => {
+  const onPlayerMove = (_action: number) => {
     setActionSelected(_action);
     console.log("Player moving! " + _action);
-    const avatar = await getAvatarForPlayer(localStorage.getItem("nickname")!);
-    const roomType =
-      colorRoomMapping[COLORS[actionToColorStringMapping[_action]]];
   };
 
   return (
     <div key={uuidv4()}>
       <Space direction="vertical" size="large">
-        <div>
-          {grid.map((row, rowIdx) => {
-            return (
-              <Row
-                key={rowIdx}
-                gutter={[1, 1]}
-                style={{ justifyContent: "center" }}
-              >
-                {row.map((col, colIdx) => {
-                  return (
-                    <Col key={col.index}>{makeSlot(rowIdx * 12 + colIdx)}</Col>
-                  );
-                })}
-              </Row>
-            );
-          })}
-        </div>
-
+        <Spin spinning={loading} indicator={<LoadingOutlined />}>
+          <div>
+            {grid.map((row, rowIdx) => {
+              return (
+                <Row
+                  key={rowIdx}
+                  gutter={[1, 1]}
+                  style={{ justifyContent: "center" }}
+                >
+                  {row.map((col, colIdx) => {
+                    return (
+                      <Col key={col.index}>
+                        {makeSlot(rowIdx * 12 + colIdx)}
+                      </Col>
+                    );
+                  })}
+                </Row>
+              );
+            })}
+          </div>
+        </Spin>
         {hasUndo && (
-          <Button type="dashed" danger onClick={undo}>
+          <Button type="dashed" danger onClick={undo} disabled={loading}>
             UNDO
           </Button>
         )}
