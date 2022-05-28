@@ -88,7 +88,10 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
           backgroundColor: roomColorMapping[roomType] + "70",
           backgroundSize: "contain",
           backgroundRepeat: "no-repeat",
-          border: slotsBorders[slotIdx] ?? "0px",
+          border:
+            playerAvatar?.positionIdx === slotIdx
+              ? `5px solid ${playerAvatar!.strokeColor}`
+              : "none",
         }}
         ghost
         disabled={!slotsEnabled[slotIdx] ?? false}
@@ -100,7 +103,7 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
       ></Button>
     );
 
-    const onSlotSelected = (slotIdx: number) => {
+    const onSlotSelected = async (slotIdx: number) => {
       if (playerStats && playerStats.status === "picking") {
         setPickedSlot(slotIdx);
         updatePlayerStatus(localStorage.getItem("nickname")!, "moving").catch(
@@ -139,6 +142,7 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
         // remove image for the old slot
         const avatarPositionMap = getAvatarPositionMap(avatars);
         const selectedAvatar = avatarPositionMap[pickedSlot!];
+        const inWhichRoom = isInWhichRoom(slotIdx);
         setSlotsBackground((slots) => {
           const _slots = { ...slots };
           _slots[slotIdx] = `url(${selectedAvatar.imageUrl})`;
@@ -147,10 +151,8 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
         });
         setSlotBorders((slots) => {
           const _slots = { ...slots };
-          _slots[slotIdx] =
-            pickedSlot === playerAvatar?.positionIdx
-              ? `5px solid ${playerAvatar!.strokeColor}`
-              : "none";
+          const pickedBorder = _slots[pickedSlot!];
+          _slots[slotIdx] = pickedBorder;
           _slots[pickedSlot!] = "none";
           return _slots;
         });
@@ -159,8 +161,18 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
           localStorage.getItem("room_id")!,
           selectedAvatar!.id,
           slotIdx,
-          selectedAvatar!.strokeColor
-        );
+          roomColorMapping[inWhichRoom!]
+        ).then(() => {
+          // pass the turn
+          nextTurn(localStorage.getItem("room_id")!);
+          updatePlayerStatus(
+            localStorage.getItem("nickname")!,
+            "waiting"
+          ).catch((err) => {
+            message.error(err);
+          });
+          onClearAction();
+        });
 
         // reset all tiles back to normal
         for (
@@ -175,15 +187,6 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
         setHasUndo(false);
         setPickedSlot(null);
         setRolledRoom(null);
-
-        // pass the turn
-        nextTurn(localStorage.getItem("room_id")!);
-        updatePlayerStatus(localStorage.getItem("nickname")!, "waiting").catch(
-          (err) => {
-            message.error(err);
-          }
-        );
-        onClearAction();
       } else if (playerStats && playerStats.status === "killing") {
         const avatarPositionMap = getAvatarPositionMap(avatars);
         const killedAvatar = avatarPositionMap[slotIdx];
@@ -243,6 +246,34 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
       });
     };
 
+    const refresh = async () => {
+      const avatarPositions = getAllAvatarPositions(avatars);
+      const avatarPositionMap = getAvatarPositionMap(avatars);
+      for (
+        let index = 0;
+        index < GRID.GRID_ROW_LENGTH * GRID.GRID_CLN_LENGTH;
+        index++
+      ) {
+        const imgUrl = !avatarPositions.includes(index)
+          ? null
+          : avatarPositionMap[index].imageUrl;
+        setSlotsBackground((slots) => {
+          const _slots = slots;
+          _slots[index] = imgUrl == null ? "none" : `url(${imgUrl})`;
+          return _slots;
+        });
+        setSlotBorders((slots) => {
+          const _slots = slots;
+          _slots[index] =
+            playerAvatar?.positionIdx === index
+              ? `5px solid ${playerAvatar!.strokeColor}`
+              : "none";
+          return _slots;
+        });
+        resetSlot(index);
+      }
+    };
+
     const init = async () => {
       clearAllSlots();
       const tmpGrid = [];
@@ -266,8 +297,8 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
           tmpSlotsBorder[index] =
             index === playerAvatar?.positionIdx
               ? `5px solid ${playerAvatar!.strokeColor}`
-              : "0px";
-          tmpSlotsEnabled[index] = true;
+              : "none";
+          tmpSlotsEnabled[index] = false;
           tmpSlotsClassName[index] = "slot-normal";
           index++;
         }
@@ -296,7 +327,7 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
       const asyncCallback = async () => {
         if (playerStats && playerStats.status === "choosing") {
           setLoading(true);
-          await init();
+          await refresh();
           setLoading(false);
         }
       };
@@ -485,3 +516,16 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
 );
 
 export default Room;
+function useContext(PlaygroundContext: any): {
+  playerAvatar: any;
+  playerStats: any;
+} {
+  throw new Error("Function not implemented.");
+}
+
+function PlaygroundContext(PlaygroundContext: any): {
+  playerAvatar: any;
+  playerStats: any;
+} {
+  throw new Error("Function not implemented.");
+}
