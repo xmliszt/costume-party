@@ -6,16 +6,20 @@
   vertical-align: 1px;
 }
 
-.slot {
+.slot-normal {
   transition: 0.3s;
-  transform: scale(0.9);
-}
-
-.slot-focus::before {
-  box-shadow: 0 0 15px #78d897;
+  opacity: 1;
+  transform: scale(1);
 }
 
 .slot-focus {
   transform: scale(1.02);
-  box-shadow: 0 0 5px #78d897;
+  box-shadow: 0 0 5px #77ff00;
+  opacity: 1;
+}
+
+.slot-disabled {
+  transform: scale(0.95);
+  box-shadow: none;
+  opacity: 0.3;
 }

@@ -11,19 +11,28 @@ import {
 } from "./player";
 import { getPlayerAvatars } from "./room";
 
+interface IRoomData {
+  playerCount: number;
+  roomCapacity: number;
+  gameStarted: boolean;
+  playerTurn: number;
+  gameEnd: boolean;
+  winner: string;
+}
 /**
  * Custom hook that set up a listener to listen to room status change
  * @returns room status data
  */
 export function useListenRoom(
-  onNextTurn: (turn: number, capacity: number) => void
-): DocumentData {
-  const [playerCount, setPlayerCount] = useState(0);
-  const [roomCapacity, setRoomCapacity] = useState(0);
-  const [gameStarted, setGameStarted] = useState(false);
-  const [playerTurn, setPlayerTurn] = useState(0);
-  const [gameEnd, setGameEnd] = useState(false);
-  const [winner, setWinner] = useState("");
+  onNextTurn: (turn: number, capacity: number) => void,
+  onGameStarted: (state: boolean) => void
+): IRoomData {
+  const [playerCount, setPlayerCount] = useState<number>(0);
+  const [roomCapacity, setRoomCapacity] = useState<number>(0);
+  const [gameStarted, setGameStarted] = useState<boolean>(false);
+  const [playerTurn, setPlayerTurn] = useState<number>(0);
+  const [gameEnd, setGameEnd] = useState<boolean>(false);
+  const [winner, setWinner] = useState<string>("");
 
   useEffect(() => {
     setTimeout(() => {
@@ -43,7 +52,7 @@ export function useListenRoom(
             if (data?.capacity === data?.players.length) {
               if (!gameStarted) {
                 setGameStarted(true);
-                localStorage.setItem("gameStarted", "true");
+                onGameStarted(true);
               }
             }
           },

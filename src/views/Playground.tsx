@@ -32,29 +32,9 @@ import {
 import { isMobile } from "react-device-detect";
 
 export default function Playground(): React.ReactElement {
+  const actionRef = useRef<IAction>(null);
+  const roomRef = useRef<IRoomRef>(null);
   const playerOrder = useRef(0);
-
-  useEffect(() => {
-    init();
-  }, []);
-
-  const init = async () => {
-    const roomID = localStorage.getItem("room_id");
-    const nickname = localStorage.getItem("nickname");
-    if (!roomID || !nickname) {
-      message.error("no room joined!");
-      history.push("/");
-    } else {
-      const player = await getPlayerByNickname(nickname);
-      const room = await getRoomStates(roomID);
-      playerOrder.current = player.order;
-      if (isMyTurn(player.order, room.turn, room.capacity) && player.alive) {
-        updatePlayerStatus(nickname, "choosing").catch((err) =>
-          message.error(err)
-        );
-      }
-    }
-  };
   const history = useHistory();
   const avatars = useListenAvatars();
   const [playerStats, playerAvatarProps] = useListenPlayer();
@@ -85,6 +65,10 @@ export default function Playground(): React.ReactElement {
     }
   };
 
+  const onGameStarted = (state: boolean) => {
+    roomRef.current?.onGameStarted(state);
+  };
+
   const {
     playerCount,
     roomCapacity,
@@ -92,15 +76,33 @@ export default function Playground(): React.ReactElement {
     playerTurn,
     gameEnd,
     winner,
-  } = useListenRoom(onNextTurn);
+  } = useListenRoom(onNextTurn, onGameStarted);
 
-  const actionRef = useRef<IAction>(null);
+  const init = async () => {
+    const roomID = localStorage.getItem("room_id");
+    const nickname = localStorage.getItem("nickname");
+    if (!roomID || !nickname) {
+      message.error("no room joined!");
+      history.push("/");
+    } else {
+      const player = await getPlayerByNickname(nickname);
+      const room = await getRoomStates(roomID);
+      playerOrder.current = player.order;
+      if (isMyTurn(player.order, room.turn, room.capacity) && player.alive) {
+        updatePlayerStatus(nickname, "choosing").catch((err) =>
+          message.error(err)
+        );
+      }
+    }
+  };
+
+  useEffect(() => {
+    init();
+  }, []);
 
   const onClearAction = (): void => {
     actionRef?.current?.clearAction();
   };
-
-  const roomRef = useRef<IRoomRef>(null);
 
   const renderStats = () => {
     if (isMobile) {
@@ -109,6 +111,7 @@ export default function Playground(): React.ReactElement {
           <Action
             ref={actionRef}
             onPlayerMove={roomRef.current?.onPlayerMove}
+            onPlayerPick={roomRef.current?.onPlayerPick}
           />
           <div
             style={{
@@ -131,6 +134,7 @@ export default function Playground(): React.ReactElement {
             <Action
               ref={actionRef}
               onPlayerMove={roomRef.current?.onPlayerMove}
+              onPlayerPick={roomRef.current?.onPlayerPick}
             />
             <Divider style={{ height: 200 }} type="vertical" />
           </div>

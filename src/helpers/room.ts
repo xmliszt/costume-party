@@ -79,6 +79,22 @@ export function generateRandomSlotPositions(
   return results;
 }
 
+export function isInWhichRoom(positionIdx: number): string | null {
+  const roomToPositionIdxs = generateRoomToPositionIdx();
+  const TL = roomToPositionIdxs.TL;
+  const TR = roomToPositionIdxs.TR;
+  const C = roomToPositionIdxs.C;
+  const BL = roomToPositionIdxs.BL;
+  const BR = roomToPositionIdxs.BR;
+
+  if (TL.includes(positionIdx)) return "TL";
+  if (TR.includes(positionIdx)) return "TR";
+  if (C.includes(positionIdx)) return "C";
+  if (BL.includes(positionIdx)) return "BL";
+  if (BR.includes(positionIdx)) return "BR";
+  return null;
+}
+
 export function getRandomRoomID(): string {
   let text = "";
   const charset = "abcdefghijklmnopqrstuvwxyz0123456789";
@@ -123,16 +139,36 @@ export function getUnAvailableMovingRooms(currentRoomType: string): string[] {
   }
 }
 
-export function highlightSlot(slotIndex: number): void {
-  const slot = document.getElementById(`slot-${slotIndex}`);
-  if (slot != null) {
-    slot!.className = slot!.className.replace("slot", "slot-focus");
+export function getAvailablePickingRooms(currentRoomType: string): string[] {
+  switch (currentRoomType) {
+    case "TL":
+      return ["TR", "C", "BL", "TL"];
+    case "TR":
+      return ["TL", "C", "BR", "TR"];
+    case "C":
+      return ["TL", "TR", "BL", "BR", "C"];
+    case "BL":
+      return ["TL", "C", "BR", "BL"];
+    case "BR":
+      return ["TR", "C", "BL", "BR"];
+    default:
+      return [];
   }
 }
 
-export function unHighlightSlot(slotIndex: number): void {
-  const slot = document.getElementById(`slot-${slotIndex}`);
-  if (slot != null) {
-    slot!.className = slot!.className.replace("slot-focus", "slot");
+export function getUnAvailablePickingRooms(currentRoomType: string): string[] {
+  switch (currentRoomType) {
+    case "TL":
+      return ["BR"];
+    case "TR":
+      return ["TR"];
+    case "C":
+      return [];
+    case "BL":
+      return ["TR"];
+    case "BR":
+      return ["TL"];
+    default:
+      return [];
   }
 }

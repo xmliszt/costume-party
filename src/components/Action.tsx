@@ -30,40 +30,56 @@ export interface IAction {
 }
 
 const Action = forwardRef<IAction, any>(
-  ({ onPlayerMove }, ref): React.ReactElement => {
+  ({ onPlayerPick, onPlayerMove }, ref): React.ReactElement => {
     const history = useHistory();
     const { playerStats, playersData, gameStarted, gameEnd, winner } =
       useContext<IPlaygroundContext>(PlaygroundContext);
 
-    const [action, setAction] = useState<number>(actions.NULL);
+    const [action, setAction] = useState<number>(actions.null);
+
     const isEndingShown = useRef(false); // For controlling the end scene modal
     const isDead = useRef(false); // For internal state reference of the state of player
 
     useImperativeHandle(ref, () => ({
       clearAction() {
-        setAction(actions.NULL);
+        setAction(actions.null);
       },
     }));
 
     const typographyLevel = isMobile ? 5 : 3;
 
     const onChooseAction = () => {
+      console.log(
+        "Player choosing action... Current status of player: " +
+          playerStats.status
+      );
+
       const _action = getRandomAction();
       setAction(_action);
 
-      if (_action === actions.BLACK) {
+      if (_action === actions.black) {
         updatePlayerStatus(localStorage.getItem("nickname")!, "killing").catch(
           (err) => {
             message.error(err);
           }
         );
       } else {
-        onPlayerMove();
-        updatePlayerStatus(localStorage.getItem("nickname")!, "moving").catch(
-          (err) => {
+        if (playerStats.status === "choosing") {
+          onPlayerPick(_action);
+          updatePlayerStatus(
+            localStorage.getItem("nickname")!,
+            "picking"
+          ).catch((err) => {
             message.error(err);
-          }
-        );
+          });
+        } else {
+          onPlayerMove(_action);
+          updatePlayerStatus(localStorage.getItem("nickname")!, "moving").catch(
+            (err) => {
+              message.error(err);
+            }
+          );
+        }
       }
     };
 
@@ -173,6 +189,21 @@ const Action = forwardRef<IAction, any>(
               </div>
             );
           }
+
+        case "picking":
+          return (
+            <div>
+              <Typography.Title level={typographyLevel}>
+                You rolled{" "}
+                <span style={{ color: actionToColorMapping[action] }}>
+                  {actionToColorStringMapping[action]}
+                </span>
+              </Typography.Title>
+              <Typography.Paragraph>
+                Pick an assassin to start moving!
+              </Typography.Paragraph>
+            </div>
+          );
 
         case "moving":
         case "killing":
