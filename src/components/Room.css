@@ -13,12 +13,14 @@
 }
 
 .slot-focus {
+  transition: 0.3s;
   transform: scale(1.02);
   box-shadow: 0 0 5px #77ff00;
   opacity: 1;
 }
 
 .slot-disabled {
+  transition: 0.3s;
   transform: scale(0.95);
   box-shadow: none;
   opacity: 0.3;

@@ -58,8 +58,11 @@ const Room = forwardRef<IRoomRef, any>((props, ref): React.ReactElement => {
   const [slotsClassName, setSlotsClassName] = useState<{
     [key: number]: string;
   }>({});
-  const [slotsStyles, setSlotsStyles] = useState<{
-    [key: number]: { [key: string]: string };
+  const [slotsBorders, setSlotBorders] = useState<{ [key: number]: string }>(
+    {}
+  );
+  const [slotsBackground, setSlotsBackground] = useState<{
+    [key: number]: string;
   }>({});
   const [hasUndo, setHasUndo] = useState<boolean>(false);
   const [slotSelected, setSlotSelected] = useState<number | null>(null);
@@ -71,11 +74,17 @@ const Room = forwardRef<IRoomRef, any>((props, ref): React.ReactElement => {
     setGameStarted(state);
   };
 
-  const makeSlot = (slotIdx: number) => (
+  const makeSlot = (slotIdx: number, roomType: string) => (
     <Button
       id={`slot-${slotIdx}`}
       className={slotsClassName[slotIdx] ?? "slot-normal"}
-      style={slotsStyles[slotIdx]}
+      style={{
+        backgroundImage: slotsBackground[slotIdx] ?? "none",
+        backgroundColor: roomColorMapping[roomType] + "70",
+        backgroundSize: "contain",
+        backgroundRepeat: "no-repeat",
+        border: slotsBorders[slotIdx] ?? "0px",
+      }}
       ghost
       disabled={!slotsEnabled[slotIdx] ?? false}
       size={isMobile ? "small" : "large"}
@@ -125,25 +134,25 @@ const Room = forwardRef<IRoomRef, any>((props, ref): React.ReactElement => {
   };
 
   const clearAllSlots = () => {
-    setSlotsStyles((slotStyles) => {
-      const oldSlotStyles: {
-        [key: number]: { [key: string]: string };
-      } = {};
+    setSlotsBackground(() => {
+      const slotsBackground: { [key: number]: string } = {};
       for (let row = 0; row < GRID.GRID_ROW_LENGTH; row++) {
         for (let col = 0; col < GRID.GRID_CLN_LENGTH; col++) {
           const index = row * 12 + col;
-          const slotProps = makeSlotProps(index, row, col);
-          const slotStyle = {
-            backgroundImage: "none",
-            backgroundColor: roomColorMapping[slotProps.roomType] + "70",
-            backgroundSize: "contain",
-            backgroundRepeat: "no-repeat",
-            border: "0px",
-          };
-          oldSlotStyles[index] = slotStyle;
+          slotsBackground[index] = "none";
         }
       }
-      return oldSlotStyles;
+      return slotsBackground;
+    });
+    setSlotBorders(() => {
+      const slotsBorder: { [key: number]: string } = {};
+      for (let row = 0; row < GRID.GRID_ROW_LENGTH; row++) {
+        for (let col = 0; col < GRID.GRID_CLN_LENGTH; col++) {
+          const index = row * 12 + col;
+          slotsBorder[index] = "none";
+        }
+      }
+      return slotsBorder;
     });
   };
 
@@ -152,7 +161,8 @@ const Room = forwardRef<IRoomRef, any>((props, ref): React.ReactElement => {
     const tmpGrid = [];
     const tmpSlotsEnabled: { [key: number]: boolean } = {};
     const tmpSlotsClassName: { [key: number]: string } = {};
-    const tmpSlotsStyles: { [key: number]: { [key: string]: string } } = {};
+    const tmpSlotsBackground: { [key: number]: string } = {};
+    const tmpSlotsBorder: { [key: number]: string } = {};
     const avatarPositions = getAllAvatarPositions(avatars);
     const avatarPositionMap = getAvatarPositionMap(avatars);
     let index = 0;
@@ -164,19 +174,13 @@ const Room = forwardRef<IRoomRef, any>((props, ref): React.ReactElement => {
         const imgUrl = !avatarPositions.includes(index)
           ? null
           : avatarPositionMap[index].imageUrl;
-        const slotStyle = {
-          backgroundImage: imgUrl == null ? "none" : `url(${imgUrl})`,
-          backgroundColor: roomColorMapping[slotProps.roomType] + "70",
-          backgroundSize: "contain",
-          backgroundRepeat: "no-repeat",
-          border:
-            index === playerAvatar.positionIdx
-              ? `5px solid ${playerAvatar.strokeColor}`
-              : "0px",
-        };
+        tmpSlotsBackground[index] = imgUrl == null ? "none" : `url(${imgUrl})`;
+        tmpSlotsBorder[index] =
+          index === playerAvatar.positionIdx
+            ? `5px solid ${playerAvatar.strokeColor}`
+            : "0px";
         tmpSlotsEnabled[index] = true;
         tmpSlotsClassName[index] = "slot-normal";
-        tmpSlotsStyles[index] = slotStyle;
         index++;
       }
       tmpGrid.push(currentRow);
@@ -185,7 +189,8 @@ const Room = forwardRef<IRoomRef, any>((props, ref): React.ReactElement => {
     setGrid(tmpGrid);
     setSlotsEnabled(tmpSlotsEnabled);
     setSlotsClassName(tmpSlotsClassName);
-    setSlotsStyles(tmpSlotsStyles);
+    setSlotsBackground(tmpSlotsBackground);
+    setSlotBorders(tmpSlotsBorder);
   };
 
   useEffect(() => {
@@ -272,7 +277,7 @@ const Room = forwardRef<IRoomRef, any>((props, ref): React.ReactElement => {
   };
 
   return (
-    <div key={uuidv4()}>
+    <div>
       <Space direction="vertical" size="large">
         <Spin spinning={loading} indicator={<LoadingOutlined />}>
           <div>
@@ -286,7 +291,7 @@ const Room = forwardRef<IRoomRef, any>((props, ref): React.ReactElement => {
                   {row.map((col, colIdx) => {
                     return (
                       <Col key={col.index}>
-                        {makeSlot(rowIdx * 12 + colIdx)}
+                        {makeSlot(rowIdx * 12 + colIdx, col.roomType)}
                       </Col>
                     );
                   })}
