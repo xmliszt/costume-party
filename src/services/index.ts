@@ -10,8 +10,10 @@ import {
   updatePlayerStatus,
 } from "./player";
 import { getPlayerAvatars } from "./room";
+import { ITurn } from "../interfaces/room";
 
 interface IRoomData {
+  playersAvatars: number[];
   playerCount: number;
   roomCapacity: number;
   gameStarted: boolean;
@@ -26,6 +28,7 @@ interface IRoomData {
 export function useListenRoom(
   onNextTurn: (turn: number, capacity: number) => void
 ): IRoomData {
+  const [playersAvatars, setPlayersAvatars] = useState<number[]>([]);
   const [playerCount, setPlayerCount] = useState<number>(0);
   const [roomCapacity, setRoomCapacity] = useState<number>(0);
   const [gameStarted, setGameStarted] = useState<boolean>(false);
@@ -43,6 +46,7 @@ export function useListenRoom(
           doc(db, "rooms", roomID),
           (_doc) => {
             const data = _doc.data();
+            setPlayersAvatars(data?.players);
             setRoomCapacity(data?.capacity);
             setPlayerCount(data?.players.length);
             setPlayerTurn(data?.turn);
@@ -64,6 +68,7 @@ export function useListenRoom(
   }, []);
 
   return {
+    playersAvatars,
     playerCount,
     roomCapacity,
     gameStarted,
@@ -97,8 +102,6 @@ export function useListenAvatars(): IAvatarProps[] {
             });
             if (data.dead && playerAvatars.includes(Number(data.id))) {
               try {
-                console.log("Set to dead");
-
                 const playerStats = await getPlayerByAvatarID(Number(data.id));
                 updatePlayerAliveness(playerStats.nickname, false);
                 updatePlayerStatus(playerStats.nickname, "dead");
@@ -208,4 +211,40 @@ export function useExitRoomAction(callbackAction: () => void): void {
       callbackAction();
     };
   }, []);
+}
+
+export function useListenTurns(): ITurn[] {
+  const [turns, setTurns] = useState<ITurn[]>([]);
+
+  useEffect(() => {
+    const roomID = localStorage.getItem("room_id");
+
+    if (roomID) {
+      onSnapshot(
+        collection(db, "rooms", roomID, "turns"),
+        (snapshots) => {
+          const _turns: ITurn[] = [];
+          snapshots.forEach((_doc) => {
+            const data = _doc.data();
+            _turns.push({
+              turn: data.turn,
+              actor: data.actor,
+              status: data.status,
+              action: data.action,
+              fromRoom: data.fromRoom,
+              toRoom: data.toRoom,
+              avatarID: data.avatarID,
+              killedPlayer: data.killedPlayer,
+            });
+          });
+          setTurns(_turns.sort((a, b) => a.turn - b.turn));
+        },
+        (err) => {
+          console.log(err);
+        }
+      );
+    }
+  }, []);
+
+  return turns;
 }

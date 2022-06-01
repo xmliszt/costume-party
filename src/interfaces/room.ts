@@ -13,3 +13,15 @@ export interface IRoom {
   gameEnd: boolean;
   winner: string;
 }
+
+// status: choosing (roll), waiting, picking (move target), moving (move dest), killing, kill (killed action performed) dead
+export interface ITurn {
+  turn: number; // the turn number
+  actor: string; // acting player nickname
+  status: string; // see above comment
+  action: number | null; // for choosing
+  fromRoom: string | null; // from room type
+  toRoom: string | null; // to room type
+  avatarID: number | null; // position index of avatar moved
+  killedPlayer: string | null; // killed player nickname
+}

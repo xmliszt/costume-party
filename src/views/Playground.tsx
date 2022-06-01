@@ -1,6 +1,7 @@
-import React, { useEffect, useRef } from "react";
+/* eslint-disable @typescript-eslint/no-empty-function */
+import React, { useEffect, useRef, useState } from "react";
 import { useHistory } from "react-router";
-import { Typography, message, Spin, Divider } from "antd";
+import { Typography, message, Spin, Divider, Timeline, Avatar } from "antd";
 import { LoadingOutlined } from "@ant-design/icons";
 
 import "./Playground.css";
@@ -17,6 +18,7 @@ import {
   useListenPlayer,
   useListenPlayers,
   useListenRoom,
+  useListenTurns,
 } from "../services";
 import {
   getPlayerByNickname,
@@ -24,12 +26,16 @@ import {
   updatePlayerStatus,
 } from "../services/player";
 import {
+  addTurn,
   getRoomStates,
   isOnlyOnePlayerAlive,
   nextTurn,
   updateRoomGameState,
 } from "../services/room";
 import { isMobile } from "react-device-detect";
+import { ITurn } from "../interfaces/room";
+import { roomColorMapping, roomColorNameMapping } from "../constants";
+import Text from "antd/lib/typography/Text";
 
 export default function Playground(): React.ReactElement {
   const actionRef = useRef<IAction>(null);
@@ -39,6 +45,8 @@ export default function Playground(): React.ReactElement {
   const avatars = useListenAvatars();
   const { playerStats, playerAvatar } = useListenPlayer();
   const playersData = useListenPlayers();
+  const turns = useListenTurns();
+  const { playersAvatars } = useListenRoom((turn, capacity) => {});
 
   const onNextTurn = async (turn: number, capacity: number) => {
     const roomID = localStorage.getItem("room_id")!;
@@ -54,6 +62,16 @@ export default function Playground(): React.ReactElement {
               await updateRoomGameState(roomID, true, nickname);
             } else {
               updatePlayerStatus(nickname, "choosing");
+              addTurn(localStorage.getItem("room_id")!, {
+                turn: turn,
+                actor: nickname,
+                status: "choosing",
+                action: null,
+                fromRoom: null,
+                toRoom: null,
+                avatarID: null,
+                killedPlayer: null,
+              });
             }
           } else {
             nextTurn(localStorage.getItem("room_id")!);
@@ -113,6 +131,7 @@ export default function Playground(): React.ReactElement {
             onPlayerPick={roomRef.current?.onPlayerPick}
             onPlayerKill={roomRef.current?.onPlayerKill}
           />
+          <Divider></Divider>
           <div
             style={{
               display: "flex",
@@ -145,6 +164,123 @@ export default function Playground(): React.ReactElement {
     }
   };
 
+  const [pendingMsg, setPendingMsg] = useState<string | null>(null);
+  interface ITurnMessage {
+    subject: string;
+    message: React.ReactElement | null;
+    pending: boolean; // if true, will display as pending in timeline, otherwise, display as a step
+    pendingMessage: string | null;
+  }
+
+  const generateTurnMessage = (turn: ITurn): ITurnMessage | null => {
+    switch (turn.status) {
+      case "choosing":
+        return {
+          subject: turn.actor,
+          message: null,
+          pending: true,
+          pendingMessage: `${turn.actor} is choosing a room by rolling dice...`,
+        };
+      case "picking":
+        return {
+          subject: turn.actor,
+          message: null,
+          pending: true,
+          pendingMessage: `${turn.actor} is picking an avatar to move...`,
+        };
+      case "moving": {
+        return {
+          subject: turn.actor,
+          message: (
+            <span>
+              <span>{turn.actor} moved </span>
+              <Avatar
+                src={`${process.env.PUBLIC_URL}/avatars/${turn.avatarID}.png`}
+                size="small"
+              ></Avatar>
+              <span> from </span>
+              <span style={{ color: roomColorMapping[turn.fromRoom!] }}>
+                {roomColorNameMapping[turn.fromRoom!]} Room
+              </span>
+              <span> to </span>
+              <span style={{ color: roomColorMapping[turn.toRoom!] }}>
+                {roomColorNameMapping[turn.toRoom!]} Room
+              </span>
+            </span>
+          ),
+          pending: false,
+          pendingMessage: null,
+        };
+      }
+      case "killing": {
+        return {
+          subject: turn.actor,
+          message: null,
+          pending: true,
+          pendingMessage: `${turn.actor} is choosing an avatar to kill...`,
+        };
+      }
+      case "kill": {
+        return {
+          subject: turn.actor,
+          message: (
+            <span>
+              <span>
+                {turn.actor} <b style={{ color: "#F56C6C" }}>killed</b>
+              </span>
+              <Avatar
+                src={`${process.env.PUBLIC_URL}/avatars/${turn.avatarID}.png`}
+                size="small"
+              ></Avatar>
+              <span> in </span>
+              <span style={{ color: roomColorMapping[turn.fromRoom!] }}>
+                {roomColorNameMapping[turn.fromRoom!]} Room
+              </span>
+              <span>
+                ,{" "}
+                {playersAvatars.includes(turn.avatarID!)
+                  ? `who is an assassin!!!`
+                  : "who is an innocent :("}
+              </span>
+            </span>
+          ),
+          pending: false,
+          pendingMessage: null,
+        };
+      }
+      case "dead": {
+        return {
+          subject: turn.actor,
+          message: <Text disabled>{turn.actor} is dead...</Text>,
+          pending: false,
+          pendingMessage: null,
+        };
+      }
+      default:
+        return null;
+    }
+  };
+
+  function renderTimelineItems() {
+    const msgs: ITurnMessage[] = [];
+    turns.forEach((turn) => {
+      const msg = generateTurnMessage(turn);
+      if (msg && !msg.pending) {
+        msg && msgs.push(msg);
+      }
+    });
+    return msgs;
+  }
+
+  useEffect(() => {
+    turns.forEach((turn) => {
+      const msg = generateTurnMessage(turn);
+      if (msg && msg.pending) {
+        setPendingMsg(msg.pendingMessage);
+      }
+    });
+  }, [turns]);
+
   return (
     <PlaygroundContext.Provider
       value={{
@@ -176,6 +312,15 @@ export default function Playground(): React.ReactElement {
         <Room ref={roomRef} onClearAction={onClearAction} />
       </Spin>
       {renderStats()}
+      <div className={isMobile ? "timeline-mobile" : "timeline"}>
+        <Timeline mode="left" pending={pendingMsg} reverse>
+          {renderTimelineItems().map((message, idx) => (
+            <Timeline.Item key={idx} label={message.subject}>
+              {message.message}
+            </Timeline.Item>
+          ))}
+        </Timeline>
+      </div>
     </PlaygroundContext.Provider>
   );
 }

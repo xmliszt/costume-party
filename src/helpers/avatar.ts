@@ -1,4 +1,5 @@
 import { IAvatarProps } from "../interfaces/avatar";
+import IPlayerProps from "../interfaces/player";
 import { generateRoomToPositionIdx } from "./room";
 
 export function generateAvatarColorLight(): string {
@@ -38,6 +39,16 @@ export function getAvatarPositionMap(avatars: IAvatarProps[]): {
   const results: { [key: number]: IAvatarProps } = {};
   for (const avatar of avatars) {
     results[avatar.positionIdx] = avatar;
+  }
+  return results;
+}
+
+export function getPlayerAvatarIDMap(players: IPlayerProps[]): {
+  [key: number]: IPlayerProps;
+} {
+  const results: { [key: number]: IPlayerProps } = {};
+  for (const player of players) {
+    results[player.avatar] = player;
   }
   return results;
 }

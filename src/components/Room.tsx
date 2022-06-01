@@ -22,12 +22,16 @@ import {
   makeSlotProps,
 } from "../helpers/room";
 import { isMobile } from "react-device-detect";
-import { updatePlayerStatus } from "../services/player";
+import {
+  getPlayerByAvatarID,
+  updatePlayerAliveness,
+  updatePlayerStatus,
+} from "../services/player";
 import { ISlot } from "../interfaces/room";
 import { LoadingOutlined } from "@ant-design/icons";
 import { useListenAvatars, useListenPlayer, useListenRoom } from "../services";
 import { updateAvatarProps, updateAvatarStatus } from "../services/avatar";
-import { nextTurn } from "../services/room";
+import { addTurn, getPlayerAvatars, nextTurn } from "../services/room";
 import { getAllAvatarPositions, getAvatarPositionMap } from "../helpers/avatar";
 import Avatar from "antd/lib/avatar/avatar";
 import { IAvatarProps } from "../interfaces/avatar";
@@ -105,7 +109,7 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
       );
     };
 
-    const onSlotSelected = async (slotIdx: number) => {
+    const onSlotSelected = (slotIdx: number) => {
       if (playerStats && playerStats.status === "picking") {
         setPickedSlot(slotIdx);
         updatePlayerStatus(localStorage.getItem("nickname")!, "moving").catch(
@@ -144,6 +148,7 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
         // remove image for the old slot
         const avatarPositionMap = getAvatarPositionMap(avatars);
         const selectedAvatar = avatarPositionMap[pickedSlot!];
+        const fromWhichRoom = isInWhichRoom(selectedAvatar.positionIdx);
         const inWhichRoom = isInWhichRoom(slotIdx);
         // update firebase
         updateAvatarProps(
@@ -152,6 +157,17 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
           slotIdx,
           roomColorMapping[inWhichRoom!]
         ).then(() => {
+          addTurn(localStorage.getItem("room_id")!, {
+            turn: playerTurn,
+            actor: playerStats.nickname,
+            status: "moving",
+            action: actionSelected,
+            fromRoom: fromWhichRoom,
+            toRoom: inWhichRoom,
+            avatarID: Number(selectedAvatar.id),
+            killedPlayer: null,
+          });
+
           // pass the turn
           nextTurn(localStorage.getItem("room_id")!);
           updatePlayerStatus(
@@ -331,12 +347,46 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
       }
     };
 
-    const conductMurder = (avatarToKill: IAvatarProps) => {
+    const conductMurder = async (avatarToKill: IAvatarProps) => {
       // Kill the chosen target
       updateAvatarStatus(
         localStorage.getItem("room_id")!,
         avatarToKill.id,
         true
+      ).then(() => {
+        addTurn(localStorage.getItem("room_id")!, {
+          turn: playerTurn,
+          actor: playerStats?.nickname ?? "",
+          status: "kill",
+          action: actionSelected,
+          fromRoom: isInWhichRoom(avatarToKill.positionIdx),
+          toRoom: null,
+          avatarID: Number(avatarToKill.id),
+          killedPlayer: null,
+        });
+      });
+
+      getPlayerAvatars(localStorage.getItem("room_id")!).then(
+        (playerAvatars) => {
+          if (playerAvatars.includes(Number(avatarToKill.id))) {
+            getPlayerByAvatarID(Number(avatarToKill.id))
+              .then((player) => {
+                addTurn(localStorage.getItem("room_id")!, {
+                  turn: playerTurn,
+                  actor: player.nickname,
+                  status: "dead",
+                  action: null,
+                  fromRoom: null,
+                  toRoom: null,
+                  avatarID: null,
+                  killedPlayer: null,
+                });
+              })
+              .catch((err) => {
+                message.error(err);
+              });
+          }
+        }
       );
 
       // Reset the board
@@ -407,7 +457,7 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
     };
 
     return (
-      <div>
+      <div className="room">
         <Space direction="vertical" size="large">
           <Spin spinning={loading} indicator={<LoadingOutlined />}>
             <div>

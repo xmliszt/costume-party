@@ -12,7 +12,7 @@ import {
 import { getRandomInt } from "../helpers/number";
 import { IAvatarProps } from "../interfaces/avatar";
 import { asyncForEach } from "../helpers/async";
-import { IRoom } from "../interfaces/room";
+import { IRoom, ITurn } from "../interfaces/room";
 
 /**
  * Create a new room
@@ -255,6 +255,48 @@ export async function initializeGlobals(roomID: string): Promise<boolean> {
   });
 }
 
+/**
+ * Initialize all 20 avatars props in a given room
+ */
+export async function addTurn(roomID: string, turn: ITurn): Promise<boolean> {
+  return new Promise((res, rej) => {
+    isRoomExist(roomID)
+      .then(async (exist) => {
+        if (exist) {
+          try {
+            await setDoc(
+              doc(
+                db,
+                "rooms",
+                roomID,
+                "turns",
+                turn.turn.toString() + turn.status.toLowerCase()
+              ),
+              {
+                turn: turn.turn,
+                actor: turn.actor,
+                status: turn.status,
+                action: turn.action,
+                fromRoom: turn.fromRoom,
+                toRoom: turn.toRoom,
+                avatarID: turn.avatarID,
+                killedPlayer: turn.killedPlayer,
+              }
+            );
+            res(true);
+          } catch (err) {
+            rej(err);
+          }
+        } else {
+          rej("room does not exist");
+        }
+      })
+      .catch((err) => {
+        rej(err);
+      });
+  });
+}
+
 export async function getAllAvatarsProps(
   roomID: string
 ): Promise<Array<IAvatarProps>> {
@@ -320,7 +362,7 @@ export async function isOnlyOnePlayerAlive(
             const data = player.data();
             if (data?.alive) counter++;
           });
-          res(counter === 1);
+          res(counter == 1);
         }
       })
       .catch((err) => rej(err));

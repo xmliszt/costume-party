@@ -37,6 +37,14 @@ export const roomColorMapping: tRoomTypes = {
   C: COLORS.black,
 };
 
+export const roomColorNameMapping: { [key: string]: string } = {
+  TL: "Yellow",
+  TR: "Blue",
+  BL: "Green",
+  BR: "Red",
+  C: "Black",
+};
+
 export const actions: { [key: string]: number } = {
   green: 0,
   yellow: 1,

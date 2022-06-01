@@ -47,6 +47,33 @@ export async function updateAvatarProps(
   });
 }
 
+export async function getAllAvatars(): Promise<IAvatarProps[]> {
+  return new Promise((res, rej) => {
+    getDocs(
+      collection(db, "rooms", localStorage.getItem("room_id")!, "avatars")
+    )
+      .then((snapshots) => {
+        const _avatars: IAvatarProps[] = [];
+
+        snapshots.forEach((_doc) => {
+          const data = _doc.data();
+          _avatars.push({
+            id: data.id,
+            positionIdx: data.positionIdx,
+            strokeColor: data.strokeColor,
+            imageUrl: `${process.env.PUBLIC_URL}/avatars/${data.id}.png`,
+            dead: data.dead,
+          });
+        });
+
+        res(_avatars);
+      })
+      .catch((err) => {
+        rej(err);
+      });
+  });
+}
+
 export async function getAvatarByID(avatarID: string): Promise<IAvatarProps> {
   return new Promise((res, rej) => {
     const q = query(

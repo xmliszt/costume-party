@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-empty-function */
 /**
  * The action section where the player either throw the dice, or perform action, or watch other player's action status\
  * State Machine: (status)
@@ -26,8 +27,9 @@ import {
 import { PlaygroundContext } from "../context/PlaygroundContext";
 import { getRandomAction } from "../helpers/action";
 import IPlaygroundContext from "../interfaces/playground";
+import { useListenRoom } from "../services";
 import { updatePlayerStatus } from "../services/player";
-import { deleteRoom, nextTurn } from "../services/room";
+import { addTurn, deleteRoom, nextTurn } from "../services/room";
 import "./Action.css";
 
 export interface IAction {
@@ -40,6 +42,7 @@ const Action = forwardRef<IAction, any>(
     const { playerStats, playersData, gameStarted, gameEnd, winner } =
       useContext<IPlaygroundContext>(PlaygroundContext);
 
+    const { playerTurn } = useListenRoom((turn, capacity) => {});
     const [action, setAction] = useState<number>(actions.null);
 
     const isEndingShown = useRef(false); // For controlling the end scene modal
@@ -64,6 +67,16 @@ const Action = forwardRef<IAction, any>(
             message.error(err);
           }
         );
+        addTurn(localStorage.getItem("room_id")!, {
+          turn: playerTurn,
+          actor: playerStats.nickname,
+          status: "killing",
+          action: null,
+          fromRoom: null,
+          toRoom: null,
+          avatarID: null,
+          killedPlayer: null,
+        });
       } else {
         if (playerStats.status === "choosing") {
           onPlayerPick(_action);
@@ -72,6 +85,16 @@ const Action = forwardRef<IAction, any>(
             "picking"
           ).catch((err) => {
             message.error(err);
+          });
+          addTurn(localStorage.getItem("room_id")!, {
+            turn: playerTurn,
+            actor: playerStats.nickname,
+            status: "picking",
+            action: null,
+            fromRoom: null,
+            toRoom: null,
+            avatarID: null,
+            killedPlayer: null,
           });
         } else {
           onPlayerMove(_action);
