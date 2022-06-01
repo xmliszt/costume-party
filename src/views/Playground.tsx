@@ -65,10 +65,6 @@ export default function Playground(): React.ReactElement {
     }
   };
 
-  const onGameStarted = (state: boolean) => {
-    roomRef.current?.onGameStarted(state);
-  };
-
   const {
     playerCount,
     roomCapacity,
@@ -76,7 +72,7 @@ export default function Playground(): React.ReactElement {
     playerTurn,
     gameEnd,
     winner,
-  } = useListenRoom(onNextTurn, onGameStarted);
+  } = useListenRoom(onNextTurn);
 
   const init = async () => {
     const roomID = localStorage.getItem("room_id");
@@ -97,7 +93,10 @@ export default function Playground(): React.ReactElement {
   };
 
   useEffect(() => {
-    init();
+    const asyncInit = async () => {
+      await init();
+    };
+    asyncInit();
   }, []);
 
   const onClearAction = (): void => {

@@ -24,8 +24,7 @@ interface IRoomData {
  * @returns room status data
  */
 export function useListenRoom(
-  onNextTurn: (turn: number, capacity: number) => void,
-  onGameStarted: (state: boolean) => void
+  onNextTurn: (turn: number, capacity: number) => void
 ): IRoomData {
   const [playerCount, setPlayerCount] = useState<number>(0);
   const [roomCapacity, setRoomCapacity] = useState<number>(0);
@@ -52,7 +51,6 @@ export function useListenRoom(
             if (data?.capacity === data?.players.length) {
               if (!gameStarted) {
                 setGameStarted(true);
-                onGameStarted(true);
               }
               onNextTurn(data?.turn, data?.capacity);
             }

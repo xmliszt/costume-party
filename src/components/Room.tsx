@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-empty-function */
 import { Button, Row, Col, Space, Spin, message, Modal } from "antd";
 import React, {
   forwardRef,
@@ -23,8 +24,8 @@ import {
 import { isMobile } from "react-device-detect";
 import { updatePlayerStatus } from "../services/player";
 import { ISlot } from "../interfaces/room";
-import { LoadingOutlined, ThunderboltFilled } from "@ant-design/icons";
-import { useListenAvatars, useListenPlayer } from "../services";
+import { LoadingOutlined } from "@ant-design/icons";
+import { useListenAvatars, useListenPlayer, useListenRoom } from "../services";
 import { updateAvatarProps, updateAvatarStatus } from "../services/avatar";
 import { nextTurn } from "../services/room";
 import { getAllAvatarPositions, getAvatarPositionMap } from "../helpers/avatar";
@@ -35,7 +36,6 @@ export interface IRoomRef {
   onPlayerMove(_action: number): void;
   onPlayerPick(_action: number): void;
   onPlayerKill(_action: number): void;
-  onGameStarted(state: boolean): void;
 }
 
 interface IRoomProp {
@@ -44,17 +44,19 @@ interface IRoomProp {
 
 const Room = forwardRef<IRoomRef, IRoomProp>(
   ({ onClearAction }, ref): React.ReactElement => {
+    const onNextTurn = async (turn: number, capacity: number) => {};
+
     const avatars = useListenAvatars();
-    const { playerStats, playerAvatar } = useListenPlayer();
+    const { playerStats } = useListenPlayer();
+    const { gameStarted, playerTurn, gameEnd, winner } =
+      useListenRoom(onNextTurn);
 
     useImperativeHandle(ref, () => ({
       onPlayerMove,
       onPlayerPick,
       onPlayerKill,
-      onGameStarted,
     }));
 
-    const [gameStarted, setGameStarted] = useState<boolean>(false);
     const [loading, setLoading] = useState<boolean>(false);
     const [grid, setGrid] = useState<ISlot[][]>([]);
     const [slotsEnabled, setSlotsEnabled] = useState<{
@@ -63,45 +65,45 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
     const [slotsClassName, setSlotsClassName] = useState<{
       [key: number]: string;
     }>({});
-    const [slotsBorders, setSlotBorders] = useState<{ [key: number]: string }>(
-      {}
-    );
-    const [slotsBackground, setSlotsBackground] = useState<{
-      [key: number]: string;
-    }>({});
     const [hasUndo, setHasUndo] = useState<boolean>(false);
     const [actionSelected, setActionSelected] = useState<number | null>(null);
     const [pickedSlot, setPickedSlot] = useState<number | null>(null);
     const [rolledRoom, setRolledRoom] = useState<string | null>(null);
-    const onGameStarted = (state: boolean) => {
-      console.log("Set game started to " + state);
+    const [playerAvatar, setPlayerAvatar] = useState<IAvatarProps | null>();
 
-      setGameStarted(state);
+    const makeSlot = (slotIdx: number, roomType: string) => {
+      const avatarPositions = getAllAvatarPositions(avatars);
+      const avatarPositionMap = getAvatarPositionMap(avatars);
+      const backgroundImage = avatarPositions.includes(slotIdx)
+        ? !avatarPositionMap[slotIdx].dead
+          ? avatarPositionMap[slotIdx].imageUrl
+          : "none"
+        : "none";
+
+      return (
+        <Button
+          id={`slot-${slotIdx}`}
+          className={slotsClassName[slotIdx] ?? "slot-normal"}
+          style={{
+            backgroundImage: `url(${backgroundImage})`,
+            backgroundColor: roomColorMapping[roomType] + "70",
+            backgroundSize: "contain",
+            backgroundRepeat: "no-repeat",
+            border:
+              playerAvatar?.positionIdx === slotIdx
+                ? `5px solid ${playerAvatar!.strokeColor}`
+                : "none",
+          }}
+          ghost
+          disabled={!slotsEnabled[slotIdx] ?? false}
+          size={isMobile ? "small" : "large"}
+          icon={<div style={{ width: 0, height: 0 }}></div>}
+          onClick={() => {
+            onSlotSelected(slotIdx);
+          }}
+        ></Button>
+      );
     };
-
-    const makeSlot = (slotIdx: number, roomType: string) => (
-      <Button
-        id={`slot-${slotIdx}`}
-        className={slotsClassName[slotIdx] ?? "slot-normal"}
-        style={{
-          backgroundImage: slotsBackground[slotIdx] ?? "none",
-          backgroundColor: roomColorMapping[roomType] + "70",
-          backgroundSize: "contain",
-          backgroundRepeat: "no-repeat",
-          border:
-            playerAvatar?.positionIdx === slotIdx
-              ? `5px solid ${playerAvatar!.strokeColor}`
-              : "none",
-        }}
-        ghost
-        disabled={!slotsEnabled[slotIdx] ?? false}
-        size={isMobile ? "small" : "large"}
-        icon={<div style={{ width: 0, height: 0 }}></div>}
-        onClick={() => {
-          onSlotSelected(slotIdx);
-        }}
-      ></Button>
-    );
 
     const onSlotSelected = async (slotIdx: number) => {
       if (playerStats && playerStats.status === "picking") {
@@ -143,19 +145,6 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
         const avatarPositionMap = getAvatarPositionMap(avatars);
         const selectedAvatar = avatarPositionMap[pickedSlot!];
         const inWhichRoom = isInWhichRoom(slotIdx);
-        setSlotsBackground((slots) => {
-          const _slots = { ...slots };
-          _slots[slotIdx] = `url(${selectedAvatar.imageUrl})`;
-          _slots[pickedSlot!] = "none";
-          return _slots;
-        });
-        setSlotBorders((slots) => {
-          const _slots = { ...slots };
-          const pickedBorder = _slots[pickedSlot!];
-          _slots[slotIdx] = pickedBorder;
-          _slots[pickedSlot!] = "none";
-          return _slots;
-        });
         // update firebase
         updateAvatarProps(
           localStorage.getItem("room_id")!,
@@ -223,81 +212,26 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
       );
     };
 
-    const clearAllSlots = () => {
-      setSlotsBackground(() => {
-        const slotsBackground: { [key: number]: string } = {};
-        for (let row = 0; row < GRID.GRID_ROW_LENGTH; row++) {
-          for (let col = 0; col < GRID.GRID_CLN_LENGTH; col++) {
-            const index = row * 12 + col;
-            slotsBackground[index] = "none";
-          }
-        }
-        return slotsBackground;
-      });
-      setSlotBorders(() => {
-        const slotsBorder: { [key: number]: string } = {};
-        for (let row = 0; row < GRID.GRID_ROW_LENGTH; row++) {
-          for (let col = 0; col < GRID.GRID_CLN_LENGTH; col++) {
-            const index = row * 12 + col;
-            slotsBorder[index] = "none";
-          }
-        }
-        return slotsBorder;
-      });
-    };
-
     const refresh = async () => {
-      const avatarPositions = getAllAvatarPositions(avatars);
-      const avatarPositionMap = getAvatarPositionMap(avatars);
       for (
         let index = 0;
         index < GRID.GRID_ROW_LENGTH * GRID.GRID_CLN_LENGTH;
         index++
       ) {
-        const imgUrl = !avatarPositions.includes(index)
-          ? null
-          : avatarPositionMap[index].imageUrl;
-        setSlotsBackground((slots) => {
-          const _slots = slots;
-          _slots[index] = imgUrl == null ? "none" : `url(${imgUrl})`;
-          return _slots;
-        });
-        setSlotBorders((slots) => {
-          const _slots = slots;
-          _slots[index] =
-            playerAvatar?.positionIdx === index
-              ? `5px solid ${playerAvatar!.strokeColor}`
-              : "none";
-          return _slots;
-        });
         resetSlot(index);
       }
     };
 
     const init = async () => {
-      clearAllSlots();
       const tmpGrid = [];
       const tmpSlotsEnabled: { [key: number]: boolean } = {};
       const tmpSlotsClassName: { [key: number]: string } = {};
-      const tmpSlotsBackground: { [key: number]: string } = {};
-      const tmpSlotsBorder: { [key: number]: string } = {};
-      const avatarPositions = getAllAvatarPositions(avatars);
-      const avatarPositionMap = getAvatarPositionMap(avatars);
       let index = 0;
       for (let row = 0; row < GRID.GRID_ROW_LENGTH; row++) {
         const currentRow = [];
         for (let col = 0; col < GRID.GRID_CLN_LENGTH; col++) {
           const slotProps = makeSlotProps(index, row, col);
           currentRow.push(slotProps);
-          const imgUrl = !avatarPositions.includes(index)
-            ? null
-            : avatarPositionMap[index].imageUrl;
-          tmpSlotsBackground[index] =
-            imgUrl == null ? "none" : `url(${imgUrl})`;
-          tmpSlotsBorder[index] =
-            index === playerAvatar?.positionIdx
-              ? `5px solid ${playerAvatar!.strokeColor}`
-              : "none";
           tmpSlotsEnabled[index] = false;
           tmpSlotsClassName[index] = "slot-normal";
           index++;
@@ -308,8 +242,6 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
       setGrid(tmpGrid);
       setSlotsEnabled(tmpSlotsEnabled);
       setSlotsClassName(tmpSlotsClassName);
-      setSlotsBackground(tmpSlotsBackground);
-      setSlotBorders(tmpSlotsBorder);
     };
 
     useEffect(() => {
@@ -325,14 +257,20 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
 
     useEffect(() => {
       const asyncCallback = async () => {
-        if (playerStats && playerStats.status === "choosing") {
-          setLoading(true);
-          await refresh();
-          setLoading(false);
-        }
+        setLoading(true);
+        await refresh();
+        setLoading(false);
       };
       asyncCallback();
-    }, [playerStats && playerStats.status]);
+    }, [playerTurn]);
+
+    useEffect(() => {
+      for (const avatar of avatars) {
+        if (avatar.id === String(playerStats?.avatar)) {
+          setPlayerAvatar(avatar);
+        }
+      }
+    }, [avatars]);
 
     const highlighSlot = (slotIdx: number) => {
       setSlotsEnabled((slots) => {
@@ -400,18 +338,6 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
         avatarToKill.id,
         true
       );
-
-      // Remove it from the board
-      setSlotsBackground((slots) => {
-        const _slots = { ...slots };
-        _slots[avatarToKill.positionIdx] = "none";
-        return _slots;
-      });
-      setSlotBorders((slots) => {
-        const _slots = { ...slots };
-        _slots[avatarToKill.positionIdx] = "none";
-        return _slots;
-      });
 
       // Reset the board
       setPickedSlot(null);
@@ -516,16 +442,3 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
 );
 
 export default Room;
-function useContext(PlaygroundContext: any): {
-  playerAvatar: any;
-  playerStats: any;
-} {
-  throw new Error("Function not implemented.");
-}
-
-function PlaygroundContext(PlaygroundContext: any): {
-  playerAvatar: any;
-  playerStats: any;
-} {
-  throw new Error("Function not implemented.");
-}

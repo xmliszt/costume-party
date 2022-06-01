@@ -320,7 +320,6 @@ export async function isOnlyOnePlayerAlive(
             const data = player.data();
             if (data?.alive) counter++;
           });
-          console.log(counter);
           res(counter === 1);
         }
       })
