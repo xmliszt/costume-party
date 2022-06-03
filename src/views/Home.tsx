@@ -43,7 +43,6 @@ export default function Home(): React.ReactElement {
   const [id_4, setId_4] = useState("");
 
   useEffect(() => {
-    localStorage.setItem("gameStarted", "false");
     if (localStorage.getItem("nickname")) {
       setNickname(localStorage.getItem("nickname")!);
     }

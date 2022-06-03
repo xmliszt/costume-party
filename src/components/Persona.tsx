@@ -3,6 +3,7 @@ import { Avatar, Typography } from "antd";
 import { useContext, useEffect, useState } from "react";
 import { isMobile } from "react-device-detect";
 import { PlaygroundContext } from "../context/PlaygroundContext";
+import { getPlayerAvatar } from "../helpers/avatar";
 import { IAvatarProps } from "../interfaces/avatar";
 import IPlaygroundContext from "../interfaces/playground";
 import "./Persona.css";
@@ -13,11 +14,8 @@ export default function Persona(): React.ReactElement {
   const [playerAvatar, setPlayerAvatar] = useState<IAvatarProps | null>();
 
   useEffect(() => {
-    for (const avatar of avatars) {
-      if (avatar.id === String(playerStats?.avatar)) {
-        setPlayerAvatar(avatar);
-      }
-    }
+    const avatar = getPlayerAvatar(avatars, playerStats);
+    setPlayerAvatar(avatar);
   }, [avatars]);
 
   return (

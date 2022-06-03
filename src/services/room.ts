@@ -388,7 +388,6 @@ export async function updateRoomGameState(
 export async function deleteRoom(roomID: string): Promise<boolean> {
   return new Promise((res, rej) => {
     localStorage.removeItem("room_id");
-    localStorage.removeItem("win");
     deleteDoc(doc(db, "rooms", roomID))
       .then(() => res(true))
       .catch((err) => rej(err));
@@ -396,6 +395,7 @@ export async function deleteRoom(roomID: string): Promise<boolean> {
 }
 
 export async function onNextTurn(
+  playerStatus: string,
   playerOrder: number,
   turn: number,
   capacity: number
@@ -411,23 +411,27 @@ export async function onNextTurn(
               isOnlyOnePlayerAlive(roomID, capacity)
                 .then((isAWin) => {
                   if (isAWin) {
-                    localStorage.setItem("win", "true");
                     updateRoomGameState(roomID, true, nickname);
                     res();
                   } else {
-                    updatePlayerStatus(nickname, "choosing");
-                    addTurn(localStorage.getItem("room_id")!, {
-                      turn: turn,
-                      actor: nickname,
-                      status: "choosing",
-                      action: null,
-                      fromRoom: null,
-                      toRoom: null,
-                      fromPosition: null,
-                      toPosition: null,
-                      avatarID: null,
-                      killedPlayer: null,
-                    });
+                    if (
+                      playerStatus === "waiting" ||
+                      playerStatus === "choosing"
+                    ) {
+                      updatePlayerStatus(nickname, "choosing");
+                      addTurn(localStorage.getItem("room_id")!, {
+                        turn: turn,
+                        actor: nickname,
+                        status: "choosing",
+                        action: null,
+                        fromRoom: null,
+                        toRoom: null,
+                        fromPosition: null,
+                        toPosition: null,
+                        avatarID: null,
+                        killedPlayer: null,
+                      });
+                    }
                     res();
                   }
                 })

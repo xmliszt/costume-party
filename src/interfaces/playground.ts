@@ -6,7 +6,6 @@ export default interface IPlaygroundContext {
   globals: Array<number>;
   playersData: Array<IPlayerProps>;
   playerStats: IPlayerProps;
-  playerAvatarProps: IAvatarProps;
   avatars: Array<IAvatarProps>;
   gameStarted: boolean;
   playerCount: number;

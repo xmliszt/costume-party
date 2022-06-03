@@ -54,3 +54,13 @@ export function getPlayerAvatarIDMap(players: IPlayerProps[]): {
   }
   return results;
 }
+
+export function getPlayerAvatar(
+  avatars: IAvatarProps[],
+  playerStats: IPlayerProps
+): IAvatarProps | null {
+  for (const avatar of avatars) {
+    if (avatar.id === String(playerStats.avatar)) return avatar;
+  }
+  return null;
+}

@@ -30,6 +30,7 @@ interface IRoomData {
  */
 export function useListenRoom(
   onNextTurn: (
+    playerStatus: string,
     playerOrder: number,
     turn: number,
     capacity: number
@@ -68,11 +69,14 @@ export function useListenRoom(
                 }
                 getPlayerByNickname(nickname!)
                   .then((player) => {
-                    onNextTurn(player.order, data?.turn, data?.capacity).catch(
-                      (err) => {
-                        message.error(err);
-                      }
-                    );
+                    onNextTurn(
+                      player.status,
+                      player.order,
+                      data?.turn,
+                      data?.capacity
+                    ).catch((err) => {
+                      message.error(err);
+                    });
                   })
                   .catch((err) => {
                     message.error(err);
@@ -180,14 +184,12 @@ export function useListenPlayers(): IPlayerProps[] {
 
   return players;
 }
-interface IPlayerData {
-  playerStats: IPlayerProps | null;
-  playerAvatar: IAvatarProps | null;
-}
 
+export interface IPlayerData {
+  playerStats: IPlayerProps | null;
+}
 export function useListenPlayer(): IPlayerData {
   const [playerStats, setPlayerStats] = useState<IPlayerProps | null>(null);
-  const [playerAvatar, setPlayerAvatar] = useState<IAvatarProps | null>(null);
 
   useEffect(() => {
     if (localStorage.getItem("room_id")) {
@@ -201,7 +203,6 @@ export function useListenPlayer(): IPlayerData {
         ),
         (_doc) => {
           const data = _doc.data();
-
           setPlayerStats({
             nickname: data?.nickname,
             alive: data?.alive,
@@ -211,11 +212,6 @@ export function useListenPlayer(): IPlayerData {
             message: data?.message,
             status: data?.status,
           });
-          getAvatarForPlayer(localStorage.getItem("nickname")!)
-            .then((props) => setPlayerAvatar(props))
-            .catch((err) => {
-              message.error(err);
-            });
         },
         (err) => {
           message.error(err);
@@ -226,7 +222,6 @@ export function useListenPlayer(): IPlayerData {
 
   return {
     playerStats,
-    playerAvatar,
   };
 }
 
