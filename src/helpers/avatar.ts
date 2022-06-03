@@ -38,7 +38,9 @@ export function getAvatarPositionMap(avatars: IAvatarProps[]): {
 } {
   const results: { [key: number]: IAvatarProps } = {};
   for (const avatar of avatars) {
-    results[avatar.positionIdx] = avatar;
+    if (!avatar.dead) {
+      results[avatar.positionIdx] = avatar;
+    }
   }
   return results;
 }

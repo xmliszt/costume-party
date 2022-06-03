@@ -2,6 +2,7 @@
 import { Button, Row, Col, Space, Spin, message, Modal } from "antd";
 import React, {
   forwardRef,
+  useContext,
   useEffect,
   useImperativeHandle,
   useState,
@@ -29,31 +30,27 @@ import {
 } from "../services/player";
 import { ISlot } from "../interfaces/room";
 import { LoadingOutlined } from "@ant-design/icons";
-import { useListenAvatars, useListenPlayer, useListenRoom } from "../services";
 import { updateAvatarProps, updateAvatarStatus } from "../services/avatar";
 import { addTurn, getPlayerAvatars, nextTurn } from "../services/room";
 import { getAllAvatarPositions, getAvatarPositionMap } from "../helpers/avatar";
 import Avatar from "antd/lib/avatar/avatar";
 import { IAvatarProps } from "../interfaces/avatar";
+import { PlaygroundContext } from "../context/PlaygroundContext";
+import IPlaygroundContext from "../interfaces/playground";
 
 export interface IRoomRef {
   onPlayerMove(_action: number): void;
   onPlayerPick(_action: number): void;
   onPlayerKill(_action: number): void;
 }
-
 interface IRoomProp {
   onClearAction(): void;
 }
 
 const Room = forwardRef<IRoomRef, IRoomProp>(
   ({ onClearAction }, ref): React.ReactElement => {
-    const onNextTurn = async (turn: number, capacity: number) => {};
-
-    const avatars = useListenAvatars();
-    const { playerStats } = useListenPlayer();
-    const { gameStarted, playerTurn, gameEnd, winner } =
-      useListenRoom(onNextTurn);
+    const { avatars, playerStats, gameStarted, playerTurn } =
+      useContext<IPlaygroundContext>(PlaygroundContext);
 
     useImperativeHandle(ref, () => ({
       onPlayerMove,

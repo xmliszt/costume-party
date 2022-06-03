@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { db } from "../firebase";
 import { IAvatarProps } from "../interfaces/avatar";
-import { doc, collection, DocumentData, onSnapshot } from "@firebase/firestore";
+import { doc, collection, onSnapshot } from "@firebase/firestore";
 import IPlayerProps from "../interfaces/player";
 import {
   getAvatarForPlayer,
@@ -11,6 +11,8 @@ import {
 } from "./player";
 import { getPlayerAvatars } from "./room";
 import { ITurn } from "../interfaces/room";
+import { message } from "antd";
+import { useHistory } from "react-router";
 
 interface IRoomData {
   playersAvatars: number[];
@@ -26,7 +28,12 @@ interface IRoomData {
  * @returns room status data
  */
 export function useListenRoom(
-  onNextTurn: (turn: number, capacity: number) => void
+  playerOrder: number,
+  onNextTurn: (
+    playerOrder: number,
+    turn: number,
+    capacity: number
+  ) => Promise<void>
 ): IRoomData {
   const [playersAvatars, setPlayersAvatars] = useState<number[]>([]);
   const [playerCount, setPlayerCount] = useState<number>(0);
@@ -35,6 +42,8 @@ export function useListenRoom(
   const [playerTurn, setPlayerTurn] = useState<number>(0);
   const [gameEnd, setGameEnd] = useState<boolean>(false);
   const [winner, setWinner] = useState<string>("");
+
+  const history = useHistory();
 
   useEffect(() => {
     setTimeout(() => {
@@ -46,21 +55,29 @@ export function useListenRoom(
           doc(db, "rooms", roomID),
           (_doc) => {
             const data = _doc.data();
-            setPlayersAvatars(data?.players);
-            setRoomCapacity(data?.capacity);
-            setPlayerCount(data?.players.length);
-            setPlayerTurn(data?.turn);
-            setGameEnd(data?.gameEnd);
-            setWinner(data?.winner);
-            if (data?.capacity === data?.players.length) {
-              if (!gameStarted) {
-                setGameStarted(true);
+            if (data) {
+              setPlayersAvatars(data?.players);
+              setRoomCapacity(data?.capacity);
+              setPlayerCount(data?.players.length);
+              setPlayerTurn(data?.turn);
+              setGameEnd(data?.gameEnd);
+              setWinner(data?.winner);
+              if (data?.capacity === data?.players.length) {
+                if (!gameStarted) {
+                  setGameStarted(true);
+                }
+                onNextTurn(playerOrder, data?.turn, data?.capacity).catch(
+                  (err) => {
+                    message.error(err);
+                  }
+                );
               }
-              onNextTurn(data?.turn, data?.capacity);
+            } else {
+              message.error("The room has been removed!");
             }
           },
           (err) => {
-            console.log(err);
+            message.error(err);
           }
         );
       }
@@ -101,19 +118,20 @@ export function useListenAvatars(): IAvatarProps[] {
               dead: data.dead,
             });
             if (data.dead && playerAvatars.includes(Number(data.id))) {
-              try {
-                const playerStats = await getPlayerByAvatarID(Number(data.id));
-                updatePlayerAliveness(playerStats.nickname, false);
-                updatePlayerStatus(playerStats.nickname, "dead");
-              } catch (err) {
-                console.log(err);
-              }
+              getPlayerByAvatarID(Number(data.id))
+                .then((playerStats) => {
+                  updatePlayerAliveness(playerStats.nickname, false);
+                  updatePlayerStatus(playerStats.nickname, "dead");
+                })
+                .catch((err) => {
+                  message.error(err);
+                });
             }
           });
           setAvatars(_avatars);
         },
         (err) => {
-          console.log(err);
+          message.error(err);
         }
       );
     }
@@ -147,7 +165,7 @@ export function useListenPlayers(): IPlayerProps[] {
           setPlayers(_players);
         },
         (err) => {
-          console.log(err);
+          message.error(err);
         }
       );
     }
@@ -189,11 +207,11 @@ export function useListenPlayer(): IPlayerData {
           getAvatarForPlayer(localStorage.getItem("nickname")!)
             .then((props) => setPlayerAvatar(props))
             .catch((err) => {
-              console.log(err);
+              message.error(err);
             });
         },
         (err) => {
-          console.log(err);
+          message.error(err);
         }
       );
     }
@@ -240,7 +258,7 @@ export function useListenTurns(): ITurn[] {
           setTurns(_turns.sort((a, b) => a.turn - b.turn));
         },
         (err) => {
-          console.log(err);
+          message.error(err);
         }
       );
     }

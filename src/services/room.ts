@@ -13,6 +13,8 @@ import { getRandomInt } from "../helpers/number";
 import { IAvatarProps } from "../interfaces/avatar";
 import { asyncForEach } from "../helpers/async";
 import { IRoom, ITurn } from "../interfaces/room";
+import { isPlayerAlive, updatePlayerStatus } from "./player";
+import { isMyTurn } from "../controllers/player";
 
 /**
  * Create a new room
@@ -392,5 +394,52 @@ export async function deleteRoom(roomID: string): Promise<boolean> {
     deleteDoc(doc(db, "rooms", roomID))
       .then(() => res(true))
       .catch((err) => rej(err));
+  });
+}
+
+export async function onNextTurn(
+  playerOrder: number,
+  turn: number,
+  capacity: number
+): Promise<void> {
+  const roomID = localStorage.getItem("room_id")!;
+  const nickname = localStorage.getItem("nickname")!;
+  return new Promise((res, rej) => {
+    if (nickname && roomID) {
+      isPlayerAlive(nickname)
+        .then((alive) => {
+          if (isMyTurn(playerOrder, turn, capacity)) {
+            if (alive) {
+              isOnlyOnePlayerAlive(roomID, capacity)
+                .then((isAWin) => {
+                  if (isAWin) {
+                    localStorage.setItem("win", "true");
+                    updateRoomGameState(roomID, true, nickname);
+                    res();
+                  } else {
+                    updatePlayerStatus(nickname, "choosing");
+                    addTurn(localStorage.getItem("room_id")!, {
+                      turn: turn,
+                      actor: nickname,
+                      status: "choosing",
+                      action: null,
+                      fromRoom: null,
+                      toRoom: null,
+                      avatarID: null,
+                      killedPlayer: null,
+                    });
+                    res();
+                  }
+                })
+                .catch((err) => rej(err));
+            } else {
+              nextTurn(localStorage.getItem("room_id")!);
+            }
+          }
+        })
+        .catch((err) => {
+          rej(err);
+        });
+    }
   });
 }

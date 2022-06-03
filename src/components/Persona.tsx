@@ -2,13 +2,14 @@ import { UserOutlined } from "@ant-design/icons";
 import { Avatar, Typography } from "antd";
 import { useContext, useEffect, useState } from "react";
 import { isMobile } from "react-device-detect";
+import { PlaygroundContext } from "../context/PlaygroundContext";
 import { IAvatarProps } from "../interfaces/avatar";
-import { useListenAvatars, useListenPlayer } from "../services";
+import IPlaygroundContext from "../interfaces/playground";
 import "./Persona.css";
 
 export default function Persona(): React.ReactElement {
-  const avatars = useListenAvatars();
-  const { playerStats } = useListenPlayer();
+  const { avatars, playerStats } =
+    useContext<IPlaygroundContext>(PlaygroundContext);
   const [playerAvatar, setPlayerAvatar] = useState<IAvatarProps | null>();
 
   useEffect(() => {

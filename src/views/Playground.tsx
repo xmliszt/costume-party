@@ -20,18 +20,8 @@ import {
   useListenRoom,
   useListenTurns,
 } from "../services";
-import {
-  getPlayerByNickname,
-  isPlayerAlive,
-  updatePlayerStatus,
-} from "../services/player";
-import {
-  addTurn,
-  getRoomStates,
-  isOnlyOnePlayerAlive,
-  nextTurn,
-  updateRoomGameState,
-} from "../services/room";
+import { getPlayerByNickname, updatePlayerStatus } from "../services/player";
+import { getRoomStates, onNextTurn } from "../services/room";
 import { isMobile } from "react-device-detect";
 import { ITurn } from "../interfaces/room";
 import { roomColorMapping, roomColorNameMapping } from "../constants";
@@ -46,51 +36,16 @@ export default function Playground(): React.ReactElement {
   const { playerStats, playerAvatar } = useListenPlayer();
   const playersData = useListenPlayers();
   const turns = useListenTurns();
-  const { playersAvatars } = useListenRoom((turn, capacity) => {});
-
-  const onNextTurn = async (turn: number, capacity: number) => {
-    const roomID = localStorage.getItem("room_id")!;
-    const nickname = localStorage.getItem("nickname")!;
-    if (nickname && roomID) {
-      try {
-        const alive = await isPlayerAlive(nickname);
-        if (isMyTurn(playerOrder.current, turn, capacity)) {
-          if (alive) {
-            const winCondition = await isOnlyOnePlayerAlive(roomID, capacity);
-            if (winCondition) {
-              localStorage.setItem("win", "true");
-              await updateRoomGameState(roomID, true, nickname);
-            } else {
-              updatePlayerStatus(nickname, "choosing");
-              addTurn(localStorage.getItem("room_id")!, {
-                turn: turn,
-                actor: nickname,
-                status: "choosing",
-                action: null,
-                fromRoom: null,
-                toRoom: null,
-                avatarID: null,
-                killedPlayer: null,
-              });
-            }
-          } else {
-            nextTurn(localStorage.getItem("room_id")!);
-          }
-        }
-      } catch (err) {
-        message.error("Something is wrong D: Please refresh!");
-      }
-    }
-  };
 
   const {
     playerCount,
+    playersAvatars,
     roomCapacity,
     gameStarted,
     playerTurn,
     gameEnd,
     winner,
-  } = useListenRoom(onNextTurn);
+  } = useListenRoom(playerOrder.current, onNextTurn);
 
   const init = async () => {
     const roomID = localStorage.getItem("room_id");
@@ -173,6 +128,8 @@ export default function Playground(): React.ReactElement {
   }
 
   const generateTurnMessage = (turn: ITurn): ITurnMessage | null => {
+    console.log(playersAvatars, turn);
+
     switch (turn.status) {
       case "choosing":
         return {

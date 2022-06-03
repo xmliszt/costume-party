@@ -27,7 +27,6 @@ import {
 import { PlaygroundContext } from "../context/PlaygroundContext";
 import { getRandomAction } from "../helpers/action";
 import IPlaygroundContext from "../interfaces/playground";
-import { useListenRoom } from "../services";
 import { updatePlayerStatus } from "../services/player";
 import { addTurn, deleteRoom, nextTurn } from "../services/room";
 import "./Action.css";
@@ -39,10 +38,14 @@ export interface IAction {
 const Action = forwardRef<IAction, any>(
   ({ onPlayerPick, onPlayerMove, onPlayerKill }, ref): React.ReactElement => {
     const history = useHistory();
-    const { playerStats, playersData, gameStarted, gameEnd, winner } =
-      useContext<IPlaygroundContext>(PlaygroundContext);
-
-    const { playerTurn } = useListenRoom((turn, capacity) => {});
+    const {
+      playerStats,
+      playersData,
+      gameStarted,
+      gameEnd,
+      winner,
+      playerTurn,
+    } = useContext<IPlaygroundContext>(PlaygroundContext);
     const [action, setAction] = useState<number>(actions.null);
 
     const isEndingShown = useRef(false); // For controlling the end scene modal
@@ -119,26 +122,20 @@ const Action = forwardRef<IAction, any>(
         if (!isEndingShown.current) {
           isEndingShown.current = true;
           setTimeout(() => {
-            Modal.success({
-              title: "Good Game!",
-              okText: "Back To Home",
-              onOk: () => {
-                try {
-                  deleteRoom(localStorage.getItem("room_id")!);
-                } catch (e) {
-                  console.warn("room is already deleted");
-                } finally {
-                  message.warn("Welcome Back!");
-                  history.push("/");
-                }
-              },
-            });
+            try {
+              deleteRoom(localStorage.getItem("room_id")!);
+            } catch (e) {
+              console.warn("room is already deleted");
+            } finally {
+              message.warn("Welcome Back!");
+              history.push("/");
+            }
           }, 2000);
         }
         if (localStorage.getItem("win")) {
           return (
             <div>
-              <Typography.Title level={typographyLevel}>
+              <Typography.Title level={typographyLevel} type="success">
                 Congratulations! You Win!
               </Typography.Title>
             </div>
@@ -147,7 +144,10 @@ const Action = forwardRef<IAction, any>(
           return (
             <div>
               <Typography.Title level={typographyLevel}>
-                The winner is: {winner}
+                The winner is:{" "}
+                <span>
+                  <b>{winner}</b>
+                </span>
               </Typography.Title>
             </div>
           );
@@ -157,7 +157,7 @@ const Action = forwardRef<IAction, any>(
       if (isDead.current) {
         return (
           <div>
-            <Typography.Title level={typographyLevel}>
+            <Typography.Title level={typographyLevel} disabled>
               You are dead
             </Typography.Title>
           </div>
@@ -207,7 +207,7 @@ const Action = forwardRef<IAction, any>(
             nextTurn(localStorage.getItem("room_id")!);
             return (
               <div>
-                <Typography.Title level={typographyLevel}>
+                <Typography.Title level={typographyLevel} disabled>
                   You are dead
                 </Typography.Title>
               </div>
@@ -247,7 +247,7 @@ const Action = forwardRef<IAction, any>(
         case "dead":
           return (
             <div>
-              <Typography.Title level={typographyLevel}>
+              <Typography.Title level={typographyLevel} disabled>
                 You are dead
               </Typography.Title>
             </div>
