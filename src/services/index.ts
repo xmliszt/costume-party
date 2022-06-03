@@ -13,9 +13,9 @@ import {
 import { getPlayerAvatars } from "./room";
 import { ITurn } from "../interfaces/room";
 import { message } from "antd";
-import { useHistory } from "react-router";
 
 interface IRoomData {
+  globals: number[];
   playersAvatars: number[];
   playerCount: number;
   roomCapacity: number;
@@ -35,6 +35,7 @@ export function useListenRoom(
     capacity: number
   ) => Promise<void>
 ): IRoomData {
+  const [globals, setGlobals] = useState<number[]>([]);
   const [playersAvatars, setPlayersAvatars] = useState<number[]>([]);
   const [playerCount, setPlayerCount] = useState<number>(0);
   const [roomCapacity, setRoomCapacity] = useState<number>(0);
@@ -54,6 +55,7 @@ export function useListenRoom(
           (_doc) => {
             const data = _doc.data();
             if (data) {
+              setGlobals(data?.globals);
               setPlayersAvatars(data?.players);
               setRoomCapacity(data?.capacity);
               setPlayerCount(data?.players.length);
@@ -89,6 +91,7 @@ export function useListenRoom(
   }, []);
 
   return {
+    globals,
     playersAvatars,
     playerCount,
     roomCapacity,

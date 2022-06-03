@@ -25,11 +25,7 @@ import {
   makeSlotProps,
 } from "../helpers/room";
 import { isMobile } from "react-device-detect";
-import {
-  getPlayerByAvatarID,
-  updatePlayerAliveness,
-  updatePlayerStatus,
-} from "../services/player";
+import { getPlayerByAvatarID, updatePlayerStatus } from "../services/player";
 import { ISlot } from "../interfaces/room";
 import { LoadingOutlined } from "@ant-design/icons";
 import { updateAvatarProps, updateAvatarStatus } from "../services/avatar";
@@ -45,6 +41,7 @@ export interface IRoomRef {
   onPlayerMove(_action: number): void;
   onPlayerPick(_action: number): void;
   onPlayerKill(_action: number): void;
+  conductMurder(avatarToKill: IAvatarProps, isSkip: boolean): Promise<void>;
 }
 interface IRoomProp {
   onClearAction(): void;
@@ -59,6 +56,7 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
       onPlayerMove,
       onPlayerPick,
       onPlayerKill,
+      conductMurder,
     }));
 
     const [loading, setLoading] = useState<boolean>(false);
@@ -258,7 +256,7 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
           okText: "Let's do this!",
           cancelText: "Never Mind",
           onOk: () => {
-            conductMurder(killedAvatar);
+            conductMurder(killedAvatar, false);
           },
         });
       }
@@ -396,7 +394,10 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
       }
     };
 
-    const conductMurder = async (avatarToKill: IAvatarProps) => {
+    const conductMurder = async (
+      avatarToKill: IAvatarProps,
+      isSkip: boolean
+    ) => {
       // Kill the chosen target
       updateAvatarStatus(
         localStorage.getItem("room_id")!,
@@ -406,7 +407,7 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
         addTurn(localStorage.getItem("room_id")!, {
           turn: playerTurn,
           actor: playerStats?.nickname ?? "",
-          status: "kill",
+          status: isSkip ? "skip" : "kill",
           action: actionSelected,
           fromRoom: isInWhichRoom(avatarToKill.positionIdx),
           toRoom: null,
@@ -505,7 +506,7 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
       // Suicide case
       if (count === 0) {
         // self kill
-        conductMurder(playerAvatar!);
+        conductMurder(playerAvatar!, false);
       }
     };
 

@@ -189,7 +189,10 @@ export function getLastKillTurn(turns: ITurn[]): ITurn | null {
   let turnNumber = 0;
   let lastMovingTurn: ITurn | null = null;
   for (const turn of turns) {
-    if (turn.turn > turnNumber && turn.status === "kill") {
+    if (
+      turn.turn > turnNumber &&
+      (turn.status === "kill" || turn.status === "skip")
+    ) {
       lastMovingTurn = turn;
       turnNumber = turn.turn;
     }

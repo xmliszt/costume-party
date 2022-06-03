@@ -37,6 +37,7 @@ export default function Playground(): React.ReactElement {
   const turns = useListenTurns();
 
   const {
+    globals,
     playerCount,
     playersAvatars,
     roomCapacity,
@@ -83,6 +84,7 @@ export default function Playground(): React.ReactElement {
             onPlayerMove={roomRef.current?.onPlayerMove}
             onPlayerPick={roomRef.current?.onPlayerPick}
             onPlayerKill={roomRef.current?.onPlayerKill}
+            conductMurder={roomRef.current?.conductMurder}
           />
           <Divider></Divider>
           <div
@@ -108,6 +110,7 @@ export default function Playground(): React.ReactElement {
               onPlayerMove={roomRef.current?.onPlayerMove}
               onPlayerPick={roomRef.current?.onPlayerPick}
               onPlayerKill={roomRef.current?.onPlayerKill}
+              conductMurder={roomRef.current?.conductMurder}
             />
             <Divider style={{ height: 200 }} type="vertical" />
           </div>
@@ -201,6 +204,26 @@ export default function Playground(): React.ReactElement {
           pendingMessage: null,
         };
       }
+      case "skip": {
+        return {
+          subject: turn.actor,
+          message: (
+            <span>
+              <Avatar
+                src={`${process.env.PUBLIC_URL}/avatars/${turn.avatarID}.png`}
+                size="small"
+              ></Avatar>
+              <span> in </span>
+              <span style={{ color: roomColorMapping[turn.fromRoom!] }}>
+                {roomColorNameMapping[turn.fromRoom!]} Room
+              </span>
+              <span> is killed by mysterious forces</span>
+            </span>
+          ),
+          pending: false,
+          pendingMessage: null,
+        };
+      }
       case "dead": {
         return {
           subject: turn.actor,
@@ -237,6 +260,7 @@ export default function Playground(): React.ReactElement {
   return (
     <PlaygroundContext.Provider
       value={{
+        globals,
         avatars,
         playersData,
         playerStats,

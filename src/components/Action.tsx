@@ -16,6 +16,7 @@ import {
   useImperativeHandle,
   forwardRef,
   useRef,
+  useEffect,
 } from "react";
 import { isMobile } from "react-device-detect";
 import { useHistory } from "react-router";
@@ -26,6 +27,7 @@ import {
 } from "../constants";
 import { PlaygroundContext } from "../context/PlaygroundContext";
 import { getRandomAction } from "../helpers/action";
+import { IAvatarProps } from "../interfaces/avatar";
 import IPlaygroundContext from "../interfaces/playground";
 import { updatePlayerStatus } from "../services/player";
 import { addTurn, deleteRoom, nextTurn } from "../services/room";
@@ -36,9 +38,14 @@ export interface IAction {
 }
 
 const Action = forwardRef<IAction, any>(
-  ({ onPlayerPick, onPlayerMove, onPlayerKill }, ref): React.ReactElement => {
+  (
+    { onPlayerPick, onPlayerMove, onPlayerKill, conductMurder },
+    ref
+  ): React.ReactElement => {
     const history = useHistory();
     const {
+      globals,
+      avatars,
       playerStats,
       playersData,
       gameStarted,
@@ -46,8 +53,11 @@ const Action = forwardRef<IAction, any>(
       winner,
       playerTurn,
     } = useContext<IPlaygroundContext>(PlaygroundContext);
-    const [action, setAction] = useState<number>(actions.null);
 
+    const [action, setAction] = useState<number>(actions.null);
+    const [availableGlobals, setAvailableGlobals] = useState<IAvatarProps[]>(
+      []
+    );
     const isEndingShown = useRef(false); // For controlling the end scene modal
     const isDead = useRef(false); // For internal state reference of the state of player
 
@@ -58,6 +68,23 @@ const Action = forwardRef<IAction, any>(
     }));
 
     const typographyLevel = isMobile ? 5 : 3;
+
+    useEffect(() => {
+      const availableGlobalAvatars: IAvatarProps[] = [];
+      console.log(avatars, globals);
+
+      for (const avatar of avatars) {
+        if (globals.includes(Number(avatar.id)) && !avatar.dead) {
+          availableGlobalAvatars.push(avatar);
+        }
+      }
+      setAvailableGlobals(availableGlobalAvatars);
+    }, [avatars, globals]);
+
+    const useGlobal = () => {
+      const global = availableGlobals[0];
+      conductMurder(global, true);
+    };
 
     const onChooseAction = () => {
       const _action = getRandomAction();
@@ -197,6 +224,7 @@ const Action = forwardRef<IAction, any>(
                     Roll Your Next Move!
                   </Typography.Text>
                   <Button
+                    className={isMobile ? "" : "roll"}
                     size={isMobile ? "middle" : "large"}
                     type="primary"
                     onClick={onChooseAction}
@@ -238,6 +266,23 @@ const Action = forwardRef<IAction, any>(
               <Typography.Title level={typographyLevel}>
                 Click someone in your room to murder
               </Typography.Title>
+              {availableGlobals.length > 0 ? (
+                <div>
+                  <Typography.Text>
+                    Or{" "}
+                    <Button danger size="small" onClick={useGlobal}>
+                      SKIP
+                    </Button>{" "}
+                    your turn by allowing an innocent to leave the party! {"("}
+                    {availableGlobals.length}/3{")"}
+                  </Typography.Text>
+                </div>
+              ) : (
+                <Typography.Paragraph type="warning">
+                  All 3 skipping chances have been used! You have to make a
+                  kill!
+                </Typography.Paragraph>
+              )}
             </div>
           );
         case "moving":

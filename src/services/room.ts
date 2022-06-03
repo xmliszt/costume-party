@@ -29,6 +29,7 @@ export async function createRoom(
       capacity,
       turn: 1,
       players: [],
+      globals: [],
       gameEnd: false,
       winner: "",
     })
@@ -226,22 +227,17 @@ export async function initializeGlobals(roomID: string): Promise<boolean> {
           await asyncForEach([0, 1, 2], async () => {
             try {
               const playerAvatars = await getPlayerAvatars(roomID);
-              let globalAvatar;
-              while (true) {
-                globalAvatar = getRandomInt(1, 20);
+              while (globals.length < 3) {
+                const globalAvatar = getRandomInt(1, 20);
                 if (
                   !playerAvatars.includes(globalAvatar) &&
                   !globals.includes(globalAvatar)
                 )
-                  break;
+                  globals.push(globalAvatar);
               }
-              globals.push(globalAvatar);
-              await setDoc(
-                doc(db, "rooms", roomID, "globals", globalAvatar.toString()),
-                {
-                  alive: true,
-                }
-              );
+              await updateDoc(doc(db, "rooms", roomID), {
+                globals: globals,
+              });
               res(true);
             } catch (err) {
               rej(err);

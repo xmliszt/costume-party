@@ -9,12 +9,13 @@ export interface IRoom {
   _id: string;
   turn: number;
   players: Array<number>;
+  globals: Array<number>;
   capacity: number;
   gameEnd: boolean;
   winner: string;
 }
 
-// status: choosing (roll), waiting, picking (move target), moving (move dest), killing, kill (killed action performed) dead
+// status: choosing (roll), waiting, picking (move target), moving (move dest), killing, kill (killed action performed) dead, skip
 export interface ITurn {
   turn: number; // the turn number
   actor: string; // acting player nickname
