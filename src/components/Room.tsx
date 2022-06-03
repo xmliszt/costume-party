@@ -41,6 +41,7 @@ import { IAvatarProps } from "../interfaces/avatar";
 import { PlaygroundContext } from "../context/PlaygroundContext";
 import IPlaygroundContext from "../interfaces/playground";
 import LineTo from "react-lineto";
+import UIfx from "uifx";
 
 export interface IRoomRef {
   onPlayerMove(_action: number): void;
@@ -54,6 +55,10 @@ interface IRoomProp {
 
 const Room = forwardRef<IRoomRef, IRoomProp>(
   ({ onClearAction }, ref): React.ReactElement => {
+    const gunShot = new UIfx(`${process.env.PUBLIC_URL}/gun.mp3`);
+    const walk = new UIfx(`${process.env.PUBLIC_URL}/walk.mp3`);
+    gunShot.setVolume(0.5);
+
     const { avatars, playerStats, gameStarted, playerTurn, turns } =
       useContext<IPlaygroundContext>(PlaygroundContext);
 
@@ -229,6 +234,7 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
           }
         }
       } else if (playerStats && playerStats.status === "moving") {
+        walk.play();
         // update avatar image to new selected slot
         // remove image for the old slot
         const avatarPositionMap = getAvatarPositionMap(avatars);
@@ -433,6 +439,7 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
       avatarToKill: IAvatarProps,
       isSkip: boolean
     ) => {
+      gunShot.play();
       // Kill the chosen target
       updateAvatarStatus(
         localStorage.getItem("room_id")!,
