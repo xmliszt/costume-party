@@ -71,7 +71,6 @@ const Action = forwardRef<IAction, any>(
 
     useEffect(() => {
       const availableGlobalAvatars: IAvatarProps[] = [];
-      console.log(avatars, globals);
 
       for (const avatar of avatars) {
         if (globals.includes(Number(avatar.id)) && !avatar.dead) {

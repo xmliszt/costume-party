@@ -88,8 +88,8 @@ export default function Home(): React.ReactElement {
       await createRoom(_id, capacity);
       await initializeAvatars(_id, initializeAvatarPositions());
       await initializeGlobals(_id);
-      await joinRoom(_id, nickname);
-      localStorage.setItem("nickname", nickname);
+      await joinRoom(_id, nickname.trim());
+      localStorage.setItem("nickname", nickname.trim());
       localStorage.setItem("room_id", _id);
       message.success("Room created: " + _id);
       setLoading(false);
@@ -112,8 +112,8 @@ export default function Home(): React.ReactElement {
       } else if (localStorage.getItem("room_id") === _id) {
         message.error("You have already joined the game!");
       } else {
-        await joinRoom(_id, nickname);
-        localStorage.setItem("nickname", nickname);
+        await joinRoom(_id, nickname.trim());
+        localStorage.setItem("nickname", nickname.trim());
         localStorage.setItem("room_id", _id);
         setLoading(false);
         history.push("/play");
@@ -130,25 +130,32 @@ export default function Home(): React.ReactElement {
     e: React.ChangeEvent<HTMLInputElement>,
     position: number
   ) => {
-    const _char = e.target.value.toUpperCase();
-    switch (position) {
-      case 0:
-        setId_1(_char);
-        break;
-      case 1:
-        setId_2(_char);
-        break;
-      case 2:
-        setId_3(_char);
-        break;
-      case 3:
-        setId_4(_char);
-        break;
-    }
-    if (_char && position <= 2) {
-      [roomID_1, roomID_2, roomID_3, roomID_4][position + 1].current.focus({
-        cursor: "all",
-      });
+    const value = e.target.value.toUpperCase();
+    const textFields = [roomID_1, roomID_2, roomID_3, roomID_4];
+    console.log(value, position);
+    for (let i = position; i < 4; i++) {
+      const _char = value[i - position] ?? "";
+      switch (i) {
+        case 0:
+          setId_1(_char);
+          break;
+        case 1:
+          setId_2(_char);
+          break;
+        case 2:
+          setId_3(_char);
+          break;
+        case 3:
+          setId_4(_char);
+          break;
+        default:
+          break;
+      }
+      if (_char) {
+        textFields[i + 1]?.current.focus({ cursor: "all" });
+      } else {
+        return;
+      }
     }
   };
 
@@ -174,7 +181,7 @@ export default function Home(): React.ReactElement {
             allowClear
             required
             onChange={(e) => {
-              setNickname(e.target.value.trim());
+              setNickname(e.target.value);
             }}
           />
           <Typography.Text type="secondary">
@@ -217,7 +224,6 @@ export default function Home(): React.ReactElement {
                   style={{ maxWidth: 50 }}
                   size="large"
                   value={id_1}
-                  maxLength={1}
                   onChange={(e) => {
                     updateRoomID(e, 0);
                   }}
@@ -227,7 +233,6 @@ export default function Home(): React.ReactElement {
                   style={{ maxWidth: 50 }}
                   size="large"
                   value={id_2}
-                  maxLength={1}
                   onChange={(e) => {
                     updateRoomID(e, 1);
                   }}
@@ -237,7 +242,6 @@ export default function Home(): React.ReactElement {
                   style={{ maxWidth: 50 }}
                   size="large"
                   value={id_3}
-                  maxLength={1}
                   onChange={(e) => {
                     updateRoomID(e, 2);
                   }}
@@ -247,7 +251,6 @@ export default function Home(): React.ReactElement {
                   ref={roomID_4}
                   size="large"
                   value={id_4}
-                  maxLength={1}
                   onChange={(e) => {
                     updateRoomID(e, 3);
                   }}
