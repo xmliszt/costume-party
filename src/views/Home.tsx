@@ -108,11 +108,9 @@ export default function Home(): React.ReactElement {
         message.error("Invalid Room ID");
       } else if (!(await isRoomExist(_id))) {
         message.error("Room does not exist!");
-      } else if (localStorage.getItem("room_id") === _id) {
-        message.error("You have already joined the game!");
       } else {
-        await joinRoom(_id, nickname.trim());
         localStorage.setItem("nickname", nickname.trim());
+        await joinRoom(_id, nickname.trim());
         localStorage.setItem("room_id", _id);
         setLoading(false);
         history.push("/play");
@@ -131,7 +129,6 @@ export default function Home(): React.ReactElement {
   ) => {
     const value = e.target.value.toUpperCase();
     const textFields = [roomID_1, roomID_2, roomID_3, roomID_4];
-    console.log(value, position);
     for (let i = position; i < 4; i++) {
       const _char = value[i - position] ?? "";
       switch (i) {

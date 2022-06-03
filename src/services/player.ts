@@ -12,11 +12,11 @@ import { IAvatarProps } from "../interfaces/avatar";
 import IPlayerProps from "../interfaces/player";
 import { getAvatarByID } from "./avatar";
 
-export async function getAllPlayers(): Promise<Array<IPlayerProps>> {
+export async function getAllPlayers(
+  roomID: string
+): Promise<Array<IPlayerProps>> {
   return new Promise((res, rej) => {
-    getDocs(
-      collection(db, "rooms", localStorage.getItem("room_id")!, "players")
-    )
+    getDocs(collection(db, "rooms", roomID, "players"))
       .then((snapshots) => {
         const players: Array<IPlayerProps> = [];
         snapshots.forEach((doc) => {

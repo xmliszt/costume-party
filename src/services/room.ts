@@ -13,7 +13,7 @@ import { getRandomInt } from "../helpers/number";
 import { IAvatarProps } from "../interfaces/avatar";
 import { asyncForEach } from "../helpers/async";
 import { IRoom, ITurn } from "../interfaces/room";
-import { isPlayerAlive, updatePlayerStatus } from "./player";
+import { getAllPlayers, isPlayerAlive, updatePlayerStatus } from "./player";
 import { isMyTurn } from "../controllers/player";
 
 /**
@@ -142,29 +142,35 @@ export async function joinRoom(
         if (exist) {
           try {
             const roomStats = await getRoomStates(roomID);
-            const count = await getPlayerCount(roomID);
-
-            if (roomStats.capacity <= count) {
+            const players = await getAllPlayers(roomID);
+            const count = players.length;
+            const nickNameExist =
+              players.filter((player) => player.nickname === nickname).length >
+              0;
+            if (roomStats.capacity <= count && !nickNameExist) {
               rej("room is full");
             }
-
-            const playerAvatars = await getPlayerAvatars(roomID);
-            let avatarAssigned;
-            while (true) {
-              avatarAssigned = getRandomInt(1, 20);
-              if (!playerAvatars.includes(avatarAssigned)) break;
+            if (nickNameExist) {
+              res(true);
+            } else {
+              const playerAvatars = roomStats.players;
+              let avatarAssigned;
+              while (true) {
+                avatarAssigned = getRandomInt(1, 20);
+                if (!playerAvatars.includes(avatarAssigned)) break;
+              }
+              await addPlayerAvatar(roomID, avatarAssigned);
+              setDoc(doc(db, "rooms", roomID, "players", nickname), {
+                nickname,
+                avatar: avatarAssigned,
+                alive: true,
+                order: count + 1,
+                status: "waiting", //
+                action: null, // constants.ts -- actions
+                message: "", // action message
+              });
+              res(true);
             }
-            await addPlayerAvatar(roomID, avatarAssigned);
-            setDoc(doc(db, "rooms", roomID, "players", nickname), {
-              nickname,
-              avatar: avatarAssigned,
-              alive: true,
-              order: count + 1,
-              status: "waiting", // or "playing"
-              action: null, // constants.ts -- actions
-              message: "", // action message
-            });
-            res(true);
           } catch (err) {
             rej(err);
           }
@@ -224,9 +230,8 @@ export async function initializeGlobals(roomID: string): Promise<boolean> {
       .then(async (exist) => {
         if (exist) {
           const globals: Array<number> = [];
-          await asyncForEach([0, 1, 2], async () => {
-            try {
-              const playerAvatars = await getPlayerAvatars(roomID);
+          getPlayerAvatars(roomID)
+            .then((playerAvatars) => {
               while (globals.length < 3) {
                 const globalAvatar = getRandomInt(1, 20);
                 if (
@@ -235,14 +240,13 @@ export async function initializeGlobals(roomID: string): Promise<boolean> {
                 )
                   globals.push(globalAvatar);
               }
-              await updateDoc(doc(db, "rooms", roomID), {
+              updateDoc(doc(db, "rooms", roomID), {
                 globals: globals,
-              });
-              res(true);
-            } catch (err) {
-              rej(err);
-            }
-          });
+              })
+                .then(() => res(true))
+                .catch((err) => rej(err));
+            })
+            .catch((err) => rej(err));
         } else {
           rej("room does not exist");
         }
@@ -406,6 +410,7 @@ export async function onNextTurn(
     if (nickname && roomID) {
       isPlayerAlive(nickname)
         .then((alive) => {
+          console.log(isMyTurn(playerOrder, turn, capacity));
           if (isMyTurn(playerOrder, turn, capacity)) {
             if (alive) {
               isOnlyOnePlayerAlive(roomID, capacity)
@@ -415,8 +420,8 @@ export async function onNextTurn(
                     res();
                   } else {
                     if (
-                      playerStatus === "waiting" ||
-                      playerStatus === "choosing"
+                      playerStatus === "choosing" ||
+                      playerStatus === "waiting"
                     ) {
                       updatePlayerStatus(nickname, "choosing");
                       addTurn(localStorage.getItem("room_id")!, {
@@ -439,6 +444,8 @@ export async function onNextTurn(
             } else {
               nextTurn(localStorage.getItem("room_id")!);
             }
+          } else {
+            updatePlayerStatus(nickname, "waiting");
           }
         })
         .catch((err) => {

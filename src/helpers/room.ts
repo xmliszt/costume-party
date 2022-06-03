@@ -221,7 +221,5 @@ export function getLastTurnByPlayer(
       }
     }
   }
-  console.log(lastMovingTurn);
-
   return lastMovingTurn;
 }

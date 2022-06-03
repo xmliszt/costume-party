@@ -173,7 +173,7 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
           style={{
             backgroundImage:
               isLastKilledSlot && !isAvatarSlot
-                ? `url(/dead.png)`
+                ? `url(${process.env.PUBLIC_URL}/dead.png)`
                 : `url(${backgroundImage})`,
             backgroundColor: roomColorMapping[roomType] + "70",
             backgroundSize: "contain",
