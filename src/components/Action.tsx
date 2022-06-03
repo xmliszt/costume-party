@@ -1,196 +1,316 @@
+/* eslint-disable @typescript-eslint/no-empty-function */
 /**
- * The action section where the player either throw the dice, or perform action, or watch other player's action status
+ * The action section where the player either throw the dice, or perform action, or watch other player's action status\
+ * State Machine: (status)
+ * - waiting
+ * - choosing
+ * - picking
+ * - moving
+ * - killing
+ * - dead
  */
-import { Button, message, Modal, Typography } from "antd";
+import { Button, message, Modal, Typography, Space } from "antd";
 import {
   useState,
   useContext,
   useImperativeHandle,
   forwardRef,
   useRef,
+  useEffect,
 } from "react";
+import { isMobile } from "react-device-detect";
 import { useHistory } from "react-router";
 import {
   actions,
-  actionToMessageMapping,
   actionToColorMapping,
   actionToColorStringMapping,
 } from "../constants";
 import { PlaygroundContext } from "../context/PlaygroundContext";
-import { isMyTurn } from "../controllers/player";
 import { getRandomAction } from "../helpers/action";
+import { IAvatarProps } from "../interfaces/avatar";
 import IPlaygroundContext from "../interfaces/playground";
 import { updatePlayerStatus } from "../services/player";
-import { deleteRoom, nextTurn } from "../services/room";
+import { addTurn, deleteRoom, nextTurn } from "../services/room";
 import "./Action.css";
 
 export interface IAction {
   clearAction(): void;
 }
 
-const Action = forwardRef<IAction, any>((props, ref): React.ReactElement => {
-  const history = useHistory();
-  const { playerStats, playersData, gameStarted, gameEnd, winner } =
-    useContext<IPlaygroundContext>(PlaygroundContext);
+const Action = forwardRef<IAction, any>(
+  (
+    { onPlayerPick, onPlayerMove, onPlayerKill, conductMurder },
+    ref
+  ): React.ReactElement => {
+    const history = useHistory();
+    const {
+      globals,
+      avatars,
+      playerStats,
+      playersData,
+      gameStarted,
+      gameEnd,
+      winner,
+      playerTurn,
+    } = useContext<IPlaygroundContext>(PlaygroundContext);
 
-  const [action, setAction] = useState<number>(actions.NULL);
-  const isEndingShown = useRef(false); // For controlling the end scene modal
-  const isDead = useRef(false); // For internal state reference of the state of player
+    const [action, setAction] = useState<number>(actions.null);
+    const [availableGlobals, setAvailableGlobals] = useState<IAvatarProps[]>(
+      []
+    );
+    const isEndingShown = useRef(false); // For controlling the end scene modal
+    const isDead = useRef(false); // For internal state reference of the state of player
 
-  useImperativeHandle(ref, () => ({
-    clearAction() {
-      setAction(actions.NULL);
-    },
-  }));
+    useImperativeHandle(ref, () => ({
+      clearAction() {
+        setAction(actions.null);
+      },
+    }));
 
-  const onChooseAction = () => {
-    const _action = getRandomAction();
-    setAction(_action);
+    const typographyLevel = isMobile ? 5 : 3;
 
-    if (_action === actions.BLACK) {
-      updatePlayerStatus(localStorage.getItem("nickname")!, "killing").catch(
-        (err) => {
-          message.error(err);
+    useEffect(() => {
+      const availableGlobalAvatars: IAvatarProps[] = [];
+
+      for (const avatar of avatars) {
+        if (globals.includes(Number(avatar.id)) && !avatar.dead) {
+          availableGlobalAvatars.push(avatar);
         }
-      );
-    } else {
-      updatePlayerStatus(localStorage.getItem("nickname")!, "moving").catch(
-        (err) => {
-          message.error(err);
-        }
-      );
-    }
-  };
-
-  const renderAction = () => {
-    if (!gameStarted)
-      return (
-        <div>
-          <Typography>Waiting for players to join...</Typography>
-        </div>
-      );
-
-    if (gameEnd) {
-      if (!isEndingShown.current) {
-        isEndingShown.current = true;
-        setTimeout(() => {
-          Modal.success({
-            title: "Good Game!",
-            okText: "Back To Home",
-            onOk: () => {
-              try {
-                deleteRoom(localStorage.getItem("room_id")!);
-              } catch (e) {
-                console.warn("room is already deleted");
-              } finally {
-                message.warn("Welcome Back!");
-                history.push("/");
-              }
-            },
-          });
-        }, 2000);
       }
-      if (localStorage.getItem("win")) {
-        return (
-          <div>
-            <Typography.Title level={3}>
-              Congratulations! You Win!
-            </Typography.Title>
-          </div>
-        );
-      } else {
-        return (
-          <div>
-            <Typography.Title level={3}>
-              The winner is: {winner}
-            </Typography.Title>
-          </div>
-        );
-      }
-    }
+      setAvailableGlobals(availableGlobalAvatars);
+    }, [avatars, globals]);
 
-    if (isDead.current) {
-      return (
-        <div>
-          <Typography.Title level={3}>You are dead</Typography.Title>
-        </div>
-      );
-    }
+    const useGlobal = () => {
+      const global = availableGlobals[0];
+      conductMurder(global, true);
+    };
 
-    switch (playerStats.status) {
-      case "waiting": {
-        let playingName = "";
-        playersData.forEach((player) => {
-          if (player.status !== "waiting" && player.alive) {
-            playingName = player.nickname;
+    const onChooseAction = () => {
+      const _action = getRandomAction();
+      setAction(_action);
+
+      if (_action === actions.black) {
+        onPlayerKill(_action);
+        updatePlayerStatus(localStorage.getItem("nickname")!, "killing").catch(
+          (err) => {
+            message.error(err);
           }
+        );
+        addTurn(localStorage.getItem("room_id")!, {
+          turn: playerTurn,
+          actor: playerStats.nickname,
+          status: "killing",
+          action: null,
+          fromRoom: null,
+          toRoom: null,
+          fromPosition: null,
+          toPosition: null,
+          avatarID: null,
+          killedPlayer: null,
         });
+      } else {
+        if (playerStats.status === "choosing") {
+          onPlayerPick(_action);
+          updatePlayerStatus(
+            localStorage.getItem("nickname")!,
+            "picking"
+          ).catch((err) => {
+            message.error(err);
+          });
+          addTurn(localStorage.getItem("room_id")!, {
+            turn: playerTurn,
+            actor: playerStats.nickname,
+            status: "picking",
+            action: null,
+            fromRoom: null,
+            toRoom: null,
+            fromPosition: null,
+            toPosition: null,
+            avatarID: null,
+            killedPlayer: null,
+          });
+        } else {
+          onPlayerMove(_action);
+          updatePlayerStatus(localStorage.getItem("nickname")!, "moving").catch(
+            (err) => {
+              message.error(err);
+            }
+          );
+        }
+      }
+    };
+
+    const renderAction = () => {
+      if (!gameStarted)
         return (
           <div>
-            <Typography.Title level={3}>
-              {playingName} is playing...
-            </Typography.Title>
+            <Typography>Waiting for players to join...</Typography>
           </div>
         );
-      }
-      case "choosing":
-        if (playerStats.alive) {
+
+      if (gameEnd) {
+        if (!isEndingShown.current) {
+          isEndingShown.current = true;
+          setTimeout(() => {
+            try {
+              deleteRoom(localStorage.getItem("room_id")!);
+            } catch (e) {
+              console.warn("room is already deleted");
+            } finally {
+              message.warn("Welcome Back!");
+              history.push("/");
+            }
+          }, 5000);
+        }
+        if (localStorage.getItem("win")) {
           return (
             <div>
-              <Typography>
-                <span style={{ color: "rgba(0,0,0,0.3)" }}>
-                  Click the button to play!
-                </span>
-              </Typography>
-              <Button
-                size="large"
-                type="primary"
-                danger
-                onClick={onChooseAction}
-              >
-                YOUR TURN
-              </Button>
+              <Typography.Title level={typographyLevel} type="success">
+                Congratulations! You Win!
+              </Typography.Title>
             </div>
           );
         } else {
-          isDead.current = true;
-          nextTurn(localStorage.getItem("room_id")!);
           return (
             <div>
-              <Typography.Title level={3}>You are dead</Typography.Title>
+              <Typography.Title level={typographyLevel}>
+                The winner is:{" "}
+                <span>
+                  <b>{winner}</b>
+                </span>
+              </Typography.Title>
             </div>
           );
         }
+      }
 
-      case "moving":
-      case "killing":
+      if (isDead.current) {
         return (
           <div>
-            <Typography.Title level={3}>
-              You chose{" "}
-              <span style={{ color: actionToColorMapping[action] }}>
-                {actionToColorStringMapping[action]}
-              </span>
+            <Typography.Title level={typographyLevel} disabled>
+              You are dead
             </Typography.Title>
-            <Typography.Paragraph>
-              {actionToMessageMapping[action]}
-            </Typography.Paragraph>
           </div>
         );
-      case "dead":
-        return (
-          <div>
-            <Typography.Title level={3}>You are dead</Typography.Title>
-          </div>
-        );
-    }
-  };
+      }
 
-  return (
-    <>
-      <div className="action">{renderAction()}</div>
-    </>
-  );
-});
+      switch (playerStats.status) {
+        case "waiting": {
+          let playingName = "";
+          playersData.forEach((player) => {
+            if (player.status !== "waiting" && player.alive) {
+              playingName = player.nickname;
+            }
+          });
+          return (
+            <div>
+              <Typography.Title level={typographyLevel}>
+                {playingName} is playing...
+              </Typography.Title>
+            </div>
+          );
+        }
+        case "choosing":
+          if (playerStats.alive) {
+            return (
+              <div>
+                <Space
+                  direction="vertical"
+                  size={isMobile ? "small" : "middle"}
+                  style={{ display: "flex" }}
+                >
+                  <Typography.Text type="secondary">
+                    Roll Your Next Move!
+                  </Typography.Text>
+                  <Button
+                    className={isMobile ? "" : "roll"}
+                    size={isMobile ? "middle" : "large"}
+                    type="primary"
+                    onClick={onChooseAction}
+                  >
+                    ROLL
+                  </Button>
+                </Space>
+              </div>
+            );
+          } else {
+            isDead.current = true;
+            nextTurn(localStorage.getItem("room_id")!);
+            return (
+              <div>
+                <Typography.Title level={typographyLevel} disabled>
+                  You are dead
+                </Typography.Title>
+              </div>
+            );
+          }
+
+        case "picking":
+          return (
+            <div>
+              <Typography.Title level={typographyLevel}>
+                You rolled{" "}
+                <span style={{ color: actionToColorMapping[action] }}>
+                  {actionToColorStringMapping[action]}
+                </span>
+              </Typography.Title>
+              <Typography.Paragraph>
+                Pick an assassin to start moving!
+              </Typography.Paragraph>
+            </div>
+          );
+        case "killing":
+          return (
+            <div>
+              <Typography.Title level={typographyLevel}>
+                Click someone in your room to murder
+              </Typography.Title>
+              {availableGlobals.length > 0 ? (
+                <div>
+                  <Typography.Text>
+                    Or{" "}
+                    <Button danger size="small" onClick={useGlobal}>
+                      SKIP
+                    </Button>{" "}
+                    your turn by allowing an innocent to leave the party! {"("}
+                    {availableGlobals.length}/3{")"}
+                  </Typography.Text>
+                </div>
+              ) : (
+                <Typography.Paragraph type="warning">
+                  All 3 skipping chances have been used! You have to make a
+                  kill!
+                </Typography.Paragraph>
+              )}
+            </div>
+          );
+        case "moving":
+          return (
+            <div>
+              <Typography.Title level={typographyLevel}>
+                Move to any of the highlighted slots
+              </Typography.Title>
+            </div>
+          );
+        case "dead":
+          return (
+            <div>
+              <Typography.Title level={typographyLevel} disabled>
+                You are dead
+              </Typography.Title>
+            </div>
+          );
+      }
+    };
+
+    return (
+      <>
+        <div className={isMobile ? "action-mobile" : "action"}>
+          {renderAction()}
+        </div>
+      </>
+    );
+  }
+);
 
 export default Action;

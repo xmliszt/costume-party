@@ -24,6 +24,7 @@ import {
 import { generateAvatarPosition } from "../helpers/avatar";
 import { roomColorMapping } from "../constants";
 import { IAvatarProps } from "../interfaces/avatar";
+import { isMobile } from "react-device-detect";
 
 export default function Home(): React.ReactElement {
   const history = useHistory();
@@ -42,6 +43,7 @@ export default function Home(): React.ReactElement {
   const [id_4, setId_4] = useState("");
 
   useEffect(() => {
+    localStorage.setItem("gameStarted", "false");
     if (localStorage.getItem("nickname")) {
       setNickname(localStorage.getItem("nickname")!);
     }
@@ -50,17 +52,25 @@ export default function Home(): React.ReactElement {
   const initializeAvatarPositions = (): Array<IAvatarProps> => {
     const avatarList: Array<IAvatarProps> = [];
     const rooms = ["TL", "TR", "BL", "BR", "C"];
+    const selectedPositions: Array<number> = [];
     let _id = 1;
     rooms.forEach((room) => {
       for (let i = 0; i < 4; i++) {
-        avatarList.push({
-          id: _id.toString(),
-          position: generateAvatarPosition(room),
-          imageUrl: `${process.env.PUBLIC_URL}/avatars/${_id}.png`,
-          strokeColor: roomColorMapping[room],
-          dead: false,
-        });
-        _id++;
+        while (true) {
+          const positionIdx = generateAvatarPosition(room);
+          if (!selectedPositions.includes(positionIdx)) {
+            avatarList.push({
+              id: _id.toString(),
+              positionIdx: positionIdx,
+              imageUrl: `${process.env.PUBLIC_URL}/avatars/${_id}.png`,
+              strokeColor: roomColorMapping[room],
+              dead: false,
+            });
+            selectedPositions.push(positionIdx);
+            _id++;
+            break;
+          }
+        }
       }
     });
     return avatarList;
@@ -78,8 +88,8 @@ export default function Home(): React.ReactElement {
       await createRoom(_id, capacity);
       await initializeAvatars(_id, initializeAvatarPositions());
       await initializeGlobals(_id);
-      await joinRoom(_id, nickname);
-      localStorage.setItem("nickname", nickname);
+      await joinRoom(_id, nickname.trim());
+      localStorage.setItem("nickname", nickname.trim());
       localStorage.setItem("room_id", _id);
       message.success("Room created: " + _id);
       setLoading(false);
@@ -102,8 +112,8 @@ export default function Home(): React.ReactElement {
       } else if (localStorage.getItem("room_id") === _id) {
         message.error("You have already joined the game!");
       } else {
-        await joinRoom(_id, nickname);
-        localStorage.setItem("nickname", nickname);
+        await joinRoom(_id, nickname.trim());
+        localStorage.setItem("nickname", nickname.trim());
         localStorage.setItem("room_id", _id);
         setLoading(false);
         history.push("/play");
@@ -120,39 +130,46 @@ export default function Home(): React.ReactElement {
     e: React.ChangeEvent<HTMLInputElement>,
     position: number
   ) => {
-    const _char = e.target.value.toUpperCase();
-    switch (position) {
-      case 0:
-        setId_1(_char);
-        break;
-      case 1:
-        setId_2(_char);
-        break;
-      case 2:
-        setId_3(_char);
-        break;
-      case 3:
-        setId_4(_char);
-        break;
-    }
-    if (_char && position <= 2) {
-      [roomID_1, roomID_2, roomID_3, roomID_4][position + 1].current.focus({
-        cursor: "all",
-      });
+    const value = e.target.value.toUpperCase();
+    const textFields = [roomID_1, roomID_2, roomID_3, roomID_4];
+    console.log(value, position);
+    for (let i = position; i < 4; i++) {
+      const _char = value[i - position] ?? "";
+      switch (i) {
+        case 0:
+          setId_1(_char);
+          break;
+        case 1:
+          setId_2(_char);
+          break;
+        case 2:
+          setId_3(_char);
+          break;
+        case 3:
+          setId_4(_char);
+          break;
+        default:
+          break;
+      }
+      if (_char) {
+        textFields[i + 1]?.current.focus({ cursor: "all" });
+      } else {
+        return;
+      }
     }
   };
 
   return (
-    <div className="home">
+    <div className={isMobile ? "home mobile" : "home"}>
       <Spin spinning={loading} indicator={<LoadingOutlined />}>
-        <div className="home-card">
-          <Typography.Title level={1} code>
+        <div className={isMobile ? "home-card-mobile" : "home-card"}>
+          <Typography.Title level={isMobile ? 3 : 1} code>
             Welcome To Costume Party!
           </Typography.Title>
           <Divider>
             <StarOutlined />
           </Divider>
-          <Typography.Paragraph>What's Your Name?</Typography.Paragraph>
+          <Typography.Text>What's Your Name?</Typography.Text>
           <Input
             style={{ marginTop: 15 }}
             size="large"
@@ -164,10 +181,10 @@ export default function Home(): React.ReactElement {
             allowClear
             required
             onChange={(e) => {
-              setNickname(e.target.value.trim());
+              setNickname(e.target.value);
             }}
           />
-          <Typography.Text style={{ color: "rgba(50, 50, 50, 0.3)" }}>
+          <Typography.Text type="secondary">
             Nickname should be not less than 3 characters, and not more than 12
             characters.
           </Typography.Text>
@@ -198,14 +215,15 @@ export default function Home(): React.ReactElement {
                 </Space>
               </Space>
               <Divider>Join A Room</Divider>
-              <Typography.Title level={3}>Room ID:</Typography.Title>
+              <Typography.Title level={isMobile ? 5 : 3}>
+                Room ID:
+              </Typography.Title>
               <Space>
                 <Input
                   ref={roomID_1}
                   style={{ maxWidth: 50 }}
                   size="large"
                   value={id_1}
-                  maxLength={1}
                   onChange={(e) => {
                     updateRoomID(e, 0);
                   }}
@@ -215,7 +233,6 @@ export default function Home(): React.ReactElement {
                   style={{ maxWidth: 50 }}
                   size="large"
                   value={id_2}
-                  maxLength={1}
                   onChange={(e) => {
                     updateRoomID(e, 1);
                   }}
@@ -225,7 +242,6 @@ export default function Home(): React.ReactElement {
                   style={{ maxWidth: 50 }}
                   size="large"
                   value={id_3}
-                  maxLength={1}
                   onChange={(e) => {
                     updateRoomID(e, 2);
                   }}
@@ -235,14 +251,13 @@ export default function Home(): React.ReactElement {
                   ref={roomID_4}
                   size="large"
                   value={id_4}
-                  maxLength={1}
                   onChange={(e) => {
                     updateRoomID(e, 3);
                   }}
                 />
               </Space>
               <div style={{ marginTop: 15 }}>
-                <Button size="large" onClick={joinARoom}>
+                <Button size={"large"} onClick={joinARoom}>
                   JOIN
                 </Button>
               </div>

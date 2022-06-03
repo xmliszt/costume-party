@@ -1,6 +1,11 @@
 import { tNumberToString, tRoomTypes, tStringToString } from "./types";
 
-export const colors = {
+export const GRID = {
+  GRID_ROW_LENGTH: 12,
+  GRID_CLN_LENGTH: 12,
+};
+
+export const COLORS: { [key: string]: string } = {
   green: "#67C23A",
   yellow: "#E6A23C",
   blue: "#409EFF",
@@ -16,21 +21,37 @@ export const colorStringToColorMapping: tStringToString = {
   "#606266": "black",
 };
 
-export const roomColorMapping: tRoomTypes = {
-  TL: colors.yellow,
-  TR: colors.blue,
-  BL: colors.green,
-  BR: colors.red,
-  C: colors.black,
+export const colorRoomMapping: { [key: string]: string } = {
+  "#E6A23C": "TL",
+  "#409EFF": "TR",
+  "#67C23A": "BL",
+  "#F56C6C": "BR",
+  "#606266": "C",
 };
 
-export const actions = {
-  GREEN: 0,
-  YELLOW: 1,
-  BLUE: 2,
-  RED: 3,
-  BLACK: 4,
-  NULL: 5,
+export const roomColorMapping: tRoomTypes = {
+  TL: COLORS.yellow,
+  TR: COLORS.blue,
+  BL: COLORS.green,
+  BR: COLORS.red,
+  C: COLORS.black,
+};
+
+export const roomColorNameMapping: { [key: string]: string } = {
+  TL: "Yellow",
+  TR: "Blue",
+  BL: "Green",
+  BR: "Red",
+  C: "Black",
+};
+
+export const actions: { [key: string]: number } = {
+  green: 0,
+  yellow: 1,
+  blue: 2,
+  red: 3,
+  black: 4,
+  null: 5,
 };
 
 export const actionToMessageMapping: tNumberToString = {

@@ -1,11 +1,6 @@
-export interface IAvatarPosition {
-  x: number;
-  y: number;
-}
-
 export interface IAvatarProps {
   id: string;
-  position: IAvatarPosition;
+  positionIdx: number;
   imageUrl: string;
   strokeColor: string;
   dead: boolean;

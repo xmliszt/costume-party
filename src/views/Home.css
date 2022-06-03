@@ -15,6 +15,10 @@
   align-items: center;
 }
 
+.home.mobile {
+  height: 100vh;
+}
+
 @-webkit-keyframes Gradient {
   0% {
     background-position: 0% 50%;
@@ -66,7 +70,27 @@
   padding-right: 17px;
 }
 
+.home-card-mobile {
+  width: 400px;
+  height: 600px;
+  max-height: 75vh;
+  max-width: 80vw;
+  background-color: white;
+  text-align: center;
+  padding: 20px;
+  border-radius: 20px;
+  box-shadow: 5px 5px 20px rgba(0, 0, 0, 0.5);
+  overflow-y: scroll;
+  box-sizing: content-box;
+  padding-right: 17px;
+}
+
 .home-card::-webkit-scrollbar {
+  width: 0 !important; /* Remove scrollbar space */
+  background: transparent; /* Optional: just make scrollbar invisible */
+}
+
+.home-card-mobile::-webkit-scrollbar {
   width: 0 !important; /* Remove scrollbar space */
   background: transparent; /* Optional: just make scrollbar invisible */
 }

@@ -12,7 +12,9 @@ import {
 import { getRandomInt } from "../helpers/number";
 import { IAvatarProps } from "../interfaces/avatar";
 import { asyncForEach } from "../helpers/async";
-import IRoom from "../interfaces/room";
+import { IRoom, ITurn } from "../interfaces/room";
+import { isPlayerAlive, updatePlayerStatus } from "./player";
+import { isMyTurn } from "../controllers/player";
 
 /**
  * Create a new room
@@ -27,6 +29,7 @@ export async function createRoom(
       capacity,
       turn: 1,
       players: [],
+      globals: [],
       gameEnd: false,
       winner: "",
     })
@@ -192,8 +195,7 @@ export async function initializeAvatars(
                 doc(db, "rooms", roomID, "avatars", avatar.id.toString()),
                 {
                   id: avatar.id,
-                  x: avatar.position.x,
-                  y: avatar.position.y,
+                  positionIdx: avatar.positionIdx,
                   strokeColor: avatar.strokeColor,
                   dead: avatar.dead,
                 }
@@ -225,27 +227,66 @@ export async function initializeGlobals(roomID: string): Promise<boolean> {
           await asyncForEach([0, 1, 2], async () => {
             try {
               const playerAvatars = await getPlayerAvatars(roomID);
-              let globalAvatar;
-              while (true) {
-                globalAvatar = getRandomInt(1, 20);
+              while (globals.length < 3) {
+                const globalAvatar = getRandomInt(1, 20);
                 if (
                   !playerAvatars.includes(globalAvatar) &&
                   !globals.includes(globalAvatar)
                 )
-                  break;
+                  globals.push(globalAvatar);
               }
-              globals.push(globalAvatar);
-              await setDoc(
-                doc(db, "rooms", roomID, "globals", globalAvatar.toString()),
-                {
-                  alive: true,
-                }
-              );
+              await updateDoc(doc(db, "rooms", roomID), {
+                globals: globals,
+              });
               res(true);
             } catch (err) {
               rej(err);
             }
           });
+        } else {
+          rej("room does not exist");
+        }
+      })
+      .catch((err) => {
+        rej(err);
+      });
+  });
+}
+
+/**
+ * Initialize all 20 avatars props in a given room
+ */
+export async function addTurn(roomID: string, turn: ITurn): Promise<boolean> {
+  return new Promise((res, rej) => {
+    isRoomExist(roomID)
+      .then(async (exist) => {
+        if (exist) {
+          try {
+            await setDoc(
+              doc(
+                db,
+                "rooms",
+                roomID,
+                "turns",
+                turn.turn.toString() + turn.status.toLowerCase()
+              ),
+              {
+                turn: turn.turn,
+                actor: turn.actor,
+                status: turn.status,
+                action: turn.action,
+                fromRoom: turn.fromRoom,
+                toRoom: turn.toRoom,
+                fromPosition: turn.fromPosition,
+                toPosition: turn.toPosition,
+                avatarID: turn.avatarID,
+                killedPlayer: turn.killedPlayer,
+              }
+            );
+            res(true);
+          } catch (err) {
+            rej(err);
+          }
         } else {
           rej("room does not exist");
         }
@@ -267,10 +308,7 @@ export async function getAllAvatarsProps(
           const data = avatarDoc.data();
           const avatar = {
             id: data.id,
-            position: {
-              x: data.x,
-              y: data.y,
-            },
+            positionIdx: data.positionIdx,
             strokeColor: data.strokeColor,
             imageUrl: `${process.env.PUBLIC_URL}/avatars/${data.id}.png`,
             dead: data.dead,
@@ -324,8 +362,7 @@ export async function isOnlyOnePlayerAlive(
             const data = player.data();
             if (data?.alive) counter++;
           });
-          console.log(counter);
-          res(counter === 1);
+          res(counter == 1);
         }
       })
       .catch((err) => rej(err));
@@ -355,5 +392,54 @@ export async function deleteRoom(roomID: string): Promise<boolean> {
     deleteDoc(doc(db, "rooms", roomID))
       .then(() => res(true))
       .catch((err) => rej(err));
+  });
+}
+
+export async function onNextTurn(
+  playerOrder: number,
+  turn: number,
+  capacity: number
+): Promise<void> {
+  const roomID = localStorage.getItem("room_id")!;
+  const nickname = localStorage.getItem("nickname")!;
+  return new Promise((res, rej) => {
+    if (nickname && roomID) {
+      isPlayerAlive(nickname)
+        .then((alive) => {
+          if (isMyTurn(playerOrder, turn, capacity)) {
+            if (alive) {
+              isOnlyOnePlayerAlive(roomID, capacity)
+                .then((isAWin) => {
+                  if (isAWin) {
+                    localStorage.setItem("win", "true");
+                    updateRoomGameState(roomID, true, nickname);
+                    res();
+                  } else {
+                    updatePlayerStatus(nickname, "choosing");
+                    addTurn(localStorage.getItem("room_id")!, {
+                      turn: turn,
+                      actor: nickname,
+                      status: "choosing",
+                      action: null,
+                      fromRoom: null,
+                      toRoom: null,
+                      fromPosition: null,
+                      toPosition: null,
+                      avatarID: null,
+                      killedPlayer: null,
+                    });
+                    res();
+                  }
+                })
+                .catch((err) => rej(err));
+            } else {
+              nextTurn(localStorage.getItem("room_id")!);
+            }
+          }
+        })
+        .catch((err) => {
+          rej(err);
+        });
+    }
   });
 }

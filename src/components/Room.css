@@ -1,0 +1,43 @@
+.room {
+  text-align: center;
+}
+
+.playground-wrapper {
+  border: 1px solid black;
+}
+
+.ant-btn-icon-only {
+  vertical-align: 1px;
+}
+
+.slot-normal {
+  transition: 0.3s;
+  opacity: 1;
+  transform: scale(1);
+}
+
+.slot-focus {
+  transition: 0.3s;
+  transform: scale(1.02);
+  box-shadow: 0 0 5px #77ff00;
+  opacity: 1;
+}
+
+.slot-disabled {
+  transition: 0.3s;
+  transform: scale(0.85);
+  box-shadow: none;
+  opacity: 0.3;
+}
+
+.drop-shadow {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  box-shadow: 0 0 25px #00000040;
+  margin-bottom: 20px;
+}
+
+.to-slot {
+  border: 2px dotted gray;
+}
