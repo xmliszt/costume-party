@@ -30,9 +30,11 @@ import Text from "antd/lib/typography/Text";
 export default function Playground(): React.ReactElement {
   const actionRef = useRef<IAction>(null);
   const roomRef = useRef<IRoomRef>(null);
+
   const history = useHistory();
+
   const avatars = useListenAvatars();
-  const { playerStats, playerAvatar } = useListenPlayer();
+  const { playerStats } = useListenPlayer();
   const playersData = useListenPlayers();
   const turns = useListenTurns();
 
@@ -50,16 +52,20 @@ export default function Playground(): React.ReactElement {
   const init = async () => {
     const roomID = localStorage.getItem("room_id");
     const nickname = localStorage.getItem("nickname");
+
     if (!roomID || !nickname) {
       message.error("no room joined!");
       history.push("/");
     } else {
       const player = await getPlayerByNickname(nickname);
       const room = await getRoomStates(roomID);
+
       if (isMyTurn(player.order, room.turn, room.capacity) && player.alive) {
-        updatePlayerStatus(nickname, "choosing").catch((err) =>
-          message.error(err)
-        );
+        if (player.status === "waiting") {
+          updatePlayerStatus(nickname, "choosing").catch((err) => {
+            console.error(err);
+          });
+        }
       }
     }
   };
@@ -264,7 +270,6 @@ export default function Playground(): React.ReactElement {
         avatars,
         playersData,
         playerStats,
-        playerAvatar,
         playerCount,
         roomCapacity,
         playerTurn,

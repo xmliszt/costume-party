@@ -21,6 +21,7 @@ import {
   getAvailablePickingRooms,
   getLastKillTurn,
   getLastMovingTurn,
+  getLastTurnByPlayer,
   isInWhichRoom,
   makeSlotProps,
 } from "../helpers/room";
@@ -30,7 +31,11 @@ import { ISlot } from "../interfaces/room";
 import { LoadingOutlined } from "@ant-design/icons";
 import { updateAvatarProps, updateAvatarStatus } from "../services/avatar";
 import { addTurn, getPlayerAvatars, nextTurn } from "../services/room";
-import { getAllAvatarPositions, getAvatarPositionMap } from "../helpers/avatar";
+import {
+  getAllAvatarPositions,
+  getAvatarPositionMap,
+  getPlayerAvatar,
+} from "../helpers/avatar";
 import Avatar from "antd/lib/avatar/avatar";
 import { IAvatarProps } from "../interfaces/avatar";
 import { PlaygroundContext } from "../context/PlaygroundContext";
@@ -71,7 +76,44 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
     const [actionSelected, setActionSelected] = useState<number | null>(null);
     const [pickedSlot, setPickedSlot] = useState<number | null>(null);
     const [rolledRoom, setRolledRoom] = useState<string | null>(null);
-    const [playerAvatar, setPlayerAvatar] = useState<IAvatarProps | null>();
+    const [playerAvatar, setPlayerAvatar] = useState<IAvatarProps | null>(null);
+
+    useEffect(() => {
+      const avatar = getPlayerAvatar(avatars, playerStats);
+      setPlayerAvatar(avatar);
+    }, [avatars]);
+
+    const restoreStatus = () => {
+      if (playerStats && !(playerStats.status === "waiting")) {
+        const lastTurnByPlayer = getLastTurnByPlayer(
+          turns,
+          localStorage.getItem("nickname")!
+        );
+        if (lastTurnByPlayer) {
+          setActionSelected(lastTurnByPlayer.action);
+          switch (lastTurnByPlayer.status) {
+            case "picking": {
+              onPlayerPick(lastTurnByPlayer.action!);
+              break;
+            }
+            case "moving": {
+              onPlayerMove(lastTurnByPlayer.action!);
+              break;
+            }
+            case "killing": {
+              onPlayerKill(lastTurnByPlayer.action!);
+              break;
+            }
+          }
+          updatePlayerStatus(
+            localStorage.getItem("nickname")!,
+            lastTurnByPlayer.status
+          ).catch((err) => {
+            message.error(err);
+          });
+        }
+      }
+    };
 
     const renderTurnLine = () => {
       return (
@@ -131,7 +173,7 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
           style={{
             backgroundImage:
               isLastKilledSlot && !isAvatarSlot
-                ? `url(/dead.png)`
+                ? `url(${process.env.PUBLIC_URL}/dead.png)`
                 : `url(${backgroundImage})`,
             backgroundColor: roomColorMapping[roomType] + "70",
             backgroundSize: "contain",
@@ -311,6 +353,7 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
       async function asyncInit() {
         setLoading(true);
         await init();
+        restoreStatus();
         setLoading(false);
       }
       if (gameStarted) {
@@ -326,14 +369,6 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
       };
       asyncCallback();
     }, [playerTurn]);
-
-    useEffect(() => {
-      for (const avatar of avatars) {
-        if (avatar.id === String(playerStats?.avatar)) {
-          setPlayerAvatar(avatar);
-        }
-      }
-    }, [avatars]);
 
     const highlighSlot = (slotIdx: number) => {
       setSlotsEnabled((slots) => {
@@ -490,23 +525,26 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
         disableSlot(index);
       }
       // highlight available avatars only in current player's avatar's room
-      const avatarPositions = getAllAvatarPositions(avatars);
-      const playerInRoom = isInWhichRoom(playerAvatar!.positionIdx);
-      let count = 0;
-      for (const avatarIdx of avatarPositions) {
-        const room = isInWhichRoom(avatarIdx);
-        if (room === playerInRoom && avatarIdx !== playerAvatar!.positionIdx) {
-          highlighSlot(avatarIdx);
-          count++;
-        } else if (avatarIdx === playerAvatar!.positionIdx) {
-          resetSlot(avatarIdx);
-        }
-      }
+      if (playerAvatar) {
+        const avatarPositions = getAllAvatarPositions(avatars);
+        const playerInRoom = isInWhichRoom(playerAvatar.positionIdx);
+        let count = 0;
+        for (const avatarIdx of avatarPositions) {
+          const room = isInWhichRoom(avatarIdx);
 
-      // Suicide case
-      if (count === 0) {
-        // self kill
-        conductMurder(playerAvatar!, false);
+          if (room === playerInRoom && avatarIdx !== playerAvatar.positionIdx) {
+            highlighSlot(avatarIdx);
+            count++;
+          } else if (avatarIdx === playerAvatar.positionIdx) {
+            resetSlot(avatarIdx);
+          }
+        }
+
+        // Suicide case
+        if (count === 0) {
+          // self kill
+          conductMurder(playerAvatar, false);
+        }
       }
     };
 

@@ -1,4 +1,4 @@
-import { GRID, roomColorMapping } from "../constants";
+import { GRID, roomColorMapping, statusPrecedentMap } from "../constants";
 import { ISlot, ITurn } from "../interfaces/room";
 
 export function makeSlotProps(index: number, row: number, col: number): ISlot {
@@ -195,6 +195,30 @@ export function getLastKillTurn(turns: ITurn[]): ITurn | null {
     ) {
       lastMovingTurn = turn;
       turnNumber = turn.turn;
+    }
+  }
+  return lastMovingTurn;
+}
+
+// Choosing -> Picking -> Moving
+// Choosing -> Killing
+export function getLastTurnByPlayer(
+  turns: ITurn[],
+  byWho: string
+): ITurn | null {
+  let turnNumber = 0;
+  let turnStatusPriority = -1;
+  let lastMovingTurn: ITurn | null = null;
+  for (const turn of turns) {
+    if (turn.actor === byWho && turn.turn >= turnNumber) {
+      if (turn.turn > turnNumber) {
+        turnStatusPriority = -1;
+      }
+      turnNumber = turn.turn;
+      if (statusPrecedentMap[turn.status] > turnStatusPriority) {
+        turnStatusPriority = statusPrecedentMap[turn.status];
+        lastMovingTurn = turn;
+      }
     }
   }
   return lastMovingTurn;

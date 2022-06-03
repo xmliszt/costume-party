@@ -9,7 +9,7 @@
  * - killing
  * - dead
  */
-import { Button, message, Modal, Typography, Space } from "antd";
+import { Button, message, Typography, Space } from "antd";
 import {
   useState,
   useContext,
@@ -27,6 +27,7 @@ import {
 } from "../constants";
 import { PlaygroundContext } from "../context/PlaygroundContext";
 import { getRandomAction } from "../helpers/action";
+import { getLastTurnByPlayer } from "../helpers/room";
 import { IAvatarProps } from "../interfaces/avatar";
 import IPlaygroundContext from "../interfaces/playground";
 import { updatePlayerStatus } from "../services/player";
@@ -44,6 +45,7 @@ const Action = forwardRef<IAction, any>(
   ): React.ReactElement => {
     const history = useHistory();
     const {
+      turns,
       globals,
       avatars,
       playerStats,
@@ -60,6 +62,36 @@ const Action = forwardRef<IAction, any>(
     );
     const isEndingShown = useRef(false); // For controlling the end scene modal
     const isDead = useRef(false); // For internal state reference of the state of player
+
+    useEffect(() => {
+      if (gameEnd) {
+        if (!isEndingShown.current) {
+          isEndingShown.current = true;
+          setTimeout(() => {
+            try {
+              deleteRoom(localStorage.getItem("room_id")!);
+            } catch (e) {
+              console.warn("room is already deleted");
+            } finally {
+              message.warn("Welcome Back!");
+              history.push("/");
+            }
+          }, 5000);
+        }
+      }
+    }, [gameEnd]);
+
+    useEffect(() => {
+      if (playerStats && !(playerStats.status === "waiting")) {
+        const lastTurnByPlayer = getLastTurnByPlayer(
+          turns,
+          localStorage.getItem("nickname")!
+        );
+        if (lastTurnByPlayer && lastTurnByPlayer.action) {
+          setAction(lastTurnByPlayer.action);
+        }
+      }
+    });
 
     useImperativeHandle(ref, () => ({
       clearAction() {
@@ -85,10 +117,7 @@ const Action = forwardRef<IAction, any>(
       conductMurder(global, true);
     };
 
-    const onChooseAction = () => {
-      const _action = getRandomAction();
-      setAction(_action);
-
+    const implementAction = (_action: number) => {
       if (_action === actions.black) {
         onPlayerKill(_action);
         updatePlayerStatus(localStorage.getItem("nickname")!, "killing").catch(
@@ -100,7 +129,7 @@ const Action = forwardRef<IAction, any>(
           turn: playerTurn,
           actor: playerStats.nickname,
           status: "killing",
-          action: null,
+          action: _action,
           fromRoom: null,
           toRoom: null,
           fromPosition: null,
@@ -121,7 +150,7 @@ const Action = forwardRef<IAction, any>(
             turn: playerTurn,
             actor: playerStats.nickname,
             status: "picking",
-            action: null,
+            action: _action,
             fromRoom: null,
             toRoom: null,
             fromPosition: null,
@@ -140,6 +169,12 @@ const Action = forwardRef<IAction, any>(
       }
     };
 
+    const onChooseAction = () => {
+      const _action = getRandomAction();
+      setAction(_action);
+      implementAction(_action);
+    };
+
     const renderAction = () => {
       if (!gameStarted)
         return (
@@ -149,20 +184,7 @@ const Action = forwardRef<IAction, any>(
         );
 
       if (gameEnd) {
-        if (!isEndingShown.current) {
-          isEndingShown.current = true;
-          setTimeout(() => {
-            try {
-              deleteRoom(localStorage.getItem("room_id")!);
-            } catch (e) {
-              console.warn("room is already deleted");
-            } finally {
-              message.warn("Welcome Back!");
-              history.push("/");
-            }
-          }, 5000);
-        }
-        if (localStorage.getItem("win")) {
+        if (winner === localStorage.getItem("nickname")!) {
           return (
             <div>
               <Typography.Title level={typographyLevel} type="success">

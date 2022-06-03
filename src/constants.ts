@@ -77,3 +77,14 @@ export const actionToColorMapping: tNumberToString = {
   3: "#F56C6C",
   4: "#606266",
 };
+
+export const statusPrecedentMap: { [key: string]: number } = {
+  waiting: -1,
+  choosing: 0,
+  picking: 1,
+  moving: 2,
+  killing: 1,
+  dead: 999,
+  kill: 999,
+  skip: 999,
+};

@@ -21,6 +21,11 @@ export default function PlayerStatus(): React.ReactElement {
                     shape="square"
                     size="large"
                     icon={<QuestionCircleOutlined />}
+                    src={
+                      item.alive
+                        ? ""
+                        : `${process.env.PUBLIC_URL}/avatars/${item.avatar}.png`
+                    }
                   />
                 }
                 title={item.nickname}
