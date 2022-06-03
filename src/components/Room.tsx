@@ -19,6 +19,8 @@ import {
   generateRoomToPositionIdx,
   getAvailableMovingRooms,
   getAvailablePickingRooms,
+  getLastKillTurn,
+  getLastMovingTurn,
   isInWhichRoom,
   makeSlotProps,
 } from "../helpers/room";
@@ -37,6 +39,7 @@ import Avatar from "antd/lib/avatar/avatar";
 import { IAvatarProps } from "../interfaces/avatar";
 import { PlaygroundContext } from "../context/PlaygroundContext";
 import IPlaygroundContext from "../interfaces/playground";
+import LineTo from "react-lineto";
 
 export interface IRoomRef {
   onPlayerMove(_action: number): void;
@@ -49,7 +52,7 @@ interface IRoomProp {
 
 const Room = forwardRef<IRoomRef, IRoomProp>(
   ({ onClearAction }, ref): React.ReactElement => {
-    const { avatars, playerStats, gameStarted, playerTurn } =
+    const { avatars, playerStats, gameStarted, playerTurn, turns } =
       useContext<IPlaygroundContext>(PlaygroundContext);
 
     useImperativeHandle(ref, () => ({
@@ -72,8 +75,29 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
     const [rolledRoom, setRolledRoom] = useState<string | null>(null);
     const [playerAvatar, setPlayerAvatar] = useState<IAvatarProps | null>();
 
+    const renderTurnLine = () => {
+      return (
+        <LineTo
+          from="from-slot"
+          to="to-slot"
+          borderColor="#00000040"
+          borderWidth={5}
+          borderStyle="dotted"
+          zIndex={999}
+        ></LineTo>
+      );
+    };
+
     const makeSlot = (slotIdx: number, roomType: string) => {
+      let isToAvatar = false;
+      let isFromAvatar = false;
+      let isLastKilledSlot = false;
+      let isAvatarSlot = false;
+
       const avatarPositions = getAllAvatarPositions(avatars);
+      if (avatarPositions.includes(slotIdx)) {
+        isAvatarSlot = true;
+      }
       const avatarPositionMap = getAvatarPositionMap(avatars);
       const backgroundImage = avatarPositions.includes(slotIdx)
         ? !avatarPositionMap[slotIdx].dead
@@ -81,12 +105,36 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
           : "none"
         : "none";
 
+      const lastMovingTurn = getLastMovingTurn(turns);
+      const lastKillTurn = getLastKillTurn(turns);
+
+      if (lastMovingTurn) {
+        if (lastMovingTurn.toPosition === slotIdx) {
+          isToAvatar = true;
+        } else if (lastMovingTurn.fromPosition === slotIdx) {
+          isFromAvatar = true;
+        }
+      }
+
+      if (lastKillTurn) {
+        if (lastKillTurn.fromPosition === slotIdx) {
+          isLastKilledSlot = true;
+        }
+      }
+
       return (
         <Button
           id={`slot-${slotIdx}`}
-          className={slotsClassName[slotIdx] ?? "slot-normal"}
+          className={
+            (slotsClassName[slotIdx] ?? "slot-normal") +
+            (isFromAvatar ? " from-slot" : "") +
+            (isToAvatar ? " to-slot" : "")
+          }
           style={{
-            backgroundImage: `url(${backgroundImage})`,
+            backgroundImage:
+              isLastKilledSlot && !isAvatarSlot
+                ? `url(/dead.png)`
+                : `url(${backgroundImage})`,
             backgroundColor: roomColorMapping[roomType] + "70",
             backgroundSize: "contain",
             backgroundRepeat: "no-repeat",
@@ -145,8 +193,10 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
         // remove image for the old slot
         const avatarPositionMap = getAvatarPositionMap(avatars);
         const selectedAvatar = avatarPositionMap[pickedSlot!];
-        const fromWhichRoom = isInWhichRoom(selectedAvatar.positionIdx);
-        const inWhichRoom = isInWhichRoom(slotIdx);
+        const fromPosition = selectedAvatar.positionIdx;
+        const toPosition = slotIdx;
+        const fromWhichRoom = isInWhichRoom(fromPosition);
+        const inWhichRoom = isInWhichRoom(toPosition);
         // update firebase
         updateAvatarProps(
           localStorage.getItem("room_id")!,
@@ -160,7 +210,9 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
             status: "moving",
             action: actionSelected,
             fromRoom: fromWhichRoom,
+            fromPosition: fromPosition,
             toRoom: inWhichRoom,
+            toPosition: toPosition,
             avatarID: Number(selectedAvatar.id),
             killedPlayer: null,
           });
@@ -358,6 +410,8 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
           action: actionSelected,
           fromRoom: isInWhichRoom(avatarToKill.positionIdx),
           toRoom: null,
+          fromPosition: avatarToKill.positionIdx,
+          toPosition: null,
           avatarID: Number(avatarToKill.id),
           killedPlayer: null,
         });
@@ -375,6 +429,8 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
                   action: null,
                   fromRoom: null,
                   toRoom: null,
+                  fromPosition: null,
+                  toPosition: null,
                   avatarID: null,
                   killedPlayer: null,
                 });
@@ -455,6 +511,7 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
 
     return (
       <div className="room">
+        {renderTurnLine()}
         <Space direction="vertical" size="large">
           <Spin spinning={loading} indicator={<LoadingOutlined />}>
             <div>

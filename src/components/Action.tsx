@@ -77,6 +77,8 @@ const Action = forwardRef<IAction, any>(
           action: null,
           fromRoom: null,
           toRoom: null,
+          fromPosition: null,
+          toPosition: null,
           avatarID: null,
           killedPlayer: null,
         });
@@ -96,6 +98,8 @@ const Action = forwardRef<IAction, any>(
             action: null,
             fromRoom: null,
             toRoom: null,
+            fromPosition: null,
+            toPosition: null,
             avatarID: null,
             killedPlayer: null,
           });
@@ -130,7 +134,7 @@ const Action = forwardRef<IAction, any>(
               message.warn("Welcome Back!");
               history.push("/");
             }
-          }, 2000);
+          }, 5000);
         }
         if (localStorage.getItem("win")) {
           return (

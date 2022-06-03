@@ -1,5 +1,5 @@
 import { GRID, roomColorMapping } from "../constants";
-import { ISlot } from "../interfaces/room";
+import { ISlot, ITurn } from "../interfaces/room";
 
 export function makeSlotProps(index: number, row: number, col: number): ISlot {
   if ((row < 3 && col < 6) || (row < 6 && col < 3)) {
@@ -171,4 +171,28 @@ export function getUnAvailablePickingRooms(currentRoomType: string): string[] {
     default:
       return [];
   }
+}
+
+export function getLastMovingTurn(turns: ITurn[]): ITurn | null {
+  let turnNumber = 0;
+  let lastMovingTurn: ITurn | null = null;
+  for (const turn of turns) {
+    if (turn.turn > turnNumber && turn.status === "moving") {
+      lastMovingTurn = turn;
+      turnNumber = turn.turn;
+    }
+  }
+  return lastMovingTurn;
+}
+
+export function getLastKillTurn(turns: ITurn[]): ITurn | null {
+  let turnNumber = 0;
+  let lastMovingTurn: ITurn | null = null;
+  for (const turn of turns) {
+    if (turn.turn > turnNumber && turn.status === "kill") {
+      lastMovingTurn = turn;
+      turnNumber = turn.turn;
+    }
+  }
+  return lastMovingTurn;
 }

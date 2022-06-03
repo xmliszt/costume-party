@@ -281,6 +281,8 @@ export async function addTurn(roomID: string, turn: ITurn): Promise<boolean> {
                 action: turn.action,
                 fromRoom: turn.fromRoom,
                 toRoom: turn.toRoom,
+                fromPosition: turn.fromPosition,
+                toPosition: turn.toPosition,
                 avatarID: turn.avatarID,
                 killedPlayer: turn.killedPlayer,
               }
@@ -425,6 +427,8 @@ export async function onNextTurn(
                       action: null,
                       fromRoom: null,
                       toRoom: null,
+                      fromPosition: null,
+                      toPosition: null,
                       avatarID: null,
                       killedPlayer: null,
                     });

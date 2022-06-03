@@ -30,7 +30,6 @@ import Text from "antd/lib/typography/Text";
 export default function Playground(): React.ReactElement {
   const actionRef = useRef<IAction>(null);
   const roomRef = useRef<IRoomRef>(null);
-  const playerOrder = useRef(0);
   const history = useHistory();
   const avatars = useListenAvatars();
   const { playerStats, playerAvatar } = useListenPlayer();
@@ -45,7 +44,7 @@ export default function Playground(): React.ReactElement {
     playerTurn,
     gameEnd,
     winner,
-  } = useListenRoom(playerOrder.current, onNextTurn);
+  } = useListenRoom(onNextTurn);
 
   const init = async () => {
     const roomID = localStorage.getItem("room_id");
@@ -56,7 +55,6 @@ export default function Playground(): React.ReactElement {
     } else {
       const player = await getPlayerByNickname(nickname);
       const room = await getRoomStates(roomID);
-      playerOrder.current = player.order;
       if (isMyTurn(player.order, room.turn, room.capacity) && player.alive) {
         updatePlayerStatus(nickname, "choosing").catch((err) =>
           message.error(err)
@@ -128,8 +126,6 @@ export default function Playground(): React.ReactElement {
   }
 
   const generateTurnMessage = (turn: ITurn): ITurnMessage | null => {
-    console.log(playersAvatars, turn);
-
     switch (turn.status) {
       case "choosing":
         return {
@@ -251,6 +247,7 @@ export default function Playground(): React.ReactElement {
         gameStarted,
         gameEnd,
         winner,
+        turns,
       }}
     >
       <div className="title">

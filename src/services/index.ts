@@ -6,6 +6,7 @@ import IPlayerProps from "../interfaces/player";
 import {
   getAvatarForPlayer,
   getPlayerByAvatarID,
+  getPlayerByNickname,
   updatePlayerAliveness,
   updatePlayerStatus,
 } from "./player";
@@ -28,7 +29,6 @@ interface IRoomData {
  * @returns room status data
  */
 export function useListenRoom(
-  playerOrder: number,
   onNextTurn: (
     playerOrder: number,
     turn: number,
@@ -43,12 +43,10 @@ export function useListenRoom(
   const [gameEnd, setGameEnd] = useState<boolean>(false);
   const [winner, setWinner] = useState<string>("");
 
-  const history = useHistory();
-
   useEffect(() => {
     setTimeout(() => {
       const roomID = localStorage.getItem("room_id");
-
+      const nickname = localStorage.getItem("nickname");
       // Update when room data changed: player move to next turn, player join
       if (roomID) {
         onSnapshot(
@@ -66,11 +64,17 @@ export function useListenRoom(
                 if (!gameStarted) {
                   setGameStarted(true);
                 }
-                onNextTurn(playerOrder, data?.turn, data?.capacity).catch(
-                  (err) => {
+                getPlayerByNickname(nickname!)
+                  .then((player) => {
+                    onNextTurn(player.order, data?.turn, data?.capacity).catch(
+                      (err) => {
+                        message.error(err);
+                      }
+                    );
+                  })
+                  .catch((err) => {
                     message.error(err);
-                  }
-                );
+                  });
               }
             } else {
               message.error("The room has been removed!");
@@ -249,8 +253,10 @@ export function useListenTurns(): ITurn[] {
               actor: data.actor,
               status: data.status,
               action: data.action,
+              fromPosition: data.fromPosition,
               fromRoom: data.fromRoom,
               toRoom: data.toRoom,
+              toPosition: data.toPosition,
               avatarID: data.avatarID,
               killedPlayer: data.killedPlayer,
             });

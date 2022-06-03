@@ -21,7 +21,9 @@ export interface ITurn {
   status: string; // see above comment
   action: number | null; // for choosing
   fromRoom: string | null; // from room type
+  fromPosition: number | null; // from position index
   toRoom: string | null; // to room type
+  toPosition: number | null; // to position index
   avatarID: number | null; // position index of avatar moved
   killedPlayer: string | null; // killed player nickname
 }
