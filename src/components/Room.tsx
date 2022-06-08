@@ -42,6 +42,7 @@ import { PlaygroundContext } from "../context/PlaygroundContext";
 import IPlaygroundContext from "../interfaces/playground";
 import LineTo from "react-lineto";
 import UIfx from "uifx";
+import "animate.css";
 
 export interface IRoomRef {
   onPlayerMove(_action: number): void;
@@ -205,8 +206,12 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
           id={`slot-${slotIdx}`}
           className={
             (slotsClassName[slotIdx] ?? "slot-normal") +
-            (isFromAvatar ? " from-slot" : "") +
-            (isToAvatar ? " to-slot" : "")
+            (isFromAvatar
+              ? " from-slot animate__animated animate__flash"
+              : "") +
+            (isToAvatar
+              ? " to-slot animate__animated animate__flash animate__flipInX"
+              : "")
           }
           style={{
             backgroundImage:
@@ -220,6 +225,8 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
               playerAvatar?.positionIdx === slotIdx
                 ? `5px solid ${playerAvatar!.strokeColor}`
                 : "none",
+            minWidth: "30px",
+            minHeight: "30px",
           }}
           ghost
           disabled={!slotsEnabled[slotIdx] ?? false}
@@ -608,21 +615,20 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
     };
 
     return (
-      <div className="room">
+      <div
+        className="room"
+        style={{ display: "flex", justifyContent: "center" }}
+      >
         {renderTurnLine()}
-        <Space direction="vertical" size="large">
-          <Spin spinning={loading} indicator={<LoadingOutlined />}>
+        <Spin spinning={loading} indicator={<LoadingOutlined />}>
+          <Space direction="vertical" size={"large"}>
             <div>
               {grid.map((row, rowIdx) => {
                 return (
-                  <Row
-                    key={rowIdx}
-                    gutter={[1, 1]}
-                    style={{ justifyContent: "center" }}
-                  >
+                  <Row key={rowIdx} gutter={[1, 1]} justify="center">
                     {row.map((col, colIdx) => {
                       return (
-                        <Col key={col.index}>
+                        <Col key={col.index} span={2}>
                           {makeSlot(rowIdx * 12 + colIdx, col.roomType)}
                         </Col>
                       );
@@ -631,13 +637,13 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
                 );
               })}
             </div>
-          </Spin>
-          {hasUndo && (
-            <Button type="dashed" danger onClick={undo} disabled={loading}>
-              UNDO
-            </Button>
-          )}
-        </Space>
+            {hasUndo && (
+              <Button type="dashed" danger onClick={undo} disabled={loading}>
+                UNDO
+              </Button>
+            )}
+          </Space>
+        </Spin>
       </div>
     );
   }
