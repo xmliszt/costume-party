@@ -165,7 +165,15 @@ export default function Home({
   };
 
   return (
-    <div className={isMobile ? "home mobile" : "home"}>
+    <div
+      className={isMobile ? "home mobile" : "home"}
+      style={{
+        backgroundImage:
+          currentTheme === "light"
+            ? `url(${process.env.PUBLIC_URL}/bg-light.jpeg)`
+            : `url(${process.env.PUBLIC_URL}/bg-dark.jpeg)`,
+      }}
+    >
       <Spin spinning={loading} indicator={<LoadingOutlined />}>
         <div
           className={
@@ -179,7 +187,7 @@ export default function Home({
           }
         >
           <Typography.Title level={isMobile ? 3 : 1} code>
-            Welcome To Costume Party!
+            Welcome To Costume Party! 🎉
           </Typography.Title>
           <Divider>
             <StarOutlined />

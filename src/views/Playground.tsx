@@ -303,30 +303,32 @@ export default function Playground({
         turns,
       }}
     >
-      <div className="title">
-        <Typography.Title level={1} code copyable>
-          {localStorage.getItem("room_id")}
-        </Typography.Title>
-        <Typography.Text style={{ color: "rgba(50, 50, 50, 0.3)" }}>
-          Copy to share the Room ID with friends!
-        </Typography.Text>
-      </div>
-      <Spin
-        spinning={!gameStarted}
-        indicator={<LoadingOutlined />}
-        tip={`Waiting for players to join... ${playerCount}/${roomCapacity}`}
-      >
-        <Room ref={roomRef} onClearAction={onClearAction} muted={muted} />
-      </Spin>
-      {renderStats()}
-      <div className={isMobile ? "timeline-mobile" : "timeline"}>
-        <Timeline mode="left" pending={pendingMsg} reverse>
-          {renderTimelineItems().map((message, idx) => (
-            <Timeline.Item key={idx} label={message.subject}>
-              {message.message}
-            </Timeline.Item>
-          ))}
-        </Timeline>
+      <div className="playground">
+        <div className="title">
+          <Typography.Title level={1} code copyable>
+            {localStorage.getItem("room_id")}
+          </Typography.Title>
+          <Typography.Text disabled>
+            Copy to share the Room ID with friends!
+          </Typography.Text>
+        </div>
+        <Spin
+          spinning={!gameStarted}
+          indicator={<LoadingOutlined />}
+          tip={`Waiting for players to join... ${playerCount}/${roomCapacity}`}
+        >
+          <Room ref={roomRef} onClearAction={onClearAction} muted={muted} />
+        </Spin>
+        {renderStats()}
+        <div className={isMobile ? "timeline-mobile" : "timeline"}>
+          <Timeline mode="left" pending={pendingMsg} reverse>
+            {renderTimelineItems().map((message, idx) => (
+              <Timeline.Item key={idx} label={message.subject}>
+                {message.message}
+              </Timeline.Item>
+            ))}
+          </Timeline>
+        </div>{" "}
       </div>
     </PlaygroundContext.Provider>
   );

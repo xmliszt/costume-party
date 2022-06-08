@@ -43,6 +43,7 @@ import IPlaygroundContext from "../interfaces/playground";
 import LineTo from "react-lineto";
 import UIfx from "uifx";
 import "animate.css";
+import { useThemeSwitcher } from "react-css-theme-switcher";
 
 export interface IRoomRef {
   onPlayerMove(_action: number): void;
@@ -59,6 +60,7 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
   ({ onClearAction, muted }, ref): React.ReactElement => {
     const { avatars, playerStats, gameStarted, playerTurn, turns, gameEnd } =
       useContext<IPlaygroundContext>(PlaygroundContext);
+    const { currentTheme } = useThemeSwitcher();
 
     useImperativeHandle(ref, () => ({
       onPlayerMove,
@@ -218,7 +220,7 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
               isLastKilledSlot && !isAvatarSlot
                 ? `url(${process.env.PUBLIC_URL}/dead.png)`
                 : `url(${backgroundImage})`,
-            backgroundColor: roomColorMapping[roomType] + "70",
+            backgroundColor: roomColorMapping[roomType] + "95",
             backgroundSize: "contain",
             backgroundRepeat: "no-repeat",
             border:
@@ -622,7 +624,11 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
         {renderTurnLine()}
         <Spin spinning={loading} indicator={<LoadingOutlined />}>
           <Space direction="vertical" size={"large"}>
-            <div>
+            <div
+              className={
+                currentTheme === "light" ? "board-light" : "board-dark"
+              }
+            >
               {grid.map((row, rowIdx) => {
                 return (
                   <Row key={rowIdx} gutter={[1, 1]} justify="center">
