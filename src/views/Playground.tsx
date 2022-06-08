@@ -27,7 +27,15 @@ import { ITurn } from "../interfaces/room";
 import { roomColorMapping, roomColorNameMapping } from "../constants";
 import Text from "antd/lib/typography/Text";
 
-export default function Playground(): React.ReactElement {
+interface IPlaygroundProps {
+  changeLocation(location: string): void;
+  isMuted: boolean;
+}
+
+export default function Playground({
+  changeLocation,
+  isMuted,
+}: IPlaygroundProps): React.ReactElement {
   const actionRef = useRef<IAction>(null);
   const roomRef = useRef<IRoomRef>(null);
 
@@ -37,6 +45,16 @@ export default function Playground(): React.ReactElement {
   const { playerStats } = useListenPlayer();
   const playersData = useListenPlayers();
   const turns = useListenTurns();
+
+  const [muted, setMuted] = useState<boolean>(true);
+
+  useEffect(() => {
+    setMuted(isMuted);
+  }, [isMuted]);
+
+  useEffect(() => {
+    changeLocation("play");
+  });
 
   const {
     globals,
@@ -292,7 +310,7 @@ export default function Playground(): React.ReactElement {
         indicator={<LoadingOutlined />}
         tip={`Waiting for players to join... ${playerCount}/${roomCapacity}`}
       >
-        <Room ref={roomRef} onClearAction={onClearAction} />
+        <Room ref={roomRef} onClearAction={onClearAction} muted={muted} />
       </Spin>
       {renderStats()}
       <div className={isMobile ? "timeline-mobile" : "timeline"}>

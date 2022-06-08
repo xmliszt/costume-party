@@ -410,7 +410,6 @@ export async function onNextTurn(
     if (nickname && roomID) {
       isPlayerAlive(nickname)
         .then((alive) => {
-          console.log(isMyTurn(playerOrder, turn, capacity));
           if (isMyTurn(playerOrder, turn, capacity)) {
             if (alive) {
               isOnlyOnePlayerAlive(roomID, capacity)

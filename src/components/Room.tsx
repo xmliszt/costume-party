@@ -51,15 +51,12 @@ export interface IRoomRef {
 }
 interface IRoomProp {
   onClearAction(): void;
+  muted: boolean;
 }
 
 const Room = forwardRef<IRoomRef, IRoomProp>(
-  ({ onClearAction }, ref): React.ReactElement => {
-    const gunShot = new UIfx(`${process.env.PUBLIC_URL}/gun.mp3`);
-    const walk = new UIfx(`${process.env.PUBLIC_URL}/walk.mp3`);
-    gunShot.setVolume(0.5);
-
-    const { avatars, playerStats, gameStarted, playerTurn, turns } =
+  ({ onClearAction, muted }, ref): React.ReactElement => {
+    const { avatars, playerStats, gameStarted, playerTurn, turns, gameEnd } =
       useContext<IPlaygroundContext>(PlaygroundContext);
 
     useImperativeHandle(ref, () => ({
@@ -68,6 +65,12 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
       onPlayerKill,
       conductMurder,
     }));
+
+    const [isMuted, setIsMuted] = useState<boolean>(true);
+
+    const [gunShot, setGunShot] = useState<UIfx>();
+    const [walk, setWalk] = useState<UIfx>();
+    const [clap, setClap] = useState<UIfx>();
 
     const [loading, setLoading] = useState<boolean>(false);
     const [grid, setGrid] = useState<ISlot[][]>([]);
@@ -82,6 +85,36 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
     const [pickedSlot, setPickedSlot] = useState<number | null>(null);
     const [rolledRoom, setRolledRoom] = useState<string | null>(null);
     const [playerAvatar, setPlayerAvatar] = useState<IAvatarProps | null>(null);
+
+    useEffect(() => {
+      setIsMuted(muted);
+    }, [muted]);
+
+    useEffect(() => {
+      if (!gunShot) {
+        const _gunShot = new UIfx(`${process.env.PUBLIC_URL}/gun.mp3`);
+        setGunShot(_gunShot);
+      }
+      if (!walk) {
+        setWalk(new UIfx(`${process.env.PUBLIC_URL}/walk.mp3`));
+      }
+      if (!clap) {
+        setClap(new UIfx(`${process.env.PUBLIC_URL}/clapping.mp3`));
+      }
+    }, []);
+
+    useEffect(() => {
+      if (gameEnd) {
+        clap && clap.play(0.5);
+        for (
+          let index = 0;
+          index < GRID.GRID_ROW_LENGTH * GRID.GRID_CLN_LENGTH;
+          index++
+        ) {
+          resetSlot(index);
+        }
+      }
+    }, [gameEnd]);
 
     useEffect(() => {
       const avatar = getPlayerAvatar(avatars, playerStats);
@@ -234,7 +267,6 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
           }
         }
       } else if (playerStats && playerStats.status === "moving") {
-        walk.play();
         // update avatar image to new selected slot
         // remove image for the old slot
         const avatarPositionMap = getAvatarPositionMap(avatars);
@@ -261,17 +293,17 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
             toPosition: toPosition,
             avatarID: Number(selectedAvatar.id),
             killedPlayer: null,
+          }).then(() => {
+            // pass the turn
+            nextTurn(localStorage.getItem("room_id")!);
+            updatePlayerStatus(
+              localStorage.getItem("nickname")!,
+              "waiting"
+            ).catch((err) => {
+              message.error(err);
+            });
+            onClearAction();
           });
-
-          // pass the turn
-          nextTurn(localStorage.getItem("room_id")!);
-          updatePlayerStatus(
-            localStorage.getItem("nickname")!,
-            "waiting"
-          ).catch((err) => {
-            message.error(err);
-          });
-          onClearAction();
         });
 
         // reset all tiles back to normal
@@ -374,6 +406,26 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
         setLoading(false);
       };
       asyncCallback();
+
+      const lastMovingTurn = getLastMovingTurn(turns);
+      const lastKillTurn = getLastKillTurn(turns);
+
+      if (
+        lastMovingTurn &&
+        lastMovingTurn.turn == playerTurn - 1 &&
+        !isMuted &&
+        !isMobile
+      ) {
+        walk && walk.play();
+      }
+      if (
+        lastKillTurn &&
+        lastKillTurn.turn == playerTurn - 1 &&
+        !isMuted &&
+        !isMobile
+      ) {
+        gunShot && gunShot.play(0.2);
+      }
     }, [playerTurn]);
 
     const highlighSlot = (slotIdx: number) => {
@@ -439,7 +491,6 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
       avatarToKill: IAvatarProps,
       isSkip: boolean
     ) => {
-      gunShot.play();
       // Kill the chosen target
       updateAvatarStatus(
         localStorage.getItem("room_id")!,
@@ -457,6 +508,16 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
           toPosition: null,
           avatarID: Number(avatarToKill.id),
           killedPlayer: null,
+        }).then(() => {
+          // pass the turn
+          nextTurn(localStorage.getItem("room_id")!);
+          updatePlayerStatus(
+            localStorage.getItem("nickname")!,
+            "waiting"
+          ).catch((err) => {
+            message.error(err);
+          });
+          onClearAction();
         });
       });
 
@@ -498,15 +559,6 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
       ) {
         resetSlot(index);
       }
-
-      // pass the turn
-      nextTurn(localStorage.getItem("room_id")!);
-      updatePlayerStatus(localStorage.getItem("nickname")!, "waiting").catch(
-        (err) => {
-          message.error(err);
-        }
-      );
-      onClearAction();
     };
 
     const onPlayerPick = (_action: number) => {

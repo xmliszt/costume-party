@@ -26,7 +26,13 @@ import { roomColorMapping } from "../constants";
 import { IAvatarProps } from "../interfaces/avatar";
 import { isMobile } from "react-device-detect";
 
-export default function Home(): React.ReactElement {
+interface IHomeProp {
+  changeLocation(location: string): void;
+}
+
+export default function Home({
+  changeLocation,
+}: IHomeProp): React.ReactElement {
   const history = useHistory();
 
   const roomID_1 = useRef<any>(null);
@@ -43,6 +49,7 @@ export default function Home(): React.ReactElement {
   const [id_4, setId_4] = useState("");
 
   useEffect(() => {
+    changeLocation("home");
     if (localStorage.getItem("nickname")) {
       setNickname(localStorage.getItem("nickname")!);
     }
