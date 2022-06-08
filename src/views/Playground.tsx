@@ -303,14 +303,29 @@ export default function Playground({
       }}
     >
       <div className="playground">
-        <div className="title">
-          <Typography.Title level={1} code copyable>
-            {localStorage.getItem("room_id")}
-          </Typography.Title>
-          <Typography.Text disabled>
-            Copy to share the Room ID with friends!
-          </Typography.Text>
-        </div>
+        {!isMobile && (
+          <div className="title">
+            <Typography.Title level={1} code copyable>
+              {localStorage.getItem("room_id")}
+            </Typography.Title>
+            <Typography.Text disabled>
+              Copy to share the Room ID with friends!
+            </Typography.Text>
+          </div>
+        )}
+        {isMobile && !gameStarted && (
+          <div className="title">
+            <Typography.Title level={1} code copyable>
+              {localStorage.getItem("room_id")}
+            </Typography.Title>
+            <Typography.Text disabled>
+              Copy to share the Room ID with friends!
+            </Typography.Text>
+          </div>
+        )}
+        {isMobile && gameStarted && (
+          <div style={{ height: "auto", width: "100%", marginTop: 50 }}></div>
+        )}
         <Spin
           spinning={!gameStarted}
           indicator={<LoadingOutlined />}
