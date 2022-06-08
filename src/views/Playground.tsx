@@ -79,7 +79,6 @@ export default function Playground({
     } else {
       const player = await getPlayerByNickname(nickname);
       const room = await getRoomStates(roomID);
-
       if (isMyTurn(player.order, room.turn, room.capacity) && player.alive) {
         if (player.status === "waiting") {
           updatePlayerStatus(nickname, "choosing").catch((err) => {

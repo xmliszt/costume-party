@@ -30,7 +30,12 @@ import { getPlayerByAvatarID, updatePlayerStatus } from "../services/player";
 import { ISlot } from "../interfaces/room";
 import { LoadingOutlined } from "@ant-design/icons";
 import { updateAvatarProps, updateAvatarStatus } from "../services/avatar";
-import { addTurn, getPlayerAvatars, nextTurn } from "../services/room";
+import {
+  addTurn,
+  getPlayerAvatars,
+  initializeGlobals,
+  nextTurn,
+} from "../services/room";
 import {
   getAllAvatarPositions,
   getAvatarPositionMap,
@@ -400,6 +405,9 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
       async function asyncInit() {
         setLoading(true);
         await init();
+        if (playerStats.order === playerTurn) {
+          await initializeGlobals(localStorage.getItem("room_id")!);
+        }
         restoreStatus();
         setLoading(false);
       }

@@ -95,7 +95,6 @@ export default function Home({
 
       await createRoom(_id, capacity);
       await initializeAvatars(_id, initializeAvatarPositions());
-      await initializeGlobals(_id);
       await joinRoom(_id, nickname.trim());
       localStorage.setItem("nickname", nickname.trim());
       localStorage.setItem("room_id", _id);
