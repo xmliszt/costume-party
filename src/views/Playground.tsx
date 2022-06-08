@@ -26,6 +26,7 @@ import { isMobile } from "react-device-detect";
 import { ITurn } from "../interfaces/room";
 import { roomColorMapping, roomColorNameMapping } from "../constants";
 import Text from "antd/lib/typography/Text";
+import { useThemeSwitcher } from "react-css-theme-switcher";
 
 interface IPlaygroundProps {
   changeLocation(location: string): void;
@@ -40,6 +41,7 @@ export default function Playground({
   const roomRef = useRef<IRoomRef>(null);
 
   const history = useHistory();
+  const { currentTheme } = useThemeSwitcher();
 
   const avatars = useListenAvatars();
   const { playerStats } = useListenPlayer();
@@ -102,7 +104,11 @@ export default function Playground({
   const renderStats = () => {
     if (isMobile) {
       return (
-        <section className="stats-mobile">
+        <section
+          className={
+            currentTheme === "light" ? "stats-mobile" : "stats-mobile-dark"
+          }
+        >
           <Action
             ref={actionRef}
             onPlayerMove={roomRef.current?.onPlayerMove}
@@ -125,7 +131,7 @@ export default function Playground({
       );
     } else {
       return (
-        <section className="stats">
+        <section className={currentTheme === "light" ? "stats" : "stats-dark"}>
           <Persona />
           <div style={{ display: "flex" }}>
             <Divider style={{ height: 200 }} type="vertical" />

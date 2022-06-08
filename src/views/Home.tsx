@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useContext } from "react";
 import { useHistory } from "react-router";
 import {
   Button,
@@ -25,6 +25,7 @@ import { generateAvatarPosition } from "../helpers/avatar";
 import { roomColorMapping } from "../constants";
 import { IAvatarProps } from "../interfaces/avatar";
 import { isMobile } from "react-device-detect";
+import { useThemeSwitcher } from "react-css-theme-switcher";
 
 interface IHomeProp {
   changeLocation(location: string): void;
@@ -34,6 +35,7 @@ export default function Home({
   changeLocation,
 }: IHomeProp): React.ReactElement {
   const history = useHistory();
+  const { currentTheme } = useThemeSwitcher();
 
   const roomID_1 = useRef<any>(null);
   const roomID_2 = useRef<any>(null);
@@ -165,7 +167,17 @@ export default function Home({
   return (
     <div className={isMobile ? "home mobile" : "home"}>
       <Spin spinning={loading} indicator={<LoadingOutlined />}>
-        <div className={isMobile ? "home-card-mobile" : "home-card"}>
+        <div
+          className={
+            isMobile
+              ? currentTheme === "light"
+                ? "home-card-mobile"
+                : "home-card-mobile-dark"
+              : currentTheme === "light"
+              ? "home-card"
+              : "home-card-dark"
+          }
+        >
           <Typography.Title level={isMobile ? 3 : 1} code>
             Welcome To Costume Party!
           </Typography.Title>
@@ -195,7 +207,7 @@ export default function Home({
             <div>
               <Divider>Create A Room</Divider>
               <Space size="large">
-                <Button size="large" onClick={createARoom}>
+                <Button type="primary" size="large" onClick={createARoom}>
                   CREATE
                 </Button>
 
@@ -260,7 +272,7 @@ export default function Home({
                 />
               </Space>
               <div style={{ marginTop: 15 }}>
-                <Button size={"large"} onClick={joinARoom}>
+                <Button type="primary" size={"large"} onClick={joinARoom}>
                   JOIN
                 </Button>
               </div>

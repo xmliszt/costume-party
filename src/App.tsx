@@ -7,8 +7,12 @@ import { useState } from "react";
 import { Switch as AntSwitch, Typography } from "antd";
 import { SoundOutlined } from "@ant-design/icons";
 import { isMobile } from "react-device-detect";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { useThemeSwitcher } from "react-css-theme-switcher";
 
 function App(): React.ReactElement {
+  const { switcher, currentTheme, status, themes } = useThemeSwitcher();
+  const [isDarkModeOn, setIsDarkModeOn] = useState<boolean>(false);
   const [location, setLocation] = useState<string>("");
   const [playStatus, setPlayStatus] = useState<
     "PLAYING" | "STOPPED" | "PAUSED"
@@ -22,6 +26,11 @@ function App(): React.ReactElement {
     }
   };
 
+  const toggleDarkMode = (darkModeOn: boolean) => {
+    setIsDarkModeOn(darkModeOn);
+    switcher({ theme: darkModeOn ? themes.dark : themes.light });
+  };
+
   const changeLocation = (location: string) => {
     setLocation(location);
   };
@@ -29,15 +38,26 @@ function App(): React.ReactElement {
   return (
     <div className="App">
       <div className="music-control">
-        <Typography.Text
-          style={{ color: location === "home" ? "white" : "black" }}
-        >
+        <Typography.Text>
           <SoundOutlined />{" "}
         </Typography.Text>
         <AntSwitch
+          className="sound-switch"
           size={isMobile ? "small" : "default"}
           onChange={toggleSound}
           defaultChecked={false}
+        />
+      </div>
+
+      <div className="dark-mode-control">
+        <AntSwitch
+          className="dark-mode-switch"
+          size={isMobile ? "small" : "default"}
+          checked={isDarkModeOn}
+          onChange={toggleDarkMode}
+          defaultChecked={false}
+          unCheckedChildren={<FontAwesomeIcon icon={["fas", "sun"]} />}
+          checkedChildren={<FontAwesomeIcon icon={["fas", "moon"]} />}
         />
       </div>
 
