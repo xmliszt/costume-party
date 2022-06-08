@@ -17,3 +17,14 @@
   height: 80px;
   margin-top: -50px;
 }
+
+.avatar:hover {
+  cursor: pointer;
+  transform: scale(1.1);
+  transition: 0.3s;
+}
+
+.avatar {
+  transform: scale(1);
+  transition: 0.3s;
+}

@@ -179,6 +179,7 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
       let isFromAvatar = false;
       let isLastKilledSlot = false;
       let isAvatarSlot = false;
+      const isPlayer = playerAvatar?.positionIdx === slotIdx ?? false;
 
       const avatarPositions = getAllAvatarPositions(avatars);
       if (avatarPositions.includes(slotIdx)) {
@@ -208,16 +209,38 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
         }
       }
 
+      setTimeout(() => {
+        const slot = document.getElementById(`slot-${slotIdx}`);
+        slot &&
+          slot.classList.remove(
+            "animate__animated",
+            "animate__flash",
+            "animate__heartBeat",
+            "animate__flipInX",
+            "animate__repeat-3"
+          );
+        const playerSlot = document.getElementById("playerSlot");
+        playerSlot &&
+          playerSlot.classList.remove(
+            "animate__animated",
+            "animate__flash",
+            "animate__heartBeat",
+            "animate__flipInX",
+            "animate__repeat-3"
+          );
+      }, 3000);
+
       return (
         <Button
-          id={`slot-${slotIdx}`}
+          id={isPlayer ? "playerSlot" : `slot-${slotIdx}`}
           className={
             (slotsClassName[slotIdx] ?? "slot-normal") +
             (isFromAvatar
               ? " from-slot animate__animated animate__flash"
               : "") +
-            (isToAvatar
-              ? " to-slot animate__animated animate__flash animate__flipInX"
+            (isToAvatar ? " to-slot animate__animated animate__flipInX" : "") +
+            (isPlayer && turns.length <= 1
+              ? " animate__animated animate__heartBeat animate__repeat-3"
               : "")
           }
           style={{

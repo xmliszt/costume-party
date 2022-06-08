@@ -18,6 +18,23 @@ export default function Persona(): React.ReactElement {
     setPlayerAvatar(avatar);
   }, [avatars]);
 
+  const highlightAvatar = () => {
+    const playerSlot = document.getElementById("playerSlot");
+    playerSlot &&
+      playerSlot.classList.add(
+        "animate__animated",
+        "animate__heartBeat",
+        "animate__repeat-1"
+      );
+    setTimeout(() => {
+      playerSlot!.classList.remove(
+        "animate__animated",
+        "animate__heartBeat",
+        "animate__repeat-1"
+      );
+    }, 1000);
+  };
+
   return (
     <>
       <div
@@ -31,14 +48,16 @@ export default function Persona(): React.ReactElement {
             <Typography.Title level={5}>
               {playerStats?.nickname}
             </Typography.Title>
-            <Avatar
-              style={{ border: `5px solid ${playerAvatar?.strokeColor}` }}
-              shape="square"
-              size={isMobile ? 50 : 100}
-              icon={<UserOutlined />}
-              src={playerAvatar?.imageUrl}
-              alt="No Image"
-            />
+            <div className="avatar" onClick={highlightAvatar}>
+              <Avatar
+                style={{ border: `5px solid ${playerAvatar?.strokeColor}` }}
+                shape="square"
+                size={isMobile ? 50 : 100}
+                icon={<UserOutlined />}
+                src={playerAvatar?.imageUrl}
+                alt="No Image"
+              />
+            </div>
           </div>
         </div>
       </div>
