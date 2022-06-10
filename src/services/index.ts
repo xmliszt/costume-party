@@ -4,7 +4,6 @@ import { IAvatarProps } from "../interfaces/avatar";
 import { doc, collection, onSnapshot } from "@firebase/firestore";
 import IPlayerProps from "../interfaces/player";
 import {
-  getAvatarForPlayer,
   getPlayerByAvatarID,
   getPlayerByNickname,
   updatePlayerAliveness,

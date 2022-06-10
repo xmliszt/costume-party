@@ -2,6 +2,16 @@
   text-align: center;
 }
 
+.board-light {
+  background-color: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(20px);
+}
+
+.board-dark {
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(20px);
+}
+
 .playground-wrapper {
   border: 1px solid black;
 }

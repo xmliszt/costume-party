@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useContext } from "react";
 import { useHistory } from "react-router";
 import {
   Button,
@@ -25,9 +25,17 @@ import { generateAvatarPosition } from "../helpers/avatar";
 import { roomColorMapping } from "../constants";
 import { IAvatarProps } from "../interfaces/avatar";
 import { isMobile } from "react-device-detect";
+import { useThemeSwitcher } from "react-css-theme-switcher";
 
-export default function Home(): React.ReactElement {
+interface IHomeProp {
+  changeLocation(location: string): void;
+}
+
+export default function Home({
+  changeLocation,
+}: IHomeProp): React.ReactElement {
   const history = useHistory();
+  const { currentTheme } = useThemeSwitcher();
 
   const roomID_1 = useRef<any>(null);
   const roomID_2 = useRef<any>(null);
@@ -43,6 +51,7 @@ export default function Home(): React.ReactElement {
   const [id_4, setId_4] = useState("");
 
   useEffect(() => {
+    changeLocation("home");
     if (localStorage.getItem("nickname")) {
       setNickname(localStorage.getItem("nickname")!);
     }
@@ -86,7 +95,6 @@ export default function Home(): React.ReactElement {
 
       await createRoom(_id, capacity);
       await initializeAvatars(_id, initializeAvatarPositions());
-      await initializeGlobals(_id);
       await joinRoom(_id, nickname.trim());
       localStorage.setItem("nickname", nickname.trim());
       localStorage.setItem("room_id", _id);
@@ -156,11 +164,29 @@ export default function Home(): React.ReactElement {
   };
 
   return (
-    <div className={isMobile ? "home mobile" : "home"}>
+    <div
+      className={isMobile ? "home mobile" : "home"}
+      style={{
+        backgroundImage:
+          currentTheme === "light"
+            ? `url(${process.env.PUBLIC_URL}/bg-light.jpeg)`
+            : `url(${process.env.PUBLIC_URL}/bg-dark.jpeg)`,
+      }}
+    >
       <Spin spinning={loading} indicator={<LoadingOutlined />}>
-        <div className={isMobile ? "home-card-mobile" : "home-card"}>
+        <div
+          className={
+            isMobile
+              ? currentTheme === "light"
+                ? "home-card-mobile"
+                : "home-card-mobile-dark"
+              : currentTheme === "light"
+              ? "home-card"
+              : "home-card-dark"
+          }
+        >
           <Typography.Title level={isMobile ? 3 : 1} code>
-            Welcome To Costume Party!
+            Welcome To Costume Party! 🎉
           </Typography.Title>
           <Divider>
             <StarOutlined />
@@ -188,7 +214,7 @@ export default function Home(): React.ReactElement {
             <div>
               <Divider>Create A Room</Divider>
               <Space size="large">
-                <Button size="large" onClick={createARoom}>
+                <Button type="primary" size="large" onClick={createARoom}>
                   CREATE
                 </Button>
 
@@ -253,7 +279,7 @@ export default function Home(): React.ReactElement {
                 />
               </Space>
               <div style={{ marginTop: 15 }}>
-                <Button size={"large"} onClick={joinARoom}>
+                <Button type="primary" size={"large"} onClick={joinARoom}>
                   JOIN
                 </Button>
               </div>

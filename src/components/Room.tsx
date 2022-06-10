@@ -30,7 +30,12 @@ import { getPlayerByAvatarID, updatePlayerStatus } from "../services/player";
 import { ISlot } from "../interfaces/room";
 import { LoadingOutlined } from "@ant-design/icons";
 import { updateAvatarProps, updateAvatarStatus } from "../services/avatar";
-import { addTurn, getPlayerAvatars, nextTurn } from "../services/room";
+import {
+  addTurn,
+  getPlayerAvatars,
+  initializeGlobals,
+  nextTurn,
+} from "../services/room";
 import {
   getAllAvatarPositions,
   getAvatarPositionMap,
@@ -41,6 +46,9 @@ import { IAvatarProps } from "../interfaces/avatar";
 import { PlaygroundContext } from "../context/PlaygroundContext";
 import IPlaygroundContext from "../interfaces/playground";
 import LineTo from "react-lineto";
+import UIfx from "uifx";
+import "animate.css";
+import { useThemeSwitcher } from "react-css-theme-switcher";
 
 export interface IRoomRef {
   onPlayerMove(_action: number): void;
@@ -50,12 +58,14 @@ export interface IRoomRef {
 }
 interface IRoomProp {
   onClearAction(): void;
+  muted: boolean;
 }
 
 const Room = forwardRef<IRoomRef, IRoomProp>(
-  ({ onClearAction }, ref): React.ReactElement => {
-    const { avatars, playerStats, gameStarted, playerTurn, turns } =
+  ({ onClearAction, muted }, ref): React.ReactElement => {
+    const { avatars, playerStats, gameStarted, playerTurn, turns, gameEnd } =
       useContext<IPlaygroundContext>(PlaygroundContext);
+    const { currentTheme } = useThemeSwitcher();
 
     useImperativeHandle(ref, () => ({
       onPlayerMove,
@@ -63,6 +73,12 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
       onPlayerKill,
       conductMurder,
     }));
+
+    const [isMuted, setIsMuted] = useState<boolean>(true);
+
+    const [gunShot, setGunShot] = useState<UIfx>();
+    const [walk, setWalk] = useState<UIfx>();
+    const [clap, setClap] = useState<UIfx>();
 
     const [loading, setLoading] = useState<boolean>(false);
     const [grid, setGrid] = useState<ISlot[][]>([]);
@@ -77,6 +93,36 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
     const [pickedSlot, setPickedSlot] = useState<number | null>(null);
     const [rolledRoom, setRolledRoom] = useState<string | null>(null);
     const [playerAvatar, setPlayerAvatar] = useState<IAvatarProps | null>(null);
+
+    useEffect(() => {
+      setIsMuted(muted);
+    }, [muted]);
+
+    useEffect(() => {
+      if (!gunShot) {
+        const _gunShot = new UIfx(`${process.env.PUBLIC_URL}/gun.mp3`);
+        setGunShot(_gunShot);
+      }
+      if (!walk) {
+        setWalk(new UIfx(`${process.env.PUBLIC_URL}/walk.mp3`));
+      }
+      if (!clap) {
+        setClap(new UIfx(`${process.env.PUBLIC_URL}/clapping.mp3`));
+      }
+    }, []);
+
+    useEffect(() => {
+      if (gameEnd) {
+        clap && clap.play(0.5);
+        for (
+          let index = 0;
+          index < GRID.GRID_ROW_LENGTH * GRID.GRID_CLN_LENGTH;
+          index++
+        ) {
+          resetSlot(index);
+        }
+      }
+    }, [gameEnd]);
 
     useEffect(() => {
       const avatar = getPlayerAvatar(avatars, playerStats);
@@ -133,6 +179,7 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
       let isFromAvatar = false;
       let isLastKilledSlot = false;
       let isAvatarSlot = false;
+      const isPlayer = playerAvatar?.positionIdx === slotIdx ?? false;
 
       const avatarPositions = getAllAvatarPositions(avatars);
       if (avatarPositions.includes(slotIdx)) {
@@ -162,26 +209,54 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
         }
       }
 
+      setTimeout(() => {
+        const slot = document.getElementById(`slot-${slotIdx}`);
+        slot &&
+          slot.classList.remove(
+            "animate__animated",
+            "animate__flash",
+            "animate__heartBeat",
+            "animate__flipInX",
+            "animate__repeat-3"
+          );
+        const playerSlot = document.getElementById("playerSlot");
+        playerSlot &&
+          playerSlot.classList.remove(
+            "animate__animated",
+            "animate__flash",
+            "animate__heartBeat",
+            "animate__flipInX",
+            "animate__repeat-3"
+          );
+      }, 3000);
+
       return (
         <Button
-          id={`slot-${slotIdx}`}
+          id={isPlayer ? "playerSlot" : `slot-${slotIdx}`}
           className={
             (slotsClassName[slotIdx] ?? "slot-normal") +
-            (isFromAvatar ? " from-slot" : "") +
-            (isToAvatar ? " to-slot" : "")
+            (isFromAvatar
+              ? " from-slot animate__animated animate__flash"
+              : "") +
+            (isToAvatar ? " to-slot animate__animated animate__flipInX" : "") +
+            (isPlayer && turns.length <= 1
+              ? " animate__animated animate__heartBeat animate__repeat-3"
+              : "")
           }
           style={{
             backgroundImage:
               isLastKilledSlot && !isAvatarSlot
                 ? `url(${process.env.PUBLIC_URL}/dead.png)`
                 : `url(${backgroundImage})`,
-            backgroundColor: roomColorMapping[roomType] + "70",
+            backgroundColor: roomColorMapping[roomType] + "95",
             backgroundSize: "contain",
             backgroundRepeat: "no-repeat",
             border:
               playerAvatar?.positionIdx === slotIdx
                 ? `5px solid ${playerAvatar!.strokeColor}`
                 : "none",
+            minWidth: "30px",
+            minHeight: "30px",
           }}
           ghost
           disabled={!slotsEnabled[slotIdx] ?? false}
@@ -255,17 +330,17 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
             toPosition: toPosition,
             avatarID: Number(selectedAvatar.id),
             killedPlayer: null,
+          }).then(() => {
+            // pass the turn
+            nextTurn(localStorage.getItem("room_id")!);
+            updatePlayerStatus(
+              localStorage.getItem("nickname")!,
+              "waiting"
+            ).catch((err) => {
+              message.error(err);
+            });
+            onClearAction();
           });
-
-          // pass the turn
-          nextTurn(localStorage.getItem("room_id")!);
-          updatePlayerStatus(
-            localStorage.getItem("nickname")!,
-            "waiting"
-          ).catch((err) => {
-            message.error(err);
-          });
-          onClearAction();
         });
 
         // reset all tiles back to normal
@@ -353,6 +428,9 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
       async function asyncInit() {
         setLoading(true);
         await init();
+        if (playerStats.order === playerTurn) {
+          await initializeGlobals(localStorage.getItem("room_id")!);
+        }
         restoreStatus();
         setLoading(false);
       }
@@ -368,6 +446,26 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
         setLoading(false);
       };
       asyncCallback();
+
+      const lastMovingTurn = getLastMovingTurn(turns);
+      const lastKillTurn = getLastKillTurn(turns);
+
+      if (
+        lastMovingTurn &&
+        lastMovingTurn.turn == playerTurn - 1 &&
+        !isMuted &&
+        !isMobile
+      ) {
+        walk && walk.play();
+      }
+      if (
+        lastKillTurn &&
+        lastKillTurn.turn == playerTurn - 1 &&
+        !isMuted &&
+        !isMobile
+      ) {
+        gunShot && gunShot.play(0.2);
+      }
     }, [playerTurn]);
 
     const highlighSlot = (slotIdx: number) => {
@@ -450,6 +548,16 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
           toPosition: null,
           avatarID: Number(avatarToKill.id),
           killedPlayer: null,
+        }).then(() => {
+          // pass the turn
+          nextTurn(localStorage.getItem("room_id")!);
+          updatePlayerStatus(
+            localStorage.getItem("nickname")!,
+            "waiting"
+          ).catch((err) => {
+            message.error(err);
+          });
+          onClearAction();
         });
       });
 
@@ -491,15 +599,6 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
       ) {
         resetSlot(index);
       }
-
-      // pass the turn
-      nextTurn(localStorage.getItem("room_id")!);
-      updatePlayerStatus(localStorage.getItem("nickname")!, "waiting").catch(
-        (err) => {
-          message.error(err);
-        }
-      );
-      onClearAction();
     };
 
     const onPlayerPick = (_action: number) => {
@@ -549,21 +648,24 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
     };
 
     return (
-      <div className="room">
+      <div
+        className="room"
+        style={{ display: "flex", justifyContent: "center" }}
+      >
         {renderTurnLine()}
-        <Space direction="vertical" size="large">
-          <Spin spinning={loading} indicator={<LoadingOutlined />}>
-            <div>
+        <Spin spinning={loading} indicator={<LoadingOutlined />}>
+          <Space direction="vertical" size={"large"}>
+            <div
+              className={
+                currentTheme === "light" ? "board-light" : "board-dark"
+              }
+            >
               {grid.map((row, rowIdx) => {
                 return (
-                  <Row
-                    key={rowIdx}
-                    gutter={[1, 1]}
-                    style={{ justifyContent: "center" }}
-                  >
+                  <Row key={rowIdx} gutter={[1, 1]} justify="center">
                     {row.map((col, colIdx) => {
                       return (
-                        <Col key={col.index}>
+                        <Col key={col.index} span={2}>
                           {makeSlot(rowIdx * 12 + colIdx, col.roomType)}
                         </Col>
                       );
@@ -572,13 +674,13 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
                 );
               })}
             </div>
-          </Spin>
-          {hasUndo && (
-            <Button type="dashed" danger onClick={undo} disabled={loading}>
-              UNDO
-            </Button>
-          )}
-        </Space>
+            {hasUndo && (
+              <Button type="dashed" danger onClick={undo} disabled={loading}>
+                UNDO
+              </Button>
+            )}
+          </Space>
+        </Spin>
       </div>
     );
   }

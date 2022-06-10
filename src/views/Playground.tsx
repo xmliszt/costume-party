@@ -26,17 +26,37 @@ import { isMobile } from "react-device-detect";
 import { ITurn } from "../interfaces/room";
 import { roomColorMapping, roomColorNameMapping } from "../constants";
 import Text from "antd/lib/typography/Text";
+import { useThemeSwitcher } from "react-css-theme-switcher";
 
-export default function Playground(): React.ReactElement {
+interface IPlaygroundProps {
+  changeLocation(location: string): void;
+  isMuted: boolean;
+}
+
+export default function Playground({
+  changeLocation,
+  isMuted,
+}: IPlaygroundProps): React.ReactElement {
   const actionRef = useRef<IAction>(null);
   const roomRef = useRef<IRoomRef>(null);
 
   const history = useHistory();
+  const { currentTheme } = useThemeSwitcher();
 
   const avatars = useListenAvatars();
   const { playerStats } = useListenPlayer();
   const playersData = useListenPlayers();
   const turns = useListenTurns();
+
+  const [muted, setMuted] = useState<boolean>(true);
+
+  useEffect(() => {
+    setMuted(isMuted);
+  }, [isMuted]);
+
+  useEffect(() => {
+    changeLocation("play");
+  });
 
   const {
     globals,
@@ -59,7 +79,6 @@ export default function Playground(): React.ReactElement {
     } else {
       const player = await getPlayerByNickname(nickname);
       const room = await getRoomStates(roomID);
-
       if (isMyTurn(player.order, room.turn, room.capacity) && player.alive) {
         if (player.status === "waiting") {
           updatePlayerStatus(nickname, "choosing").catch((err) => {
@@ -84,7 +103,11 @@ export default function Playground(): React.ReactElement {
   const renderStats = () => {
     if (isMobile) {
       return (
-        <section className="stats-mobile">
+        <section
+          className={
+            currentTheme === "light" ? "stats-mobile" : "stats-mobile-dark"
+          }
+        >
           <Action
             ref={actionRef}
             onPlayerMove={roomRef.current?.onPlayerMove}
@@ -107,7 +130,7 @@ export default function Playground(): React.ReactElement {
       );
     } else {
       return (
-        <section className="stats">
+        <section className={currentTheme === "light" ? "stats" : "stats-dark"}>
           <Persona />
           <div style={{ display: "flex" }}>
             <Divider style={{ height: 200 }} type="vertical" />
@@ -279,30 +302,47 @@ export default function Playground(): React.ReactElement {
         turns,
       }}
     >
-      <div className="title">
-        <Typography.Title level={1} code copyable>
-          {localStorage.getItem("room_id")}
-        </Typography.Title>
-        <Typography.Text style={{ color: "rgba(50, 50, 50, 0.3)" }}>
-          Copy to share the Room ID with friends!
-        </Typography.Text>
-      </div>
-      <Spin
-        spinning={!gameStarted}
-        indicator={<LoadingOutlined />}
-        tip={`Waiting for players to join... ${playerCount}/${roomCapacity}`}
-      >
-        <Room ref={roomRef} onClearAction={onClearAction} />
-      </Spin>
-      {renderStats()}
-      <div className={isMobile ? "timeline-mobile" : "timeline"}>
-        <Timeline mode="left" pending={pendingMsg} reverse>
-          {renderTimelineItems().map((message, idx) => (
-            <Timeline.Item key={idx} label={message.subject}>
-              {message.message}
-            </Timeline.Item>
-          ))}
-        </Timeline>
+      <div className="playground">
+        {!isMobile && (
+          <div className="title">
+            <Typography.Title level={1} code copyable>
+              {localStorage.getItem("room_id")}
+            </Typography.Title>
+            <Typography.Text disabled>
+              Copy to share the Room ID with friends!
+            </Typography.Text>
+          </div>
+        )}
+        {isMobile && !gameStarted && (
+          <div className="title">
+            <Typography.Title level={1} code copyable>
+              {localStorage.getItem("room_id")}
+            </Typography.Title>
+            <Typography.Text disabled>
+              Copy to share the Room ID with friends!
+            </Typography.Text>
+          </div>
+        )}
+        {isMobile && gameStarted && (
+          <div style={{ height: "auto", width: "100%", marginTop: 50 }}></div>
+        )}
+        <Spin
+          spinning={!gameStarted}
+          indicator={<LoadingOutlined />}
+          tip={`Waiting for players to join... ${playerCount}/${roomCapacity}`}
+        >
+          <Room ref={roomRef} onClearAction={onClearAction} muted={muted} />
+        </Spin>
+        {renderStats()}
+        <div className={isMobile ? "timeline-mobile" : "timeline"}>
+          <Timeline mode="left" pending={pendingMsg} reverse>
+            {renderTimelineItems().map((message, idx) => (
+              <Timeline.Item key={idx} label={message.subject}>
+                {message.message}
+              </Timeline.Item>
+            ))}
+          </Timeline>
+        </div>{" "}
       </div>
     </PlaygroundContext.Provider>
   );

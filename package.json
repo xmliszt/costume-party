@@ -4,6 +4,10 @@
   "private": true,
   "dependencies": {
     "@ant-design/icons": "^4.6.4",
+    "@fortawesome/fontawesome": "^1.1.8",
+    "@fortawesome/fontawesome-free-brands": "^5.0.6",
+    "@fortawesome/fontawesome-free-solid": "^5.0.13",
+    "@fortawesome/react-fontawesome": "^0.1.18",
     "@testing-library/jest-dom": "^5.11.4",
     "@testing-library/react": "^11.1.0",
     "@testing-library/user-event": "^12.1.10",
@@ -14,21 +18,32 @@
     "@types/react-router-dom": "^5.1.8",
     "@typescript-eslint/eslint-plugin": "^4.30.0",
     "@typescript-eslint/parser": "^4.30.0",
+    "animate.css": "^4.1.1",
     "antd": "^4.16.13",
+    "autoprefixer": "^10.4.7",
     "eslint": "^7.32.0",
     "firebase": "^9.0.1",
+    "gulp": "^4.0.2",
+    "gulp-csso": "^4.0.1",
+    "gulp-debug": "^4.0.0",
+    "gulp-less": "^5.0.0",
+    "gulp-postcss": "^9.0.1",
+    "less-plugin-npm-import": "^2.1.0",
     "react": "^17.0.2",
+    "react-css-theme-switcher": "^0.3.0",
     "react-device-detect": "^2.2.2",
     "react-dom": "^17.0.2",
     "react-lineto": "^3.3.0",
     "react-router-dom": "^5.3.0",
     "react-scripts": "4.0.3",
+    "react-sound": "^1.2.0",
     "typescript": "^4.1.2",
+    "uifx": "^2.0.7",
     "use-image": "^1.0.8",
     "web-vitals": "^1.0.1"
   },
   "scripts": {
-    "start": "react-scripts start",
+    "start": "npx gulp less && react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
@@ -53,6 +68,7 @@
     ]
   },
   "devDependencies": {
+    "@types/react-sound": "^1.2.3",
     "@types/uuid": "^8.3.4"
   }
 }

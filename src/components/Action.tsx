@@ -76,7 +76,7 @@ const Action = forwardRef<IAction, any>(
               message.warn("Welcome Back!");
               history.push("/");
             }
-          }, 5000);
+          }, 10000);
         }
       }
     }, [gameEnd]);
