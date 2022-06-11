@@ -4,55 +4,168 @@
   text-align: center;
 }
 
-.stats {
+.main-board {
   display: flex;
-  justify-content: center;
-  height: 200px;
-  margin-top: 30px;
-  box-shadow: 0px 0px 30px rgba(0, 0, 0, 0.2);
-  text-align: center;
+  justify-content: space-between;
+}
+
+.main-board-mobile {
+  display: block;
+}
+
+.stats {
+  width: 20vw;
+  position: relative;
+  margin-left: 50px;
+  margin-right: 50px;
+  border-radius: 20px;
+  box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.2);
+  overflow-y: hidden;
+  min-height: 70vh;
+  height: 70vh;
+  display: block;
   background-color: rgba(255, 255, 255, 0.5);
-  backdrop-filter: blur(5px);
+  backdrop-filter: blur(7px);
 }
 
 .stats-dark {
-  display: flex;
-  justify-content: center;
-  height: 200px;
-  margin-top: 30px;
-  box-shadow: 0px 0px 30px rgba(0, 0, 0, 0.2);
-  text-align: center;
+  width: 20vw;
+  position: relative;
+  margin-left: 50px;
+  margin-right: 50px;
+  border-radius: 20px;
+  box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.2);
+  overflow-y: hidden;
+  min-height: 70vh;
+  height: 70vh;
+  display: block;
   background-color: rgba(63, 63, 63, 0.9);
-  backdrop-filter: blur(5px);
+  backdrop-filter: blur(7px);
 }
 
 .stats-mobile {
   display: block;
-  margin-top: 30px;
-  box-shadow: 0px 0px 30px rgba(0, 0, 0, 0.2);
+  margin-bottom: 16px;
   text-align: center;
-  background-color: rgba(255, 255, 255, 0.5);
-  backdrop-filter: blur(5px);
+  background-color: rgba(255, 255, 255, 0);
 }
 
 .stats-mobile-dark {
   display: block;
-  margin-top: 30px;
-  box-shadow: 0px 0px 30px rgba(0, 0, 0, 0.2);
+  margin-bottom: 16px;
   text-align: center;
-  background-color: rgba(63, 63, 63, 0.9);
-  backdrop-filter: blur(5px);
+  background-color: rgba(63, 63, 63, 0s);
 }
 
 .timeline {
-  margin-top: 50px;
-  text-align: center;
+  width: 20vw;
+  position: relative;
+  margin-left: 50px;
+  margin-right: 50px;
+  border-radius: 20px;
+  box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.2);
+  min-height: 70vh;
+  height: 70vh;
+}
+
+.timeline div {
+  font-size: 16px;
+}
+
+.timeline-mobile div {
+  font-size: 12px;
 }
 
 .timeline-mobile {
-  margin: 40px 40px;
+  position: relative;
+  margin-top: 20px;
+  margin-left: 20px;
+  margin-right: 20px;
+  border-radius: 10px;
+  box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.2);
+  height: 90px;
+}
+
+.scrollable {
+  padding: 50px;
+  height: 70vh;
+  overflow-y: auto;
+}
+
+.scrollable-mobile {
+  padding: 20px;
+  height: 90px;
+  overflow-y: auto;
+}
+
+.stats::-webkit-scrollbar,
+.stats-mobile::-webkit-scrollbar,
+.stats-dark::-webkit-scrollbar,
+.stats-mobile-dark::-webkit-scrollbar,
+.scrollable::-webkit-scrollbar,
+.scrollable-mobile::-webkit-scrollbar {
+  display: none !important;
+}
+
+.gradient-overlay {
+  border-radius: 20px;
+  position: absolute;
+  border-radius: 20px;
+  z-index: 1;
+  height: 80px;
+  left: 0px;
+  right: 0px;
+  bottom: 0px;
+}
+
+.gradient-overlay-mobile {
+  position: absolute;
+  z-index: 1;
+  border-radius: 12px;
+  height: 40px;
+  left: 0px;
+  right: 0px;
+  bottom: 0px;
 }
 
 .ant-divider-horizontal {
   margin: 0px;
+}
+
+.ant-timeline-item-pending,
+.ant-timeline-item-content {
+  min-height: auto !important;
+}
+
+.ant-timeline.ant-timeline-reverse
+  .ant-timeline-item-pending
+  .ant-timeline-item-tail {
+  border-left: 2px dotted #8a40db;
+}
+
+.light-bg {
+  background-color: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(7px);
+}
+
+.dark-bg {
+  background-color: rgba(93, 93, 93, 0.5);
+  backdrop-filter: blur(7px);
+}
+
+.light-gradient {
+  background: linear-gradient(
+    rgba(255, 255, 255, 0),
+    rgba(255, 255, 255, 0.7),
+    rgb(255, 255, 255)
+  );
+}
+
+.dark-gradient {
+  background: linear-gradient(
+    rgba(93, 93, 93, 0),
+    rgba(36, 36, 36, 0.3),
+    rgba(36, 36, 36, 0.9),
+    rgb(36, 36, 36)
+  );
 }

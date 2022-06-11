@@ -9,7 +9,7 @@
  * - killing
  * - dead
  */
-import { Button, message, Typography, Space } from "antd";
+import { Button, message, Typography, Space, Drawer } from "antd";
 import {
   useState,
   useContext,
@@ -18,7 +18,8 @@ import {
   useRef,
   useEffect,
 } from "react";
-import { isMobile } from "react-device-detect";
+import { useThemeSwitcher } from "react-css-theme-switcher";
+import { isMobileOnly } from "react-device-detect";
 import { useHistory } from "react-router";
 import {
   actions,
@@ -26,6 +27,7 @@ import {
   actionToColorStringMapping,
 } from "../constants";
 import { PlaygroundContext } from "../context/PlaygroundContext";
+import { isMyTurn } from "../controllers/player";
 import { getRandomAction } from "../helpers/action";
 import { getLastTurnByPlayer } from "../helpers/room";
 import { IAvatarProps } from "../interfaces/avatar";
@@ -40,7 +42,7 @@ export interface IAction {
 
 const Action = forwardRef<IAction, any>(
   (
-    { onPlayerPick, onPlayerMove, onPlayerKill, conductMurder },
+    { onPlayerPick, onPlayerMove, onPlayerKill, conductMurder, undo, hasUndo },
     ref
   ): React.ReactElement => {
     const history = useHistory();
@@ -54,14 +56,36 @@ const Action = forwardRef<IAction, any>(
       gameEnd,
       winner,
       playerTurn,
+      roomCapacity,
     } = useContext<IPlaygroundContext>(PlaygroundContext);
 
+    const { currentTheme } = useThemeSwitcher();
+    const [rollActionDrawerVisible, setRollVisible] = useState<boolean>(false);
+    const [mobileActionDrawerVisible, setVisible] = useState<boolean>(false);
     const [action, setAction] = useState<number>(actions.null);
     const [availableGlobals, setAvailableGlobals] = useState<IAvatarProps[]>(
       []
     );
     const isEndingShown = useRef(false); // For controlling the end scene modal
     const isDead = useRef(false); // For internal state reference of the state of player
+
+    useEffect(() => {
+      if (
+        playerStats &&
+        isMyTurn(playerStats.order, playerTurn, roomCapacity)
+      ) {
+        if (playerStats.status === "choosing") {
+          setRollVisible(true);
+          setVisible(false);
+        } else {
+          setRollVisible(false);
+          setVisible(true);
+        }
+      } else {
+        setRollVisible(false);
+        setVisible(false);
+      }
+    }, [playerStats, playerTurn]);
 
     useEffect(() => {
       if (gameEnd) {
@@ -99,7 +123,7 @@ const Action = forwardRef<IAction, any>(
       },
     }));
 
-    const typographyLevel = isMobile ? 5 : 3;
+    const typographyLevel = isMobileOnly ? 5 : 1;
 
     useEffect(() => {
       const availableGlobalAvatars: IAvatarProps[] = [];
@@ -186,7 +210,7 @@ const Action = forwardRef<IAction, any>(
       if (gameEnd) {
         if (winner === localStorage.getItem("nickname")!) {
           return (
-            <div>
+            <div style={{ textAlign: "center" }}>
               <Typography.Title level={typographyLevel} type="success">
                 Congratulations! You Win!
               </Typography.Title>
@@ -194,7 +218,7 @@ const Action = forwardRef<IAction, any>(
           );
         } else {
           return (
-            <div>
+            <div style={{ textAlign: "center" }}>
               <Typography.Title level={typographyLevel}>
                 The winner is:{" "}
                 <span>
@@ -208,7 +232,7 @@ const Action = forwardRef<IAction, any>(
 
       if (isDead.current) {
         return (
-          <div>
+          <div style={{ textAlign: "center" }}>
             <Typography.Title level={typographyLevel} disabled>
               You are dead
             </Typography.Title>
@@ -225,7 +249,7 @@ const Action = forwardRef<IAction, any>(
             }
           });
           return (
-            <div>
+            <div style={{ textAlign: "center" }}>
               <Typography.Title level={typographyLevel}>
                 {playingName} is playing...
               </Typography.Title>
@@ -238,15 +262,22 @@ const Action = forwardRef<IAction, any>(
               <div>
                 <Space
                   direction="vertical"
-                  size={isMobile ? "small" : "middle"}
-                  style={{ display: "flex" }}
+                  size={isMobileOnly ? "small" : "middle"}
+                  style={{ textAlign: "center" }}
                 >
-                  <Typography.Text type="secondary">
-                    Roll Your Next Move!
-                  </Typography.Text>
+                  {isMobileOnly ? (
+                    <Typography.Text type="secondary">
+                      Roll Your Next Move!
+                    </Typography.Text>
+                  ) : (
+                    <Typography.Title level={3} type="secondary">
+                      Roll Your Next Move!
+                    </Typography.Title>
+                  )}
+
                   <Button
-                    className={isMobile ? "" : "roll"}
-                    size={isMobile ? "middle" : "large"}
+                    className={isMobileOnly ? "" : "roll"}
+                    size={isMobileOnly ? "middle" : "large"}
                     type="primary"
                     onClick={onChooseAction}
                   >
@@ -259,7 +290,7 @@ const Action = forwardRef<IAction, any>(
             isDead.current = true;
             nextTurn(localStorage.getItem("room_id")!);
             return (
-              <div>
+              <div style={{ textAlign: "center" }}>
                 <Typography.Title level={typographyLevel} disabled>
                   You are dead
                 </Typography.Title>
@@ -269,40 +300,44 @@ const Action = forwardRef<IAction, any>(
 
         case "picking":
           return (
-            <div>
+            <div style={{ textAlign: "center" }}>
               <Typography.Title level={typographyLevel}>
                 You rolled{" "}
                 <span style={{ color: actionToColorMapping[action] }}>
                   {actionToColorStringMapping[action]}
                 </span>
               </Typography.Title>
-              <Typography.Paragraph>
+              <Typography.Title level={typographyLevel}>
                 Pick an assassin to start moving!
-              </Typography.Paragraph>
+              </Typography.Title>
             </div>
           );
         case "killing":
           return (
-            <div>
+            <div style={{ textAlign: "center" }}>
               <Typography.Title level={typographyLevel}>
                 Click someone in your room to murder
               </Typography.Title>
               {availableGlobals.length > 0 ? (
                 <div>
-                  <Typography.Text>
+                  <Typography.Title level={typographyLevel}>
                     Or{" "}
-                    <Button danger size="small" onClick={useGlobal}>
+                    <Button
+                      danger
+                      size={isMobileOnly ? "small" : "large"}
+                      onClick={useGlobal}
+                    >
                       SKIP
                     </Button>{" "}
                     your turn by allowing an innocent to leave the party! {"("}
                     {availableGlobals.length}/3{")"}
-                  </Typography.Text>
+                  </Typography.Title>
                 </div>
               ) : (
-                <Typography.Paragraph type="warning">
+                <Typography.Title level={typographyLevel} type="warning">
                   All 3 skipping chances have been used! You have to make a
                   kill!
-                </Typography.Paragraph>
+                </Typography.Title>
               )}
             </div>
           );
@@ -327,9 +362,57 @@ const Action = forwardRef<IAction, any>(
 
     return (
       <>
-        <div className={isMobile ? "action-mobile" : "action"}>
-          {renderAction()}
-        </div>
+        {isMobileOnly ? (
+          <></>
+        ) : (
+          <div className={isMobileOnly ? "action-mobile" : "action"}>
+            {renderAction()}
+          </div>
+        )}
+        {isMobileOnly ? (
+          <>
+            <Drawer
+              placement="bottom"
+              closable={false}
+              height="20%"
+              visible={rollActionDrawerVisible}
+              key={"bottom"}
+              className={
+                "roll-drawer" +
+                (currentTheme === "light" ? " light-drawer" : " dark-drawer")
+              }
+            >
+              <div className={isMobileOnly ? "action-mobile" : "action"}>
+                {renderAction()}
+                {hasUndo && (
+                  <Button type="dashed" onClick={undo}>
+                    UNDO
+                  </Button>
+                )}
+              </div>
+            </Drawer>
+            <Drawer
+              placement="bottom"
+              closable={false}
+              height="16%"
+              visible={mobileActionDrawerVisible}
+              key={"bottom"}
+              className={
+                "action-drawer" +
+                (currentTheme === "light" ? " light-drawer" : " dark-drawer")
+              }
+            >
+              <div className={isMobileOnly ? "action-mobile" : "action"}>
+                {renderAction()}
+                {hasUndo && (
+                  <Button type="dashed" onClick={undo}>
+                    UNDO
+                  </Button>
+                )}
+              </div>
+            </Drawer>
+          </>
+        ) : null}
       </>
     );
   }

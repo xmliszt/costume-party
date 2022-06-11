@@ -22,7 +22,7 @@ import {
 } from "../services";
 import { getPlayerByNickname, updatePlayerStatus } from "../services/player";
 import { getRoomStates, onNextTurn } from "../services/room";
-import { isMobile } from "react-device-detect";
+import { isMobileOnly } from "react-device-detect";
 import { ITurn } from "../interfaces/room";
 import { roomColorMapping, roomColorNameMapping } from "../constants";
 import Text from "antd/lib/typography/Text";
@@ -101,50 +101,22 @@ export default function Playground({
   };
 
   const renderStats = () => {
-    if (isMobile) {
+    if (isMobileOnly) {
       return (
-        <section
+        <div
           className={
             currentTheme === "light" ? "stats-mobile" : "stats-mobile-dark"
           }
         >
-          <Action
-            ref={actionRef}
-            onPlayerMove={roomRef.current?.onPlayerMove}
-            onPlayerPick={roomRef.current?.onPlayerPick}
-            onPlayerKill={roomRef.current?.onPlayerKill}
-            conductMurder={roomRef.current?.conductMurder}
-          />
-          <Divider></Divider>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-          >
-            <Persona />
-            <PlayerStatus />
-          </div>
-        </section>
+          <Persona />
+        </div>
       );
     } else {
       return (
-        <section className={currentTheme === "light" ? "stats" : "stats-dark"}>
+        <div className={currentTheme === "light" ? "stats" : "stats-dark"}>
           <Persona />
-          <div style={{ display: "flex" }}>
-            <Divider style={{ height: 200 }} type="vertical" />
-            <Action
-              ref={actionRef}
-              onPlayerMove={roomRef.current?.onPlayerMove}
-              onPlayerPick={roomRef.current?.onPlayerPick}
-              onPlayerKill={roomRef.current?.onPlayerKill}
-              conductMurder={roomRef.current?.conductMurder}
-            />
-            <Divider style={{ height: 200 }} type="vertical" />
-          </div>
           <PlayerStatus />
-        </section>
+        </div>
       );
     }
   };
@@ -178,7 +150,10 @@ export default function Playground({
           subject: turn.actor,
           message: (
             <span>
-              <span>{turn.actor} moved </span>
+              <span>
+                <b>{turn.actor}</b>
+              </span>
+              <span> moved </span>
               <Avatar
                 src={`${process.env.PUBLIC_URL}/avatars/${turn.avatarID}.png`}
                 size="small"
@@ -211,7 +186,10 @@ export default function Playground({
           message: (
             <span>
               <span>
-                {turn.actor} <b style={{ color: "#F56C6C" }}>killed</b>
+                <b>{turn.actor}</b>
+              </span>
+              <span>
+                <b style={{ color: "#F56C6C" }}> killed</b>
               </span>
               <Avatar
                 src={`${process.env.PUBLIC_URL}/avatars/${turn.avatarID}.png`}
@@ -303,7 +281,23 @@ export default function Playground({
       }}
     >
       <div className="playground">
-        {!isMobile && (
+        {!isMobileOnly && (
+          <div className="title">
+            <Typography.Title level={1} code copyable>
+              {localStorage.getItem("room_id")}
+            </Typography.Title>
+            {isMobileOnly ? (
+              <Typography.Text disabled>
+                Copy to share the Room ID with friends!
+              </Typography.Text>
+            ) : (
+              <Typography.Title level={4} disabled>
+                Copy to share the Room ID with friends!
+              </Typography.Title>
+            )}
+          </div>
+        )}
+        {isMobileOnly && !gameStarted && (
           <div className="title">
             <Typography.Title level={1} code copyable>
               {localStorage.getItem("room_id")}
@@ -313,36 +307,54 @@ export default function Playground({
             </Typography.Text>
           </div>
         )}
-        {isMobile && !gameStarted && (
-          <div className="title">
-            <Typography.Title level={1} code copyable>
-              {localStorage.getItem("room_id")}
-            </Typography.Title>
-            <Typography.Text disabled>
-              Copy to share the Room ID with friends!
-            </Typography.Text>
-          </div>
-        )}
-        {isMobile && gameStarted && (
-          <div style={{ height: "auto", width: "100%", marginTop: 50 }}></div>
-        )}
+        {isMobileOnly && gameStarted && <></>}
         <Spin
           spinning={!gameStarted}
           indicator={<LoadingOutlined />}
           tip={`Waiting for players to join... ${playerCount}/${roomCapacity}`}
         >
-          <Room ref={roomRef} onClearAction={onClearAction} muted={muted} />
+          <div className={isMobileOnly ? "main-board-mobile" : "main-board"}>
+            {renderStats()}
+            <Room ref={roomRef} onClearAction={onClearAction} muted={muted} />
+            <div
+              className={
+                (isMobileOnly ? "timeline-mobile" : "timeline") +
+                (currentTheme === "light" ? " light-bg" : " dark-bg")
+              }
+            >
+              <div
+                className={
+                  (isMobileOnly
+                    ? "gradient-overlay-mobile"
+                    : "gradient-overlay") +
+                  (currentTheme === "light"
+                    ? " light-gradient"
+                    : " dark-gradient")
+                }
+              ></div>
+              <div
+                className={isMobileOnly ? "scrollable-mobile" : "scrollable"}
+              >
+                <Timeline mode="left" pending={pendingMsg} reverse>
+                  {renderTimelineItems().map((message, idx) => (
+                    <Timeline.Item key={idx}>{message.message}</Timeline.Item>
+                  ))}
+                </Timeline>
+              </div>
+            </div>
+          </div>
+          <div style={{ display: "flex", justifyContent: "center" }}>
+            <Action
+              ref={actionRef}
+              onPlayerMove={roomRef.current?.onPlayerMove}
+              onPlayerPick={roomRef.current?.onPlayerPick}
+              onPlayerKill={roomRef.current?.onPlayerKill}
+              conductMurder={roomRef.current?.conductMurder}
+              undo={roomRef.current?.undo}
+              hasUndo={roomRef.current?.hasUndo}
+            />
+          </div>
         </Spin>
-        {renderStats()}
-        <div className={isMobile ? "timeline-mobile" : "timeline"}>
-          <Timeline mode="left" pending={pendingMsg} reverse>
-            {renderTimelineItems().map((message, idx) => (
-              <Timeline.Item key={idx} label={message.subject}>
-                {message.message}
-              </Timeline.Item>
-            ))}
-          </Timeline>
-        </div>{" "}
       </div>
     </PlaygroundContext.Provider>
   );
