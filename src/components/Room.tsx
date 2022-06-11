@@ -117,7 +117,7 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
 
     useEffect(() => {
       if (gameEnd) {
-        clap && clap.play(0.5);
+        !muted && clap && clap.play(0.5);
         for (
           let index = 0;
           index < GRID.GRID_ROW_LENGTH * GRID.GRID_CLN_LENGTH;
