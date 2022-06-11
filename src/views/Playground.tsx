@@ -283,15 +283,9 @@ export default function Playground({
             <Typography.Title level={1} code copyable>
               {localStorage.getItem("room_id")}
             </Typography.Title>
-            {isMobileOnly ? (
-              <Typography.Text disabled>
-                Copy to share the Room ID with friends!
-              </Typography.Text>
-            ) : (
-              <Typography.Title level={4} disabled>
-                Copy to share the Room ID with friends!
-              </Typography.Title>
-            )}
+            <Typography.Title level={4} disabled>
+              Copy to share the Party ID with friends!
+            </Typography.Title>
           </div>
         )}
         {isMobileOnly && !gameStarted && (
@@ -300,7 +294,7 @@ export default function Playground({
               {localStorage.getItem("room_id")}
             </Typography.Title>
             <Typography.Text disabled>
-              Copy to share the Room ID with friends!
+              Copy to share the Party ID with friends!
             </Typography.Text>
           </div>
         )}

@@ -217,14 +217,14 @@ export default function Home({
               : "home-card-dark"
           }
         >
-          <Typography.Title level={isMobileOnly ? 3 : 1} code>
-            Welcome To Costume Party! 🎉
+          <Typography.Title level={isMobileOnly ? 5 : 1}>
+            🎉 Welcome To Costume Party! 🎉
           </Typography.Title>
           <Divider>
             <i>Party Invitation Card</i>
           </Divider>
           <Typography.Text>
-            Hello! Sir/Madam, how may we address you?
+            Hello Sir/Madam! How may we address you?
           </Typography.Text>
           <Input
             style={{ marginTop: 15 }}
@@ -246,7 +246,7 @@ export default function Home({
           </Typography.Text>
           {validateNickname(nickname) ? (
             <div>
-              <Divider>Create A Room</Divider>
+              <Divider>Create A Party</Divider>
               <Space size="large">
                 <Button type="primary" size="large" onClick={createARoom}>
                   CREATE
@@ -270,9 +270,9 @@ export default function Home({
                   <Typography.Text>players</Typography.Text>
                 </Space>
               </Space>
-              <Divider>Join A Room</Divider>
+              <Divider>Join A Party</Divider>
               <Typography.Title level={isMobileOnly ? 5 : 3}>
-                Room ID:
+                Party ID:
               </Typography.Title>
               <Space>
                 <Input
