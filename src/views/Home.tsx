@@ -24,7 +24,7 @@ import {
 import { generateAvatarPosition } from "../helpers/avatar";
 import { roomColorMapping } from "../constants";
 import { IAvatarProps } from "../interfaces/avatar";
-import { isMobile } from "react-device-detect";
+import { isMobileOnly } from "react-device-detect";
 import { useThemeSwitcher } from "react-css-theme-switcher";
 
 interface IHomeProp {
@@ -165,7 +165,7 @@ export default function Home({
 
   return (
     <div
-      className={isMobile ? "home mobile" : "home"}
+      className={isMobileOnly ? "home mobile" : "home"}
       style={{
         backgroundImage:
           currentTheme === "light"
@@ -176,7 +176,7 @@ export default function Home({
       <Spin spinning={loading} indicator={<LoadingOutlined />}>
         <div
           className={
-            isMobile
+            isMobileOnly
               ? currentTheme === "light"
                 ? "home-card-mobile"
                 : "home-card-mobile-dark"
@@ -185,7 +185,7 @@ export default function Home({
               : "home-card-dark"
           }
         >
-          <Typography.Title level={isMobile ? 3 : 1} code>
+          <Typography.Title level={isMobileOnly ? 3 : 1} code>
             Welcome To Costume Party! 🎉
           </Typography.Title>
           <Divider>
@@ -237,7 +237,7 @@ export default function Home({
                 </Space>
               </Space>
               <Divider>Join A Room</Divider>
-              <Typography.Title level={isMobile ? 5 : 3}>
+              <Typography.Title level={isMobileOnly ? 5 : 3}>
                 Room ID:
               </Typography.Title>
               <Space>

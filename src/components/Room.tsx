@@ -25,7 +25,7 @@ import {
   isInWhichRoom,
   makeSlotProps,
 } from "../helpers/room";
-import { isMobile } from "react-device-detect";
+import { isMobileOnly } from "react-device-detect";
 import { getPlayerByAvatarID, updatePlayerStatus } from "../services/player";
 import { ISlot } from "../interfaces/room";
 import { LoadingOutlined } from "@ant-design/icons";
@@ -55,6 +55,8 @@ export interface IRoomRef {
   onPlayerPick(_action: number): void;
   onPlayerKill(_action: number): void;
   conductMurder(avatarToKill: IAvatarProps, isSkip: boolean): Promise<void>;
+  undo(): void;
+  hasUndo: boolean;
 }
 interface IRoomProp {
   onClearAction(): void;
@@ -72,6 +74,8 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
       onPlayerPick,
       onPlayerKill,
       conductMurder,
+      undo,
+      hasUndo,
     }));
 
     const [isMuted, setIsMuted] = useState<boolean>(true);
@@ -113,7 +117,7 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
 
     useEffect(() => {
       if (gameEnd) {
-        clap && clap.play(0.5);
+        !muted && clap && clap.play(0.5);
         for (
           let index = 0;
           index < GRID.GRID_ROW_LENGTH * GRID.GRID_CLN_LENGTH;
@@ -235,10 +239,8 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
           id={isPlayer ? "playerSlot" : `slot-${slotIdx}`}
           className={
             (slotsClassName[slotIdx] ?? "slot-normal") +
-            (isFromAvatar
-              ? " from-slot animate__animated animate__flash"
-              : "") +
-            (isToAvatar ? " to-slot animate__animated animate__flipInX" : "") +
+            (isFromAvatar ? " from-slot" : "") +
+            (isToAvatar ? " to-slot" : "") +
             (isPlayer && turns.length <= 1
               ? " animate__animated animate__heartBeat animate__repeat-3"
               : "")
@@ -255,12 +257,16 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
               playerAvatar?.positionIdx === slotIdx
                 ? `5px solid ${playerAvatar!.strokeColor}`
                 : "none",
-            minWidth: "30px",
-            minHeight: "30px",
+            minWidth: isMobileOnly
+              ? "calc(80vw / 12)"
+              : "calc(min(30vw / 12, 60vh / 12))",
+            minHeight: isMobileOnly
+              ? "calc(80vw / 12)"
+              : "calc(min(30vw / 12, 70vh / 12))",
           }}
           ghost
           disabled={!slotsEnabled[slotIdx] ?? false}
-          size={isMobile ? "small" : "large"}
+          size={isMobileOnly ? "small" : "large"}
           icon={<div style={{ width: 0, height: 0 }}></div>}
           onClick={() => {
             onSlotSelected(slotIdx);
@@ -454,7 +460,7 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
         lastMovingTurn &&
         lastMovingTurn.turn == playerTurn - 1 &&
         !isMuted &&
-        !isMobile
+        !isMobileOnly
       ) {
         walk && walk.play();
       }
@@ -462,7 +468,7 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
         lastKillTurn &&
         lastKillTurn.turn == playerTurn - 1 &&
         !isMuted &&
-        !isMobile
+        !isMobileOnly
       ) {
         gunShot && gunShot.play(0.2);
       }
@@ -674,8 +680,13 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
                 );
               })}
             </div>
-            {hasUndo && (
-              <Button type="dashed" danger onClick={undo} disabled={loading}>
+            {!isMobileOnly && hasUndo && (
+              <Button
+                type="dashed"
+                onClick={undo}
+                size="large"
+                disabled={loading}
+              >
                 UNDO
               </Button>
             )}

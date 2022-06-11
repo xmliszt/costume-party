@@ -1,21 +1,13 @@
 .persona {
-  display: flex;
-  justify-content: center;
-  align-items: center;
   text-align: center;
-  width: 200px;
-  height: 200px;
-  padding: 10px;
+  padding: 50px;
 }
 
 .persona-mobile {
-  display: flex;
-  justify-content: center;
-  align-items: center;
   text-align: center;
   width: 200px;
   height: 80px;
-  margin-top: -50px;
+  margin-top: 10px;
 }
 
 .avatar:hover {
@@ -24,7 +16,19 @@
   transition: 0.3s;
 }
 
-.avatar {
+.avatar,
+.avatar-mobile {
+  margin-top: 10px;
   transform: scale(1);
   transition: 0.3s;
+}
+
+.avatar span {
+  width: 50%;
+  height: 50%;
+}
+
+.avatar-mobile span {
+  width: 50px;
+  height: 50px;
 }

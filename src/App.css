@@ -1,10 +1,12 @@
 .music-control {
+  z-index: 1000;
   position: fixed;
   top: 10px;
   left: 10px;
 }
 
 .dark-mode-control {
+  z-index: 1000;
   position: fixed;
   top: 10px;
   right: 10px;

@@ -6,7 +6,7 @@ import Sound from "react-sound";
 import { useState } from "react";
 import { Switch as AntSwitch, Typography } from "antd";
 import { SoundOutlined } from "@ant-design/icons";
-import { isMobile } from "react-device-detect";
+import { isMobileOnly } from "react-device-detect";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useThemeSwitcher } from "react-css-theme-switcher";
 
@@ -43,7 +43,7 @@ function App(): React.ReactElement {
         </Typography.Text>
         <AntSwitch
           className="sound-switch"
-          size={isMobile ? "small" : "default"}
+          size={isMobileOnly ? "small" : "default"}
           onChange={toggleSound}
           defaultChecked={false}
         />
@@ -52,7 +52,7 @@ function App(): React.ReactElement {
       <div className="dark-mode-control">
         <AntSwitch
           className="dark-mode-switch"
-          size={isMobile ? "small" : "default"}
+          size={isMobileOnly ? "small" : "default"}
           checked={isDarkModeOn}
           onChange={toggleDarkMode}
           defaultChecked={false}

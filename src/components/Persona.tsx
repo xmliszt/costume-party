@@ -1,7 +1,7 @@
 import { UserOutlined } from "@ant-design/icons";
 import { Avatar, Typography } from "antd";
 import { useContext, useEffect, useState } from "react";
-import { isMobile } from "react-device-detect";
+import { isMobileOnly } from "react-device-detect";
 import { PlaygroundContext } from "../context/PlaygroundContext";
 import { getPlayerAvatar } from "../helpers/avatar";
 import { IAvatarProps } from "../interfaces/avatar";
@@ -41,18 +41,28 @@ export default function Persona(): React.ReactElement {
         style={{
           display: "flex",
           justifyContent: "center",
+          height: "50%",
         }}
       >
-        <div className={isMobile ? "persona-mobile" : "persona"}>
+        <div className={isMobileOnly ? "persona-mobile" : "persona"}>
           <div>
-            <Typography.Title level={5}>
-              {playerStats?.nickname}
-            </Typography.Title>
-            <div className="avatar" onClick={highlightAvatar}>
+            {isMobileOnly ? (
+              <Typography.Text>
+                You are: <b>{playerStats?.nickname}</b>
+              </Typography.Text>
+            ) : (
+              <Typography.Title level={3}>
+                You are: <b>{playerStats?.nickname}</b>
+              </Typography.Title>
+            )}
+
+            <div
+              className={isMobileOnly ? "avatar-mobile" : "avatar"}
+              onClick={highlightAvatar}
+            >
               <Avatar
                 style={{ border: `5px solid ${playerAvatar?.strokeColor}` }}
                 shape="square"
-                size={isMobile ? 50 : 100}
                 icon={<UserOutlined />}
                 src={playerAvatar?.imageUrl}
                 alt="No Image"

@@ -3,22 +3,45 @@
   justify-content: center;
   align-items: center;
   padding: 10px;
-  height: 200px;
-  width: 400px;
+  height: auto;
+  width: 50vw;
 }
 
 .roll {
-  width: 200px;
-  height: 100px;
-  border-radius: 10px;
-  font-size: 40px;
-  font-weight: bold;
+  width: 30vw !important;
+  height: 100px !important;
+  border-radius: 10px !important;
+  font-size: 40px !important;
+  font-weight: bold !important;
 }
 
 .action-mobile {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 10px;
-  height: 100px;
+  text-align: center;
+  height: auto;
+  overflow-y: hidden;
+}
+
+.ant-drawer-mask {
+  background-color: transparent !important;
+}
+
+.action-drawer .ant-drawer-mask,
+.action-drawer {
+  pointer-events: none !important;
+}
+
+.action-drawer .ant-drawer-content-wrapper {
+  pointer-events: auto;
+}
+
+.light-drawer .ant-drawer-content {
+  background-color: rgba(255, 255, 255, 0.5) !important;
+}
+
+.ant-drawer-content {
+  backdrop-filter: blur(7px) !important;
+}
+
+.dark-drawer .ant-drawer-content {
+  background-color: rgba(0, 0, 0, 0.5) !important;
 }

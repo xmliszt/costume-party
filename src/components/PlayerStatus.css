@@ -1,6 +1,31 @@
 .player-status {
-  padding: 10px;
-  text-align: center;
-  width: 200px;
+  padding: 50px;
+  position: relative;
+  height: 50%;
+}
+
+.scrollable-list::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollable-list {
   overflow-y: auto;
+  height: 100%;
+}
+
+.light-gradient-up {
+  background: linear-gradient(rgba(255, 255, 255, 0.3), rgb(255, 255, 255, 0));
+}
+
+.dark-gradient-up {
+  background: linear-gradient(rgba(63, 63, 63, 0.7), rgb(93, 93, 93, 0));
+}
+
+.gradient-overlay-up {
+  position: absolute;
+  z-index: 1;
+  height: 80px;
+  left: 0px;
+  right: 0px;
+  top: 0px;
 }
