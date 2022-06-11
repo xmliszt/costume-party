@@ -111,7 +111,7 @@ function App(): React.ReactElement {
         </Switch>
       </Router>
       <Sound
-        url={`${process.env.PUBLIC_URL}/bg.mp3`}
+        url={`${process.env.PUBLIC_URL}/sounds/bg.mp3`}
         playStatus={playStatus}
         volume={50}
       />

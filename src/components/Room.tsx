@@ -102,14 +102,14 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
 
     useEffect(() => {
       if (!gunShot) {
-        const _gunShot = new UIfx(`${process.env.PUBLIC_URL}/gun.mp3`);
+        const _gunShot = new UIfx(`${process.env.PUBLIC_URL}/sounds/gun.mp3`);
         setGunShot(_gunShot);
       }
       if (!walk) {
-        setWalk(new UIfx(`${process.env.PUBLIC_URL}/walk.mp3`));
+        setWalk(new UIfx(`${process.env.PUBLIC_URL}/sounds/walk.mp3`));
       }
       if (!clap) {
-        setClap(new UIfx(`${process.env.PUBLIC_URL}/clapping.mp3`));
+        setClap(new UIfx(`${process.env.PUBLIC_URL}/sounds/clapping.mp3`));
       }
     }, []);
 
