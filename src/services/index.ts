@@ -62,6 +62,7 @@ export function useListenRoom(
               setPlayerTurn(data?.turn);
               setGameEnd(data?.gameEnd);
               setWinner(data?.winner);
+
               if (data?.capacity === data?.players.length) {
                 if (!gameStarted) {
                   setGameStarted(true);

@@ -90,10 +90,7 @@ export default function Playground({
   };
 
   useEffect(() => {
-    const asyncInit = async () => {
-      await init();
-    };
-    asyncInit();
+    init();
   }, []);
 
   const onClearAction = (): void => {
@@ -311,7 +308,7 @@ export default function Playground({
         <Spin
           spinning={!gameStarted}
           indicator={<LoadingOutlined />}
-          tip={`Waiting for players to join... ${playerCount}/${roomCapacity}`}
+          tip={`Loading The Party... ${playerCount}/${roomCapacity}`}
         >
           <div className={isMobileOnly ? "main-board-mobile" : "main-board"}>
             {renderStats()}

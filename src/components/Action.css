@@ -25,23 +25,38 @@
   background-color: transparent !important;
 }
 
+.roll-drawer .ant-drawer-mask,
 .action-drawer .ant-drawer-mask,
-.action-drawer {
+.action-drawer,
+.roll-drawer {
   pointer-events: none !important;
 }
 
+.roll-drawer .ant-drawer-content-wrapper,
 .action-drawer .ant-drawer-content-wrapper {
   pointer-events: auto;
 }
 
 .light-drawer .ant-drawer-content {
-  background-color: rgba(255, 255, 255, 0.5) !important;
-}
-
-.ant-drawer-content {
+  background-color: rgba(255, 255, 255, 0.8) !important;
   backdrop-filter: blur(7px) !important;
 }
 
+.ant-drawer-content {
+  border-radius: 12px 12px 0px 0px;
+  backdrop-filter: blur(7px) !important;
+}
+
+.ant-drawer-body::-webkit-scrollbar,
+.ant-drawer-content-wrapper::-webkit-scrollbar {
+  display: none !important;
+}
+
 .dark-drawer .ant-drawer-content {
-  background-color: rgba(0, 0, 0, 0.5) !important;
+  background-color: rgba(0, 0, 0, 0.8) !important;
+  backdrop-filter: blur(7px) !important;
+}
+
+.blurView {
+  backdrop-filter: blur(7px) !important;
 }

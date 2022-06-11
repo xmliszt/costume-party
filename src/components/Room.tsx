@@ -84,7 +84,6 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
     const [walk, setWalk] = useState<UIfx>();
     const [clap, setClap] = useState<UIfx>();
 
-    const [loading, setLoading] = useState<boolean>(false);
     const [grid, setGrid] = useState<ISlot[][]>([]);
     const [slotsEnabled, setSlotsEnabled] = useState<{
       [key: number]: boolean;
@@ -257,12 +256,13 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
               playerAvatar?.positionIdx === slotIdx
                 ? `5px solid ${playerAvatar!.strokeColor}`
                 : "none",
-            minWidth: isMobileOnly
+            width: isMobileOnly
               ? "calc(80vw / 12)"
               : "calc(min(30vw / 12, 60vh / 12))",
-            minHeight: isMobileOnly
+            height: isMobileOnly
               ? "calc(80vw / 12)"
-              : "calc(min(30vw / 12, 70vh / 12))",
+              : "calc(min(30vw / 12, 60vh / 12))",
+            aspectRatio: "1/1",
           }}
           ghost
           disabled={!slotsEnabled[slotIdx] ?? false}
@@ -398,7 +398,7 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
       );
     };
 
-    const refresh = async () => {
+    const refresh = () => {
       for (
         let index = 0;
         index < GRID.GRID_ROW_LENGTH * GRID.GRID_CLN_LENGTH;
@@ -408,7 +408,7 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
       }
     };
 
-    const init = async () => {
+    const init = () => {
       const tmpGrid = [];
       const tmpSlotsEnabled: { [key: number]: boolean } = {};
       const tmpSlotsClassName: { [key: number]: string } = {};
@@ -432,13 +432,11 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
 
     useEffect(() => {
       async function asyncInit() {
-        setLoading(true);
-        await init();
+        init();
         if (playerStats.order === playerTurn) {
           await initializeGlobals(localStorage.getItem("room_id")!);
         }
         restoreStatus();
-        setLoading(false);
       }
       if (gameStarted) {
         asyncInit();
@@ -446,13 +444,7 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
     }, [gameStarted]);
 
     useEffect(() => {
-      const asyncCallback = async () => {
-        setLoading(true);
-        await refresh();
-        setLoading(false);
-      };
-      asyncCallback();
-
+      refresh();
       const lastMovingTurn = getLastMovingTurn(turns);
       const lastKillTurn = getLastKillTurn(turns);
 
@@ -659,39 +651,31 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
         style={{ display: "flex", justifyContent: "center" }}
       >
         {renderTurnLine()}
-        <Spin spinning={loading} indicator={<LoadingOutlined />}>
-          <Space direction="vertical" size={"large"}>
-            <div
-              className={
-                currentTheme === "light" ? "board-light" : "board-dark"
-              }
-            >
-              {grid.map((row, rowIdx) => {
-                return (
-                  <Row key={rowIdx} gutter={[1, 1]} justify="center">
-                    {row.map((col, colIdx) => {
-                      return (
-                        <Col key={col.index} span={2}>
-                          {makeSlot(rowIdx * 12 + colIdx, col.roomType)}
-                        </Col>
-                      );
-                    })}
-                  </Row>
-                );
-              })}
-            </div>
-            {!isMobileOnly && hasUndo && (
-              <Button
-                type="dashed"
-                onClick={undo}
-                size="large"
-                disabled={loading}
-              >
-                UNDO
-              </Button>
-            )}
-          </Space>
-        </Spin>
+
+        <Space direction="vertical" size={"large"}>
+          <div
+            className={currentTheme === "light" ? "board-light" : "board-dark"}
+          >
+            {grid.map((row, rowIdx) => {
+              return (
+                <Row key={rowIdx} gutter={[1, 1]} justify="center">
+                  {row.map((col, colIdx) => {
+                    return (
+                      <Col key={col.index} span={2}>
+                        {makeSlot(rowIdx * 12 + colIdx, col.roomType)}
+                      </Col>
+                    );
+                  })}
+                </Row>
+              );
+            })}
+          </div>
+          {!isMobileOnly && hasUndo && (
+            <Button type="dashed" onClick={undo} size="large">
+              UNDO
+            </Button>
+          )}
+        </Space>
       </div>
     );
   }

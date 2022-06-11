@@ -17,7 +17,6 @@ import { validateNickname } from "../controllers/player";
 import {
   createRoom,
   initializeAvatars,
-  initializeGlobals,
   isRoomExist,
   joinRoom,
 } from "../services/room";
@@ -139,8 +138,6 @@ export default function Home({
     const textFields = [roomID_1, roomID_2, roomID_3, roomID_4];
     const values = [id_1, id_2, id_3, id_4];
     if (key === "Backspace" || key === "Delete") {
-      console.log(values[position], position);
-
       if (values[position] !== "") {
         switch (position) {
           case 0:
@@ -224,9 +221,11 @@ export default function Home({
             Welcome To Costume Party! 🎉
           </Typography.Title>
           <Divider>
-            <StarOutlined />
+            <i>Party Invitation Card</i>
           </Divider>
-          <Typography.Text>What's Your Name?</Typography.Text>
+          <Typography.Text>
+            Hello! Sir/Madam, how may we address you?
+          </Typography.Text>
           <Input
             style={{ marginTop: 15 }}
             size="large"
