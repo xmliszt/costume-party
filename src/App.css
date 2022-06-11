@@ -100,3 +100,10 @@ body {
 .ant-modal-confirm .ant-modal-body {
   padding: 10px 0px 0px !important;
 } */
+
+.social {
+  position: fixed;
+  bottom: 0px;
+  right: 10px;
+  z-index: 1;
+}

@@ -12,7 +12,11 @@ import {
   Switch as AntSwitch,
   Typography,
 } from "antd";
-import { InfoCircleOutlined, SoundOutlined } from "@ant-design/icons";
+import {
+  GithubOutlined,
+  InfoCircleOutlined,
+  SoundOutlined,
+} from "@ant-design/icons";
 import { isMobileOnly } from "react-device-detect";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useThemeSwitcher } from "react-css-theme-switcher";
@@ -64,6 +68,15 @@ function App(): React.ReactElement {
 
   return (
     <div className="App">
+      <div className="social">
+        <Button
+          type="link"
+          icon={<GithubOutlined />}
+          target="_blank"
+          size="large"
+          href="https://github.com/xmliszt/costume-party/tree/v1.0"
+        ></Button>
+      </div>
       <div className="info">
         <Button
           shape="circle"
