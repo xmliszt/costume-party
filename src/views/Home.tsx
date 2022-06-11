@@ -131,12 +131,47 @@ export default function Home({
     }
   };
 
+  const onKeyPressed = (
+    e: React.KeyboardEvent<HTMLInputElement>,
+    position: number
+  ) => {
+    const key = e.key;
+    const textFields = [roomID_1, roomID_2, roomID_3, roomID_4];
+    const values = [id_1, id_2, id_3, id_4];
+    if (key === "Backspace" || key === "Delete") {
+      console.log(values[position], position);
+
+      if (values[position] !== "") {
+        switch (position) {
+          case 0:
+            setId_1("");
+            break;
+          case 1:
+            setId_2("");
+            break;
+          case 2:
+            setId_3("");
+            break;
+          case 3:
+            setId_4("");
+            break;
+          default:
+            break;
+        }
+      }
+      if (position > 0) {
+        textFields[position - 1]?.current.focus({ cursor: "all" });
+      }
+    }
+  };
+
   const updateRoomID = (
     e: React.ChangeEvent<HTMLInputElement>,
     position: number
   ) => {
     const value = e.target.value.toUpperCase();
     const textFields = [roomID_1, roomID_2, roomID_3, roomID_4];
+
     for (let i = position; i < 4; i++) {
       const _char = value[i - position] ?? "";
       switch (i) {
@@ -246,6 +281,9 @@ export default function Home({
                   style={{ maxWidth: 50 }}
                   size="large"
                   value={id_1}
+                  onKeyDown={(e) => {
+                    onKeyPressed(e, 0);
+                  }}
                   onChange={(e) => {
                     updateRoomID(e, 0);
                   }}
@@ -255,6 +293,9 @@ export default function Home({
                   style={{ maxWidth: 50 }}
                   size="large"
                   value={id_2}
+                  onKeyDown={(e) => {
+                    onKeyPressed(e, 1);
+                  }}
                   onChange={(e) => {
                     updateRoomID(e, 1);
                   }}
@@ -264,6 +305,9 @@ export default function Home({
                   style={{ maxWidth: 50 }}
                   size="large"
                   value={id_3}
+                  onKeyDown={(e) => {
+                    onKeyPressed(e, 2);
+                  }}
                   onChange={(e) => {
                     updateRoomID(e, 2);
                   }}
@@ -273,6 +317,9 @@ export default function Home({
                   ref={roomID_4}
                   size="large"
                   value={id_4}
+                  onKeyDown={(e) => {
+                    onKeyPressed(e, 3);
+                  }}
                   onChange={(e) => {
                     updateRoomID(e, 3);
                   }}
