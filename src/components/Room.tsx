@@ -28,7 +28,6 @@ import {
 import { isMobileOnly } from "react-device-detect";
 import { getPlayerByAvatarID, updatePlayerStatus } from "../services/player";
 import { ISlot } from "../interfaces/room";
-import { LoadingOutlined } from "@ant-design/icons";
 import { updateAvatarProps, updateAvatarStatus } from "../services/avatar";
 import {
   addTurn,
@@ -172,7 +171,7 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
           borderColor="#00000040"
           borderWidth={5}
           borderStyle="dotted"
-          zIndex={999}
+          zIndex={1}
         ></LineTo>
       );
     };

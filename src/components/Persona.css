@@ -18,7 +18,7 @@
 
 .avatar,
 .avatar-mobile {
-  margin-top: 10px;
+  margin-top: 5px;
   transform: scale(1);
   transition: 0.3s;
   aspect-ratio: 1/1;

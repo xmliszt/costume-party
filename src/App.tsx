@@ -4,14 +4,21 @@ import Home from "./views/Home";
 import "./App.css";
 import Sound from "react-sound";
 import { useState } from "react";
-import { Switch as AntSwitch, Typography } from "antd";
-import { SoundOutlined } from "@ant-design/icons";
+import {
+  Button,
+  Carousel,
+  Image,
+  Modal,
+  Switch as AntSwitch,
+  Typography,
+} from "antd";
+import { InfoCircleOutlined, SoundOutlined } from "@ant-design/icons";
 import { isMobileOnly } from "react-device-detect";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useThemeSwitcher } from "react-css-theme-switcher";
 
 function App(): React.ReactElement {
-  const { switcher, currentTheme, status, themes } = useThemeSwitcher();
+  const { switcher, themes } = useThemeSwitcher();
   const [isDarkModeOn, setIsDarkModeOn] = useState<boolean>(false);
   const [location, setLocation] = useState<string>("");
   const [playStatus, setPlayStatus] = useState<
@@ -35,8 +42,39 @@ function App(): React.ReactElement {
     setLocation(location);
   };
 
+  const openTutorial = () => {
+    Modal.info({
+      width: "calc(min(80vw, 80vh))",
+      closable: true,
+      okButtonProps: {
+        hidden: true,
+      },
+      content: (
+        <Carousel autoplay dotPosition="bottom">
+          {[0, 1, 2, 3, 4].map((n) => (
+            <Image
+              src={`${process.env.PUBLIC_URL}/rules/${n}.jpg`}
+              preview={true}
+            ></Image>
+          ))}
+        </Carousel>
+      ),
+    });
+  };
+
   return (
     <div className="App">
+      <div className="info">
+        <Button
+          shape="circle"
+          type="text"
+          size={isMobileOnly ? "small" : "large"}
+          icon={<InfoCircleOutlined />}
+          onClick={openTutorial}
+        >
+          Help
+        </Button>
+      </div>
       <div className="music-control">
         <Typography.Text>
           <SoundOutlined />{" "}
@@ -48,7 +86,6 @@ function App(): React.ReactElement {
           defaultChecked={false}
         />
       </div>
-
       <div className="dark-mode-control">
         <AntSwitch
           className="dark-mode-switch"
@@ -60,7 +97,6 @@ function App(): React.ReactElement {
           checkedChildren={<FontAwesomeIcon icon={["fas", "moon"]} />}
         />
       </div>
-
       <Router>
         <Switch>
           <Route exact path="/">
