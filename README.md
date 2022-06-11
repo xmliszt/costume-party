@@ -1,46 +1,44 @@
-# Getting Started with Create React App
+# Welcome To Costume Party 🎉
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+You are an assassin who has been invited to a costume party. However, your rivals are also invited to the same party! Due to the costumes you all are wearing, you do not know anyone’s identity except your own. Move around in the party, interact with the people in the party, and find out who is your rival assassin, and...
 
-## Available Scripts
+<div align="center"><b style="font-size: 20px; color: #ff6060">KILL THEM ALL 😈 🔫</b></div>
 
-In the project directory, you can run:
+Grab your party ticket at https://costume-party.web.app and have some fun!
 
-### `yarn start`
+# Game Interface Instructions
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+![1.jpg](./public/rules/3.jpg)
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+![2.jpg](./public/rules/4.jpg)
 
-### `yarn test`
+# References
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+The game is inspired by famous board game [Costume Party Assassins](https://www.amazon.com/Playroom-Entertainment-Costume-Party-Assassins/dp/B0799Y5DKQ), to bring this board game to online to play. Game rules are totally following the original board game rules, with only the visual differences.
 
-### `yarn build`
+## Avatar Resources
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+The avatars used in the game come from [itch.io](https://free-game-assets.itch.io/free-character-avatars) free assets:
+https://free-game-assets.itch.io/free-character-avatars
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+Special thanks to the account: [Free Game Assets](https://free-game-assets.itch.io)
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## Sound Resources
 
-### `yarn eject`
+The sound used in the game come from the followings:
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+- Clapping Sound: https://www.youtube.com/watch?v=jDOrc8FmDy4
+- Silent Pistol: https://www.youtube.com/watch?v=h6BjmT9anXA
+- Walk Sound: https://www.youtube.com/watch?v=3I2pHlBCWFk
+- Restaurant BGM: https://www.youtube.com/watch?v=zRrkB2DeqBQ&t=113s
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+# Release Notes
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+## Release V1.0
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
+- Basic "Costume Party" game-play and logics
+- Game theme and sound effect
+- Support day/night theme
+- In-game rules can be checked at "Help"
+- Animations and highlights to guide the players to choose
+- Integration with Firebase Firestore and snapshot listeners
