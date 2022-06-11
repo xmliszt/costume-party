@@ -89,10 +89,14 @@ body {
   background-color: rgba(0, 0, 0, 0.8) !important;
 }
 
-.ant-modal-close {
+.ant-modal-confirm-body .ant-modal-confirm-title {
   color: white !important;
 }
 
+.ant-modal-close {
+  color: white !important;
+}
+/* 
 .ant-modal-confirm .ant-modal-body {
   padding: 10px 0px 0px !important;
-}
+} */
