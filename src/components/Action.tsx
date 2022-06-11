@@ -81,11 +81,18 @@ const Action = forwardRef<IAction, any>(
           setRollVisible(false);
           setVisible(true);
         }
+      } else if (
+        playerStats &&
+        gameEnd &&
+        !(winner === localStorage.getItem("nickname")!)
+      ) {
+        setVisible(true);
+        setRollVisible(false);
       } else {
         setRollVisible(false);
         setVisible(false);
       }
-    }, [playerStats, playerTurn]);
+    }, [playerStats, playerTurn, gameEnd, winner]);
 
     useEffect(() => {
       if (gameEnd) {
@@ -299,7 +306,22 @@ const Action = forwardRef<IAction, any>(
           }
 
         case "picking":
-          return (
+          return isMobileOnly ? (
+            <div style={{ textAlign: "center" }}>
+              <div>
+                <Typography.Text>
+                  You rolled{" "}
+                  <span style={{ color: actionToColorMapping[action] }}>
+                    {actionToColorStringMapping[action]}
+                  </span>
+                </Typography.Text>
+              </div>
+
+              <Typography.Text>
+                Pick a character to start moving!
+              </Typography.Text>
+            </div>
+          ) : (
             <div style={{ textAlign: "center" }}>
               <Typography.Title level={typographyLevel}>
                 You rolled{" "}
@@ -308,31 +330,60 @@ const Action = forwardRef<IAction, any>(
                 </span>
               </Typography.Title>
               <Typography.Title level={typographyLevel}>
-                Pick an assassin to start moving!
+                Pick a character to start moving!
               </Typography.Title>
             </div>
           );
         case "killing":
           return (
             <div style={{ textAlign: "center" }}>
-              <Typography.Title level={typographyLevel}>
-                Click someone in your room to murder
-              </Typography.Title>
+              {isMobileOnly ? (
+                <Typography.Text>
+                  Click someone in your room to murder
+                </Typography.Text>
+              ) : (
+                <Typography.Title level={typographyLevel}>
+                  Click someone in your room to murder
+                </Typography.Title>
+              )}
+
               {availableGlobals.length > 0 ? (
                 <div>
-                  <Typography.Title level={typographyLevel}>
-                    Or{" "}
-                    <Button
-                      danger
-                      size={isMobileOnly ? "small" : "large"}
-                      onClick={useGlobal}
-                    >
-                      SKIP
-                    </Button>{" "}
-                    your turn by allowing an innocent to leave the party! {"("}
-                    {availableGlobals.length}/3{")"}
-                  </Typography.Title>
+                  {isMobileOnly ? (
+                    <Typography.Text>
+                      Or{" "}
+                      <Button
+                        danger
+                        size={isMobileOnly ? "small" : "large"}
+                        onClick={useGlobal}
+                      >
+                        SKIP
+                      </Button>{" "}
+                      your turn by allowing an innocent to leave the party!{" "}
+                      {"("}
+                      {availableGlobals.length}/3{")"}
+                    </Typography.Text>
+                  ) : (
+                    <Typography.Title level={typographyLevel}>
+                      Or{" "}
+                      <Button
+                        danger
+                        size={isMobileOnly ? "small" : "large"}
+                        onClick={useGlobal}
+                      >
+                        SKIP
+                      </Button>{" "}
+                      your turn by allowing an innocent to leave the party!{" "}
+                      {"("}
+                      {availableGlobals.length}/3{")"}
+                    </Typography.Title>
+                  )}
                 </div>
+              ) : isMobileOnly ? (
+                <Typography.Text type="warning">
+                  All 3 skipping chances have been used! You have to make a
+                  kill!
+                </Typography.Text>
               ) : (
                 <Typography.Title level={typographyLevel} type="warning">
                   All 3 skipping chances have been used! You have to make a
@@ -344,9 +395,15 @@ const Action = forwardRef<IAction, any>(
         case "moving":
           return (
             <div>
-              <Typography.Title level={typographyLevel}>
-                Move to any of the highlighted slots
-              </Typography.Title>
+              {isMobileOnly ? (
+                <Typography.Text>
+                  Move to any of the highlighted slots
+                </Typography.Text>
+              ) : (
+                <Typography.Title level={typographyLevel}>
+                  Move to any of the highlighted slots
+                </Typography.Title>
+              )}
             </div>
           );
         case "dead":
@@ -374,9 +431,9 @@ const Action = forwardRef<IAction, any>(
             <Drawer
               placement="bottom"
               closable={false}
-              height="20%"
+              height="16%"
               visible={rollActionDrawerVisible}
-              key={"bottom"}
+              key={"bottom-roll"}
               className={
                 "roll-drawer" +
                 (currentTheme === "light" ? " light-drawer" : " dark-drawer")
@@ -390,13 +447,14 @@ const Action = forwardRef<IAction, any>(
                   </Button>
                 )}
               </div>
+              <div className="blurView"></div>
             </Drawer>
             <Drawer
               placement="bottom"
               closable={false}
               height="16%"
               visible={mobileActionDrawerVisible}
-              key={"bottom"}
+              key={"bottom-action"}
               className={
                 "action-drawer" +
                 (currentTheme === "light" ? " light-drawer" : " dark-drawer")
@@ -410,6 +468,7 @@ const Action = forwardRef<IAction, any>(
                   </Button>
                 )}
               </div>
+              <div className="blurView"></div>
             </Drawer>
           </>
         ) : null}

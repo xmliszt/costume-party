@@ -90,10 +90,7 @@ export default function Playground({
   };
 
   useEffect(() => {
-    const asyncInit = async () => {
-      await init();
-    };
-    asyncInit();
+    init();
   }, []);
 
   const onClearAction = (): void => {
@@ -286,15 +283,9 @@ export default function Playground({
             <Typography.Title level={1} code copyable>
               {localStorage.getItem("room_id")}
             </Typography.Title>
-            {isMobileOnly ? (
-              <Typography.Text disabled>
-                Copy to share the Room ID with friends!
-              </Typography.Text>
-            ) : (
-              <Typography.Title level={4} disabled>
-                Copy to share the Room ID with friends!
-              </Typography.Title>
-            )}
+            <Typography.Title level={4} disabled>
+              Copy to share the Party ID with friends!
+            </Typography.Title>
           </div>
         )}
         {isMobileOnly && !gameStarted && (
@@ -303,7 +294,7 @@ export default function Playground({
               {localStorage.getItem("room_id")}
             </Typography.Title>
             <Typography.Text disabled>
-              Copy to share the Room ID with friends!
+              Copy to share the Party ID with friends!
             </Typography.Text>
           </div>
         )}
@@ -311,7 +302,7 @@ export default function Playground({
         <Spin
           spinning={!gameStarted}
           indicator={<LoadingOutlined />}
-          tip={`Waiting for players to join... ${playerCount}/${roomCapacity}`}
+          tip={`Loading The Party... ${playerCount}/${roomCapacity}`}
         >
           <div className={isMobileOnly ? "main-board-mobile" : "main-board"}>
             {renderStats()}

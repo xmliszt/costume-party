@@ -17,7 +17,6 @@ import { validateNickname } from "../controllers/player";
 import {
   createRoom,
   initializeAvatars,
-  initializeGlobals,
   isRoomExist,
   joinRoom,
 } from "../services/room";
@@ -131,12 +130,45 @@ export default function Home({
     }
   };
 
+  const onKeyPressed = (
+    e: React.KeyboardEvent<HTMLInputElement>,
+    position: number
+  ) => {
+    const key = e.key;
+    const textFields = [roomID_1, roomID_2, roomID_3, roomID_4];
+    const values = [id_1, id_2, id_3, id_4];
+    if (key === "Backspace" || key === "Delete") {
+      if (values[position] !== "") {
+        switch (position) {
+          case 0:
+            setId_1("");
+            break;
+          case 1:
+            setId_2("");
+            break;
+          case 2:
+            setId_3("");
+            break;
+          case 3:
+            setId_4("");
+            break;
+          default:
+            break;
+        }
+      }
+      if (position > 0) {
+        textFields[position - 1]?.current.focus({ cursor: "all" });
+      }
+    }
+  };
+
   const updateRoomID = (
     e: React.ChangeEvent<HTMLInputElement>,
     position: number
   ) => {
     const value = e.target.value.toUpperCase();
     const textFields = [roomID_1, roomID_2, roomID_3, roomID_4];
+
     for (let i = position; i < 4; i++) {
       const _char = value[i - position] ?? "";
       switch (i) {
@@ -185,13 +217,15 @@ export default function Home({
               : "home-card-dark"
           }
         >
-          <Typography.Title level={isMobileOnly ? 3 : 1} code>
-            Welcome To Costume Party! 🎉
+          <Typography.Title level={isMobileOnly ? 5 : 1}>
+            🎉 Welcome To Costume Party! 🎉
           </Typography.Title>
           <Divider>
-            <StarOutlined />
+            <i>Party Invitation Card</i>
           </Divider>
-          <Typography.Text>What's Your Name?</Typography.Text>
+          <Typography.Text>
+            Hello Sir/Madam! How may we address you?
+          </Typography.Text>
           <Input
             style={{ marginTop: 15 }}
             size="large"
@@ -212,7 +246,7 @@ export default function Home({
           </Typography.Text>
           {validateNickname(nickname) ? (
             <div>
-              <Divider>Create A Room</Divider>
+              <Divider>Create A Party</Divider>
               <Space size="large">
                 <Button type="primary" size="large" onClick={createARoom}>
                   CREATE
@@ -236,9 +270,9 @@ export default function Home({
                   <Typography.Text>players</Typography.Text>
                 </Space>
               </Space>
-              <Divider>Join A Room</Divider>
+              <Divider>Join A Party</Divider>
               <Typography.Title level={isMobileOnly ? 5 : 3}>
-                Room ID:
+                Party ID:
               </Typography.Title>
               <Space>
                 <Input
@@ -246,6 +280,9 @@ export default function Home({
                   style={{ maxWidth: 50 }}
                   size="large"
                   value={id_1}
+                  onKeyDown={(e) => {
+                    onKeyPressed(e, 0);
+                  }}
                   onChange={(e) => {
                     updateRoomID(e, 0);
                   }}
@@ -255,6 +292,9 @@ export default function Home({
                   style={{ maxWidth: 50 }}
                   size="large"
                   value={id_2}
+                  onKeyDown={(e) => {
+                    onKeyPressed(e, 1);
+                  }}
                   onChange={(e) => {
                     updateRoomID(e, 1);
                   }}
@@ -264,6 +304,9 @@ export default function Home({
                   style={{ maxWidth: 50 }}
                   size="large"
                   value={id_3}
+                  onKeyDown={(e) => {
+                    onKeyPressed(e, 2);
+                  }}
                   onChange={(e) => {
                     updateRoomID(e, 2);
                   }}
@@ -273,6 +316,9 @@ export default function Home({
                   ref={roomID_4}
                   size="large"
                   value={id_4}
+                  onKeyDown={(e) => {
+                    onKeyPressed(e, 3);
+                  }}
                   onChange={(e) => {
                     updateRoomID(e, 3);
                   }}
