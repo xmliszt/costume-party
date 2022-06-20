@@ -5,10 +5,10 @@ import {
   Typography,
   message,
   Spin,
-  Divider,
   Timeline,
   Avatar,
   Drawer,
+  notification,
 } from "antd";
 import { LoadingOutlined } from "@ant-design/icons";
 
@@ -32,9 +32,16 @@ import { getPlayerByNickname, updatePlayerStatus } from "../services/player";
 import { getRoomStates, onNextTurn } from "../services/room";
 import { isMobileOnly } from "react-device-detect";
 import { ITurn } from "../interfaces/room";
-import { roomColorMapping, roomColorNameMapping } from "../constants";
+import {
+  actionToColorMapping,
+  actionToColorStringMapping,
+  roomColorMapping,
+  roomColorNameMapping,
+} from "../constants";
 import Text from "antd/lib/typography/Text";
 import { useThemeSwitcher } from "react-css-theme-switcher";
+import _ from "lodash";
+import { getLastKillTurn } from "../helpers/room";
 
 interface IPlaygroundProps {
   changeLocation(location: string): void;
@@ -56,6 +63,8 @@ export default function Playground({
   const playersData = useListenPlayers();
   const turns = useListenTurns();
 
+  const [notifiedLastKill, setNotifiedLastKill] = useState<ITurn>();
+  const [notifiedLastTurn, setNotifiedLastTurn] = useState<ITurn>();
   const [muted, setMuted] = useState<boolean>(true);
   const [isMobileTimelineShown, setMobileTimelineVisible] =
     useState<boolean>(false);
@@ -98,6 +107,58 @@ export default function Playground({
       }
     }
   };
+
+  useEffect(() => {
+    notification.config({
+      duration: 5,
+      maxCount: 1,
+    });
+  }, []);
+
+  useEffect(() => {
+    const lastTurn = turns[turns.length - 1];
+    const lastKillTurn = getLastKillTurn(turns);
+    console.log(notifiedLastTurn, lastTurn);
+
+    if (
+      lastTurn &&
+      playerStats &&
+      !_.isEqual(notifiedLastTurn, lastTurn) &&
+      lastTurn.actor != localStorage.getItem("nickname")!
+    ) {
+      const msg = generateTurnMessage(lastTurn);
+      if (msg) {
+        notification.open({
+          message: <></>,
+          description: (
+            <span>
+              {msg.message && msg.message}
+              {msg.pendingMessage && ` ${msg.pendingMessage}`}
+            </span>
+          ),
+          placement: "top",
+        });
+        setNotifiedLastTurn(lastTurn);
+      }
+    }
+
+    if (
+      lastKillTurn &&
+      lastKillTurn.turn == playerTurn - 1 &&
+      !_.isEqual(notifiedLastKill, lastKillTurn) &&
+      lastTurn.actor == localStorage.getItem("nickname")!
+    ) {
+      const msg = generateTurnMessage(lastKillTurn);
+      if (msg) {
+        notification.warning({
+          message: <Typography.Text>Assassin is on the move!</Typography.Text>,
+          description: <span>{msg.message}</span>,
+          placement: "top",
+        });
+        setNotifiedLastKill(lastKillTurn);
+      }
+    }
+  }, [turns]);
 
   useEffect(() => {
     init();
@@ -148,7 +209,17 @@ export default function Playground({
       case "picking":
         return {
           subject: turn.actor,
-          message: null,
+          message: (
+            <span>
+              <span>
+                <b>{turn.actor}</b>
+              </span>
+              <span> has rolled </span>
+              <b style={{ color: actionToColorMapping[turn.action!] }}>
+                {actionToColorStringMapping[turn.action!].toUpperCase()}.
+              </b>
+            </span>
+          ),
           pending: true,
           pendingMessage: `${turn.actor} is picking an avatar to move...`,
         };
@@ -209,8 +280,8 @@ export default function Playground({
               <span>
                 ,{" "}
                 {playersAvatars.includes(turn.avatarID!)
-                  ? `who is an assassin!!!`
-                  : "who is an innocent :("}
+                  ? `who is an assassin!`
+                  : "who is an innocent!"}
               </span>
             </span>
           ),
@@ -257,6 +328,8 @@ export default function Playground({
       const msg = generateTurnMessage(turn);
       if (msg && !msg.pending) {
         msg && msgs.push(msg);
+      } else if (msg && msg.pending && msg.message) {
+        msgs.push(msg);
       }
     });
     return msgs;

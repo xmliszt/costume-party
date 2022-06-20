@@ -381,11 +381,13 @@ const Action = forwardRef<IAction, any>(
                 </div>
               ) : isMobileOnly ? (
                 <Typography.Text type="warning">
+                  <br />
                   All 3 skipping chances have been used! You have to make a
                   kill!
                 </Typography.Text>
               ) : (
                 <Typography.Title level={typographyLevel} type="warning">
+                  <br />
                   All 3 skipping chances have been used! You have to make a
                   kill!
                 </Typography.Title>
