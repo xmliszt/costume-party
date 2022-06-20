@@ -1,7 +1,15 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 import React, { useEffect, useRef, useState } from "react";
 import { useHistory } from "react-router";
-import { Typography, message, Spin, Divider, Timeline, Avatar } from "antd";
+import {
+  Typography,
+  message,
+  Spin,
+  Divider,
+  Timeline,
+  Avatar,
+  Drawer,
+} from "antd";
 import { LoadingOutlined } from "@ant-design/icons";
 
 import "./Playground.css";
@@ -49,6 +57,8 @@ export default function Playground({
   const turns = useListenTurns();
 
   const [muted, setMuted] = useState<boolean>(true);
+  const [isMobileTimelineShown, setMobileTimelineVisible] =
+    useState<boolean>(false);
 
   useEffect(() => {
     setMuted(isMuted);
@@ -278,17 +288,20 @@ export default function Playground({
       }}
     >
       <div className="playground">
-        {!isMobileOnly && (
-          <div className="title">
-            <Typography.Title level={1} code copyable>
-              {localStorage.getItem("room_id")}
-            </Typography.Title>
-            <Typography.Title level={4} disabled>
-              Copy to share the Party ID with friends!
-            </Typography.Title>
+        {isMobileOnly && (
+          <div
+            className={
+              "mobile-side-panel-wrapper" +
+              (currentTheme === "light" ? " dark-bg" : " light-bg")
+            }
+            onClick={() => {
+              setMobileTimelineVisible(true);
+            }}
+          >
+            HISTORY - TIMELINE
           </div>
         )}
-        {isMobileOnly && !gameStarted && (
+        {!gameStarted && (
           <div className="title">
             <Typography.Title level={1} code copyable>
               {localStorage.getItem("room_id")}
@@ -298,7 +311,6 @@ export default function Playground({
             </Typography.Text>
           </div>
         )}
-        {isMobileOnly && gameStarted && <></>}
         <Spin
           spinning={!gameStarted}
           indicator={<LoadingOutlined />}
@@ -307,32 +319,30 @@ export default function Playground({
           <div className={isMobileOnly ? "main-board-mobile" : "main-board"}>
             {renderStats()}
             <Room ref={roomRef} onClearAction={onClearAction} muted={muted} />
-            <div
-              className={
-                (isMobileOnly ? "timeline-mobile" : "timeline") +
-                (currentTheme === "light" ? " light-bg" : " dark-bg")
-              }
-            >
+            {!isMobileOnly && (
               <div
                 className={
-                  (isMobileOnly
-                    ? "gradient-overlay-mobile"
-                    : "gradient-overlay") +
-                  (currentTheme === "light"
-                    ? " light-gradient"
-                    : " dark-gradient")
+                  "timeline" +
+                  (currentTheme === "light" ? " light-bg" : " dark-bg")
                 }
-              ></div>
-              <div
-                className={isMobileOnly ? "scrollable-mobile" : "scrollable"}
               >
-                <Timeline mode="left" pending={pendingMsg} reverse>
-                  {renderTimelineItems().map((message, idx) => (
-                    <Timeline.Item key={idx}>{message.message}</Timeline.Item>
-                  ))}
-                </Timeline>
+                <div
+                  className={
+                    "gradient-overlay" +
+                    (currentTheme === "light"
+                      ? " light-gradient"
+                      : " dark-gradient")
+                  }
+                ></div>
+                <div className={"scrollable"}>
+                  <Timeline mode="left" pending={pendingMsg} reverse>
+                    {renderTimelineItems().map((message, idx) => (
+                      <Timeline.Item key={idx}>{message.message}</Timeline.Item>
+                    ))}
+                  </Timeline>
+                </div>
               </div>
-            </div>
+            )}
           </div>
           <div style={{ display: "flex", justifyContent: "center" }}>
             <Action
@@ -346,6 +356,27 @@ export default function Playground({
             />
           </div>
         </Spin>
+        {isMobileOnly && (
+          <Drawer
+            className={
+              (currentTheme === "light" ? " light-bg" : " dark-bg") +
+              " mobile-timeline"
+            }
+            title="HISTORY - TIMELINE"
+            placement="right"
+            width={"80vw"}
+            visible={isMobileTimelineShown}
+            onClose={() => {
+              setMobileTimelineVisible(false);
+            }}
+          >
+            <Timeline mode="left" pending={pendingMsg} reverse>
+              {renderTimelineItems().map((message, idx) => (
+                <Timeline.Item key={idx}>{message.message}</Timeline.Item>
+              ))}
+            </Timeline>
+          </Drawer>
+        )}
       </div>
     </PlaygroundContext.Provider>
   );
