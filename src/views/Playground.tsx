@@ -37,11 +37,13 @@ import {
   actionToColorStringMapping,
   roomColorMapping,
   roomColorNameMapping,
+  statusPrecedentMap,
 } from "../constants";
 import Text from "antd/lib/typography/Text";
 import { useThemeSwitcher } from "react-css-theme-switcher";
 import _ from "lodash";
-import { getLastKillTurn } from "../helpers/room";
+import { getLastTurnWhichActorNotSelf } from "../helpers/room";
+import { getPlayerAvatarIDMap } from "../helpers/avatar";
 
 interface IPlaygroundProps {
   changeLocation(location: string): void;
@@ -63,7 +65,6 @@ export default function Playground({
   const playersData = useListenPlayers();
   const turns = useListenTurns();
 
-  const [notifiedLastKill, setNotifiedLastKill] = useState<ITurn>();
   const [notifiedLastTurn, setNotifiedLastTurn] = useState<ITurn>();
   const [muted, setMuted] = useState<boolean>(true);
   const [isMobileTimelineShown, setMobileTimelineVisible] =
@@ -111,51 +112,41 @@ export default function Playground({
   useEffect(() => {
     notification.config({
       duration: 5,
-      maxCount: 1,
+      maxCount: 2,
     });
   }, []);
 
   useEffect(() => {
-    const lastTurn = turns[turns.length - 1];
-    const lastKillTurn = getLastKillTurn(turns);
+    const lastTurn = getLastTurnWhichActorNotSelf(turns);
     console.log(notifiedLastTurn, lastTurn);
 
     if (
       lastTurn &&
       playerStats &&
-      !_.isEqual(notifiedLastTurn, lastTurn) &&
-      lastTurn.actor != localStorage.getItem("nickname")!
+      (playerStats.status === "waiting" || playerStats.status === "dead") &&
+      !_.isEqual(lastTurn, notifiedLastTurn)
     ) {
       const msg = generateTurnMessage(lastTurn);
       if (msg) {
-        notification.open({
-          message: <></>,
-          description: (
-            <span>
-              {msg.message && msg.message}
-              {msg.pendingMessage && ` ${msg.pendingMessage}`}
-            </span>
-          ),
-          placement: "top",
-        });
         setNotifiedLastTurn(lastTurn);
-      }
-    }
-
-    if (
-      lastKillTurn &&
-      lastKillTurn.turn == playerTurn - 1 &&
-      !_.isEqual(notifiedLastKill, lastKillTurn) &&
-      lastTurn.actor == localStorage.getItem("nickname")!
-    ) {
-      const msg = generateTurnMessage(lastKillTurn);
-      if (msg) {
-        notification.warning({
-          message: <Typography.Text>Assassin is on the move!</Typography.Text>,
-          description: <span>{msg.message}</span>,
-          placement: "top",
-        });
-        setNotifiedLastKill(lastKillTurn);
+        if (lastTurn.status === "skip" || lastTurn.status === "kill") {
+          notification.warning({
+            message: <></>,
+            description: <span>{msg.message}</span>,
+            placement: "top",
+          });
+        } else {
+          notification.open({
+            message: <></>,
+            description: (
+              <span>
+                {msg.message && msg.message}
+                {msg.pendingMessage && ` ${msg.pendingMessage}`}
+              </span>
+            ),
+            placement: "top",
+          });
+        }
       }
     }
   }, [turns]);
@@ -259,6 +250,31 @@ export default function Playground({
         };
       }
       case "kill": {
+        const playerIdMap = getPlayerAvatarIDMap(playersData);
+        if (
+          playerIdMap[turn.avatarID!] &&
+          playerIdMap[turn.avatarID!].nickname === turn.actor
+        ) {
+          return {
+            subject: turn.actor,
+            message: (
+              <span>
+                <span>
+                  <b>{turn.actor}</b>
+                </span>
+                <span>
+                  <b style={{ color: "#F56C6C" }}> committed suicide</b>
+                </span>
+                <span> in </span>
+                <span style={{ color: roomColorMapping[turn.fromRoom!] }}>
+                  {roomColorNameMapping[turn.fromRoom!]} Room
+                </span>
+              </span>
+            ),
+            pending: false,
+            pendingMessage: null,
+          };
+        }
         return {
           subject: turn.actor,
           message: (
@@ -336,6 +352,10 @@ export default function Playground({
   }
 
   useEffect(() => {
+    turns.sort((a, b) => {
+      if (a.turn > b.turn) return 1;
+      return statusPrecedentMap[a.status] - statusPrecedentMap[b.status];
+    });
     turns.forEach((turn) => {
       const msg = generateTurnMessage(turn);
       if (msg && msg.pending) {

@@ -41,7 +41,7 @@ export default function Persona(): React.ReactElement {
         style={{
           display: "flex",
           justifyContent: "center",
-          height: "50%",
+          height: "30%",
         }}
       >
         <div className={isMobileOnly ? "persona-mobile" : "persona"}>
@@ -51,7 +51,7 @@ export default function Persona(): React.ReactElement {
                 You are: <b>{playerStats?.nickname}</b>
               </Typography.Text>
             ) : (
-              <Typography.Title level={3}>
+              <Typography.Title level={5}>
                 You are: <b>{playerStats?.nickname}</b>
               </Typography.Title>
             )}

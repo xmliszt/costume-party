@@ -223,3 +223,41 @@ export function getLastTurnByPlayer(
   }
   return lastMovingTurn;
 }
+
+export function getLastTurn(turns: ITurn[]): ITurn | null {
+  let turnNumber = 0;
+  let turnStatusPriority = -1;
+  let lastMovingTurn: ITurn | null = null;
+  for (const turn of turns) {
+    if (turn.turn >= turnNumber) {
+      if (turn.turn > turnNumber) {
+        turnStatusPriority = -1;
+      }
+      turnNumber = turn.turn;
+      if (statusPrecedentMap[turn.status] > turnStatusPriority) {
+        turnStatusPriority = statusPrecedentMap[turn.status];
+        lastMovingTurn = turn;
+      }
+    }
+  }
+  return lastMovingTurn;
+}
+
+export function getLastTurnWhichActorNotSelf(turns: ITurn[]): ITurn | null {
+  if (turns.length == 0) return null;
+  turns.sort((a, b) => {
+    if (a.turn > b.turn) return 1;
+    return statusPrecedentMap[a.status] - statusPrecedentMap[b.status];
+  });
+  const temp = [...turns];
+  while (temp.length > 0) {
+    const lastTurn = temp.pop();
+    if (
+      lastTurn &&
+      lastTurn.status !== "dead" &&
+      lastTurn.actor !== localStorage.getItem("nickname")
+    )
+      return lastTurn;
+  }
+  return null;
+}

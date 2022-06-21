@@ -68,6 +68,7 @@ const Action = forwardRef<IAction, any>(
     );
     const isEndingShown = useRef(false); // For controlling the end scene modal
     const isDead = useRef(false); // For internal state reference of the state of player
+    const [countDown, setCountDown] = useState<number>(10);
 
     useEffect(() => {
       if (
@@ -92,12 +93,34 @@ const Action = forwardRef<IAction, any>(
         setRollVisible(false);
         setVisible(false);
       }
+      if (playerStats && !playerStats.alive) {
+        setVisible(true);
+        setRollVisible(false);
+      }
     }, [playerStats, playerTurn, gameEnd, winner]);
 
     useEffect(() => {
+      let interval: NodeJS.Timeout | null = null;
       if (gameEnd) {
         if (!isEndingShown.current) {
           isEndingShown.current = true;
+          message.warning({
+            content: (
+              <Typography.Text>
+                Party will be closing in {countDown} seconds...
+              </Typography.Text>
+            ),
+            duration: 10,
+          });
+          if (!interval) {
+            interval = setInterval(() => {
+              if (countDown === 0) {
+                clearInterval(interval!);
+              } else {
+                setCountDown((countdown) => countdown - 1);
+              }
+            }, 1000);
+          }
           setTimeout(() => {
             try {
               deleteRoom(localStorage.getItem("room_id")!);
@@ -130,7 +153,7 @@ const Action = forwardRef<IAction, any>(
       },
     }));
 
-    const typographyLevel = isMobileOnly ? 5 : 1;
+    const typographyLevel = isMobileOnly ? 5 : 3;
 
     useEffect(() => {
       const availableGlobalAvatars: IAvatarProps[] = [];
@@ -237,16 +260,6 @@ const Action = forwardRef<IAction, any>(
         }
       }
 
-      if (isDead.current) {
-        return (
-          <div style={{ textAlign: "center" }}>
-            <Typography.Title level={typographyLevel} disabled>
-              You are dead
-            </Typography.Title>
-          </div>
-        );
-      }
-
       switch (playerStats.status) {
         case "waiting": {
           let playingName = "";
@@ -255,6 +268,15 @@ const Action = forwardRef<IAction, any>(
               playingName = player.nickname;
             }
           });
+          if (!playerStats.alive) {
+            return (
+              <div style={{ textAlign: "center" }}>
+                <Typography.Title level={typographyLevel} disabled>
+                  You are dead
+                </Typography.Title>
+              </div>
+            );
+          }
           return (
             <div style={{ textAlign: "center" }}>
               <Typography.Title level={typographyLevel}>
@@ -410,7 +432,7 @@ const Action = forwardRef<IAction, any>(
           );
         case "dead":
           return (
-            <div>
+            <div style={{ textAlign: "center" }}>
               <Typography.Title level={typographyLevel} disabled>
                 You are dead
               </Typography.Title>
@@ -422,7 +444,15 @@ const Action = forwardRef<IAction, any>(
     return (
       <>
         {isMobileOnly ? (
-          <></>
+          playerStats &&
+          playerStats.alive &&
+          playerStats.status === "waiting" ? (
+            <div className={isMobileOnly ? "action-mobile" : "action"}>
+              {renderAction()}
+            </div>
+          ) : (
+            <></>
+          )
         ) : (
           <div className={isMobileOnly ? "action-mobile" : "action"}>
             {renderAction()}
