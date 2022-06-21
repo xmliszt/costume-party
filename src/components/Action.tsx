@@ -9,7 +9,7 @@
  * - killing
  * - dead
  */
-import { Button, message, Typography, Space, Drawer } from "antd";
+import { Button, message, Typography, Space, Drawer, Alert } from "antd";
 import {
   useState,
   useContext,
@@ -69,6 +69,7 @@ const Action = forwardRef<IAction, any>(
     const isEndingShown = useRef(false); // For controlling the end scene modal
     const isDead = useRef(false); // For internal state reference of the state of player
     const [countDown, setCountDown] = useState<number>(10);
+    const [showCountdown, setShowCountdown] = useState<boolean>(false);
 
     useEffect(() => {
       if (
@@ -101,37 +102,26 @@ const Action = forwardRef<IAction, any>(
 
     useEffect(() => {
       let interval: NodeJS.Timeout | null = null;
-      if (gameEnd) {
-        if (!isEndingShown.current) {
-          isEndingShown.current = true;
-          message.warning({
-            content: (
-              <Typography.Text>
-                Party will be closing in {countDown} seconds...
-              </Typography.Text>
-            ),
-            duration: 10,
-          });
-          if (!interval) {
-            interval = setInterval(() => {
-              if (countDown === 0) {
-                clearInterval(interval!);
-              } else {
-                setCountDown((countdown) => countdown - 1);
-              }
-            }, 1000);
+      if (gameEnd && !isEndingShown.current) {
+        isEndingShown.current = true;
+        setShowCountdown(true);
+        interval = setInterval(() => {
+          if (countDown === 0) {
+            clearInterval(interval!);
+          } else {
+            setCountDown((countdown) => countdown - 1);
           }
-          setTimeout(() => {
-            try {
-              deleteRoom(localStorage.getItem("room_id")!);
-            } catch (e) {
-              console.warn("room is already deleted");
-            } finally {
-              message.warn("Welcome Back!");
-              history.push("/");
-            }
-          }, 10000);
-        }
+        }, 1000);
+        setTimeout(() => {
+          try {
+            deleteRoom(localStorage.getItem("room_id")!);
+          } catch (e) {
+            console.warn("room is already deleted");
+          } finally {
+            message.warn("Welcome Back!");
+            history.push("/");
+          }
+        }, 10000);
       }
     }, [gameEnd]);
 
@@ -504,6 +494,19 @@ const Action = forwardRef<IAction, any>(
             </Drawer>
           </>
         ) : null}
+        {showCountdown && (
+          <div className="countdown-banner-wrapper animate__animated animate__fadeIn animate__delay-3s">
+            <Alert
+              className="animate__animated animate__backInDown animate__delay-4s"
+              banner
+              message={
+                <Typography.Text>
+                  Party will be closing in {countDown} seconds...
+                </Typography.Text>
+              }
+            />
+          </div>
+        )}
       </>
     );
   }

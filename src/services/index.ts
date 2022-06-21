@@ -83,7 +83,7 @@ export function useListenRoom(
                   });
               }
             } else {
-              message.error("The room has been removed!");
+              message.error("The party is over!");
             }
           },
           (err) => {
