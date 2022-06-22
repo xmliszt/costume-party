@@ -250,7 +250,7 @@ const Action = forwardRef<IAction, any>(
         }
       }
 
-      switch (playerStats.status) {
+      switch (playerStats && playerStats.status) {
         case "waiting": {
           let playingName = "";
           playersData.forEach((player) => {

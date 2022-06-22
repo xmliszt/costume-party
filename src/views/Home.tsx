@@ -25,6 +25,8 @@ import { roomColorMapping } from "../constants";
 import { IAvatarProps } from "../interfaces/avatar";
 import { isMobileOnly } from "react-device-detect";
 import { useThemeSwitcher } from "react-css-theme-switcher";
+import { useLocation } from "react-router-dom";
+import { getPlayerByNickname } from "../services/player";
 
 interface IHomeProp {
   changeLocation(location: string): void;
@@ -48,6 +50,67 @@ export default function Home({
   const [id_2, setId_2] = useState("");
   const [id_3, setId_3] = useState("");
   const [id_4, setId_4] = useState("");
+
+  const location = useLocation();
+
+  function setRoomIDs(partyID: string) {
+    for (let i = 0; i < partyID.length; i++) {
+      switch (i) {
+        case 0: {
+          setId_1(partyID[i]);
+          break;
+        }
+        case 1: {
+          setId_2(partyID[i]);
+          break;
+        }
+        case 2: {
+          setId_3(partyID[i]);
+          break;
+        }
+        case 3: {
+          setId_4(partyID[i]);
+          break;
+        }
+      }
+    }
+  }
+
+  useEffect(() => {
+    const search = new URLSearchParams(location.search);
+    const partyID = search.get("party");
+    if (partyID) {
+      isRoomExist(partyID)
+        .then((exist) => {
+          if (exist) {
+            const roomID = localStorage.getItem("room_id");
+            const _nickname = localStorage.getItem("nickname");
+            if (roomID && _nickname && roomID === partyID) {
+              getPlayerByNickname(_nickname)
+                .then((_) => {
+                  history.push("/play");
+                })
+                .catch((_) => {
+                  setRoomIDs(partyID);
+                  localStorage.setItem("room_id", partyID);
+                });
+            } else {
+              // Never join the party before! Prompt for Nickname!
+              setRoomIDs(partyID);
+              localStorage.setItem("room_id", partyID);
+            }
+          } else {
+            message.error("Requested party does not exist!");
+            history.push("/");
+          }
+        })
+        .catch((err) => {
+          console.log(err);
+          message.error("Oops! Cannot join the party!");
+          history.push("/");
+        });
+    }
+  }, [location]);
 
   useEffect(() => {
     changeLocation("home");
@@ -97,13 +160,12 @@ export default function Home({
       await joinRoom(_id, nickname.trim());
       localStorage.setItem("nickname", nickname.trim());
       localStorage.setItem("room_id", _id);
-      message.success("Room created: " + _id);
       setLoading(false);
       history.push("/play");
     } catch (err: any) {
       setLoading(false);
       console.log(err);
-      message.error("Failed to create a room");
+      message.error("Ooops! The party cannot start yet!");
     }
   };
 
@@ -112,9 +174,9 @@ export default function Home({
       setLoading(true);
       const _id = [id_1, id_2, id_3, id_4].join("");
       if (_id.replaceAll(" ", "").length < 4) {
-        message.error("Invalid Room ID");
+        message.error("Invalid Party ID");
       } else if (!(await isRoomExist(_id))) {
-        message.error("Room does not exist!");
+        message.error(`Party with code ${_id} does not exist!`);
       } else {
         localStorage.setItem("nickname", nickname.trim());
         await joinRoom(_id, nickname.trim());
@@ -124,7 +186,7 @@ export default function Home({
       }
     } catch (err: any) {
       console.log(err);
-      message.error("Unable to join room");
+      message.error("Unable to join the party");
     } finally {
       setLoading(false);
     }

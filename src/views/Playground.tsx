@@ -118,7 +118,6 @@ export default function Playground({
 
   useEffect(() => {
     const lastTurn = getLastTurnWhichActorNotSelf(turns);
-    console.log(notifiedLastTurn, lastTurn);
 
     if (
       lastTurn &&
@@ -396,7 +395,16 @@ export default function Playground({
         )}
         {!gameStarted && (
           <div className="title">
-            <Typography.Title level={1} code copyable>
+            <Typography.Title
+              level={1}
+              code
+              copyable={{
+                text:
+                  window.location.href.replace("play", "") +
+                  "?party=" +
+                  localStorage.getItem("room_id"),
+              }}
+            >
               {localStorage.getItem("room_id")}
             </Typography.Title>
             <Typography.Text disabled>

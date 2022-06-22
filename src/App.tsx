@@ -48,6 +48,7 @@ function App(): React.ReactElement {
 
   const openTutorial = () => {
     Modal.info({
+      className: "tutorial-modal",
       width: "calc(min(80vw, 80vh))",
       closable: true,
       okButtonProps: {
