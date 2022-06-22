@@ -147,12 +147,12 @@ export async function joinRoom(
             const nickNameExist =
               players.filter((player) => player.nickname === nickname).length >
               0;
-            if (roomStats.capacity <= count && !nickNameExist) {
-              rej("room is full");
-            }
             if (nickNameExist) {
               res(true);
             } else {
+              if (roomStats.capacity <= count) {
+                rej("room is full");
+              }
               const playerAvatars = roomStats.players;
               let avatarAssigned;
               while (true) {
