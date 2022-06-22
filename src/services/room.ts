@@ -151,31 +151,32 @@ export async function joinRoom(
               res(true);
             } else {
               if (roomStats.capacity <= count) {
-                rej("room is full");
+                rej("Party is full");
+              } else {
+                const playerAvatars = roomStats.players;
+                let avatarAssigned;
+                while (true) {
+                  avatarAssigned = getRandomInt(1, 20);
+                  if (!playerAvatars.includes(avatarAssigned)) break;
+                }
+                await addPlayerAvatar(roomID, avatarAssigned);
+                setDoc(doc(db, "rooms", roomID, "players", nickname), {
+                  nickname,
+                  avatar: avatarAssigned,
+                  alive: true,
+                  order: count + 1,
+                  status: "waiting", //
+                  action: null, // constants.ts -- actions
+                  message: "", // action message
+                });
+                res(true);
               }
-              const playerAvatars = roomStats.players;
-              let avatarAssigned;
-              while (true) {
-                avatarAssigned = getRandomInt(1, 20);
-                if (!playerAvatars.includes(avatarAssigned)) break;
-              }
-              await addPlayerAvatar(roomID, avatarAssigned);
-              setDoc(doc(db, "rooms", roomID, "players", nickname), {
-                nickname,
-                avatar: avatarAssigned,
-                alive: true,
-                order: count + 1,
-                status: "waiting", //
-                action: null, // constants.ts -- actions
-                message: "", // action message
-              });
-              res(true);
             }
           } catch (err) {
             rej(err);
           }
         } else {
-          rej("room does not exist");
+          rej("Party does not exist");
         }
       })
       .catch((err) => {
@@ -212,7 +213,7 @@ export async function initializeAvatars(
             rej(err);
           }
         } else {
-          rej("room does not exist");
+          rej("Party does not exist");
         }
       })
       .catch((err) => {
@@ -248,7 +249,7 @@ export async function initializeGlobals(roomID: string): Promise<boolean> {
             })
             .catch((err) => rej(err));
         } else {
-          rej("room does not exist");
+          rej("Party does not exist");
         }
       })
       .catch((err) => {
@@ -292,7 +293,7 @@ export async function addTurn(roomID: string, turn: ITurn): Promise<boolean> {
             rej(err);
           }
         } else {
-          rej("room does not exist");
+          rej("Party does not exist");
         }
       })
       .catch((err) => {
@@ -333,7 +334,7 @@ export async function getRoomStates(roomID: string): Promise<IRoom> {
       .then((roomDoc) => {
         const data = roomDoc.data() as IRoom;
         if (data) res(data);
-        else rej("no room data available");
+        else rej("No party data available");
       })
       .catch((err) => {
         rej(err);

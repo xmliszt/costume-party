@@ -165,7 +165,7 @@ export default function Home({
     } catch (err: any) {
       setLoading(false);
       console.log(err);
-      message.error("Ooops! The party cannot start yet!");
+      message.error("Sorry you can't join the party. " + err);
     }
   };
 
@@ -186,7 +186,7 @@ export default function Home({
       }
     } catch (err: any) {
       console.log(err);
-      message.error("Unable to join the party");
+      message.error("Unable to join the party. " + err);
     } finally {
       setLoading(false);
     }
