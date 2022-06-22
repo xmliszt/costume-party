@@ -257,10 +257,10 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
                 : "none",
             width: isMobileOnly
               ? "calc(80vw / 12)"
-              : "calc(min(30vw / 12, 60vh / 12))",
+              : "calc(min(30vw / 12, 70vh / 12))",
             height: isMobileOnly
               ? "calc(80vw / 12)"
-              : "calc(min(30vw / 12, 60vh / 12))",
+              : "calc(min(30vw / 12, 70vh / 12))",
             aspectRatio: "1/1",
           }}
           ghost
@@ -430,15 +430,12 @@ const Room = forwardRef<IRoomRef, IRoomProp>(
     };
 
     useEffect(() => {
-      async function asyncInit() {
+      if (gameStarted) {
         init();
         if (playerStats.order === playerTurn) {
-          await initializeGlobals(localStorage.getItem("room_id")!);
+          initializeGlobals(localStorage.getItem("room_id")!);
         }
         restoreStatus();
-      }
-      if (gameStarted) {
-        asyncInit();
       }
     }, [gameStarted]);
 

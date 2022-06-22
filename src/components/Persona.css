@@ -1,6 +1,6 @@
 .persona {
   text-align: center;
-  padding: 50px;
+  padding: 20px;
 }
 
 .persona-mobile {
@@ -21,12 +21,13 @@
   margin-top: 5px;
   transform: scale(1);
   transition: 0.3s;
-  aspect-ratio: 1/1;
 }
 
 .avatar span {
-  width: 50%;
-  height: 50%;
+  width: 100%;
+  max-width: 12vh;
+  height: 100%;
+  max-height: 12vh;
 }
 
 .avatar-mobile span {

@@ -9,7 +9,7 @@
  * - killing
  * - dead
  */
-import { Button, message, Typography, Space, Drawer } from "antd";
+import { Button, message, Typography, Space, Drawer, Alert } from "antd";
 import {
   useState,
   useContext,
@@ -68,6 +68,8 @@ const Action = forwardRef<IAction, any>(
     );
     const isEndingShown = useRef(false); // For controlling the end scene modal
     const isDead = useRef(false); // For internal state reference of the state of player
+    const [countDown, setCountDown] = useState<number>(10);
+    const [showCountdown, setShowCountdown] = useState<boolean>(false);
 
     useEffect(() => {
       if (
@@ -92,23 +94,34 @@ const Action = forwardRef<IAction, any>(
         setRollVisible(false);
         setVisible(false);
       }
+      if (playerStats && !playerStats.alive) {
+        setVisible(true);
+        setRollVisible(false);
+      }
     }, [playerStats, playerTurn, gameEnd, winner]);
 
     useEffect(() => {
-      if (gameEnd) {
-        if (!isEndingShown.current) {
-          isEndingShown.current = true;
-          setTimeout(() => {
-            try {
-              deleteRoom(localStorage.getItem("room_id")!);
-            } catch (e) {
-              console.warn("room is already deleted");
-            } finally {
-              message.warn("Welcome Back!");
-              history.push("/");
-            }
-          }, 10000);
-        }
+      let interval: NodeJS.Timeout | null = null;
+      if (gameEnd && !isEndingShown.current) {
+        isEndingShown.current = true;
+        setShowCountdown(true);
+        interval = setInterval(() => {
+          if (countDown === 0) {
+            clearInterval(interval!);
+          } else {
+            setCountDown((countdown) => countdown - 1);
+          }
+        }, 1000);
+        setTimeout(() => {
+          try {
+            deleteRoom(localStorage.getItem("room_id")!);
+          } catch (e) {
+            console.warn("room is already deleted");
+          } finally {
+            message.warn("Welcome Back!");
+            history.push("/");
+          }
+        }, 10000);
       }
     }, [gameEnd]);
 
@@ -130,7 +143,7 @@ const Action = forwardRef<IAction, any>(
       },
     }));
 
-    const typographyLevel = isMobileOnly ? 5 : 1;
+    const typographyLevel = isMobileOnly ? 5 : 3;
 
     useEffect(() => {
       const availableGlobalAvatars: IAvatarProps[] = [];
@@ -237,17 +250,7 @@ const Action = forwardRef<IAction, any>(
         }
       }
 
-      if (isDead.current) {
-        return (
-          <div style={{ textAlign: "center" }}>
-            <Typography.Title level={typographyLevel} disabled>
-              You are dead
-            </Typography.Title>
-          </div>
-        );
-      }
-
-      switch (playerStats.status) {
+      switch (playerStats && playerStats.status) {
         case "waiting": {
           let playingName = "";
           playersData.forEach((player) => {
@@ -255,6 +258,15 @@ const Action = forwardRef<IAction, any>(
               playingName = player.nickname;
             }
           });
+          if (!playerStats.alive) {
+            return (
+              <div style={{ textAlign: "center" }}>
+                <Typography.Title level={typographyLevel} disabled>
+                  You are dead
+                </Typography.Title>
+              </div>
+            );
+          }
           return (
             <div style={{ textAlign: "center" }}>
               <Typography.Title level={typographyLevel}>
@@ -381,11 +393,13 @@ const Action = forwardRef<IAction, any>(
                 </div>
               ) : isMobileOnly ? (
                 <Typography.Text type="warning">
+                  <br />
                   All 3 skipping chances have been used! You have to make a
                   kill!
                 </Typography.Text>
               ) : (
                 <Typography.Title level={typographyLevel} type="warning">
+                  <br />
                   All 3 skipping chances have been used! You have to make a
                   kill!
                 </Typography.Title>
@@ -408,7 +422,7 @@ const Action = forwardRef<IAction, any>(
           );
         case "dead":
           return (
-            <div>
+            <div style={{ textAlign: "center" }}>
               <Typography.Title level={typographyLevel} disabled>
                 You are dead
               </Typography.Title>
@@ -420,7 +434,15 @@ const Action = forwardRef<IAction, any>(
     return (
       <>
         {isMobileOnly ? (
-          <></>
+          playerStats &&
+          playerStats.alive &&
+          playerStats.status === "waiting" ? (
+            <div className={isMobileOnly ? "action-mobile" : "action"}>
+              {renderAction()}
+            </div>
+          ) : (
+            <></>
+          )
         ) : (
           <div className={isMobileOnly ? "action-mobile" : "action"}>
             {renderAction()}
@@ -472,6 +494,19 @@ const Action = forwardRef<IAction, any>(
             </Drawer>
           </>
         ) : null}
+        {showCountdown && (
+          <div className="countdown-banner-wrapper animate__animated animate__fadeIn animate__delay-3s">
+            <Alert
+              className="animate__animated animate__backInDown animate__delay-4s"
+              banner
+              message={
+                <Typography.Text>
+                  Party will be closing in {countDown} seconds...
+                </Typography.Text>
+              }
+            />
+          </div>
+        )}
       </>
     );
   }

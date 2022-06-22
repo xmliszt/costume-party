@@ -1,7 +1,15 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 import React, { useEffect, useRef, useState } from "react";
 import { useHistory } from "react-router";
-import { Typography, message, Spin, Divider, Timeline, Avatar } from "antd";
+import {
+  Typography,
+  message,
+  Spin,
+  Timeline,
+  Avatar,
+  Drawer,
+  notification,
+} from "antd";
 import { LoadingOutlined } from "@ant-design/icons";
 
 import "./Playground.css";
@@ -24,9 +32,18 @@ import { getPlayerByNickname, updatePlayerStatus } from "../services/player";
 import { getRoomStates, onNextTurn } from "../services/room";
 import { isMobileOnly } from "react-device-detect";
 import { ITurn } from "../interfaces/room";
-import { roomColorMapping, roomColorNameMapping } from "../constants";
+import {
+  actionToColorMapping,
+  actionToColorStringMapping,
+  roomColorMapping,
+  roomColorNameMapping,
+  statusPrecedentMap,
+} from "../constants";
 import Text from "antd/lib/typography/Text";
 import { useThemeSwitcher } from "react-css-theme-switcher";
+import _ from "lodash";
+import { getLastTurnWhichActorNotSelf } from "../helpers/room";
+import { getPlayerAvatarIDMap } from "../helpers/avatar";
 
 interface IPlaygroundProps {
   changeLocation(location: string): void;
@@ -48,7 +65,10 @@ export default function Playground({
   const playersData = useListenPlayers();
   const turns = useListenTurns();
 
+  const [notifiedLastTurn, setNotifiedLastTurn] = useState<ITurn>();
   const [muted, setMuted] = useState<boolean>(true);
+  const [isMobileTimelineShown, setMobileTimelineVisible] =
+    useState<boolean>(false);
 
   useEffect(() => {
     setMuted(isMuted);
@@ -88,6 +108,47 @@ export default function Playground({
       }
     }
   };
+
+  useEffect(() => {
+    notification.config({
+      duration: 5,
+      maxCount: 2,
+    });
+  }, []);
+
+  useEffect(() => {
+    const lastTurn = getLastTurnWhichActorNotSelf(turns);
+
+    if (
+      lastTurn &&
+      playerStats &&
+      (playerStats.status === "waiting" || playerStats.status === "dead") &&
+      !_.isEqual(lastTurn, notifiedLastTurn)
+    ) {
+      const msg = generateTurnMessage(lastTurn);
+      if (msg) {
+        setNotifiedLastTurn(lastTurn);
+        if (lastTurn.status === "skip" || lastTurn.status === "kill") {
+          notification.warning({
+            message: <></>,
+            description: <span>{msg.message}</span>,
+            placement: "top",
+          });
+        } else {
+          notification.open({
+            message: <></>,
+            description: (
+              <span>
+                {msg.message && msg.message}
+                {msg.pendingMessage && ` ${msg.pendingMessage}`}
+              </span>
+            ),
+            placement: "top",
+          });
+        }
+      }
+    }
+  }, [turns]);
 
   useEffect(() => {
     init();
@@ -138,7 +199,17 @@ export default function Playground({
       case "picking":
         return {
           subject: turn.actor,
-          message: null,
+          message: (
+            <span>
+              <span>
+                <b>{turn.actor}</b>
+              </span>
+              <span> has rolled </span>
+              <b style={{ color: actionToColorMapping[turn.action!] }}>
+                {actionToColorStringMapping[turn.action!].toUpperCase()}.
+              </b>
+            </span>
+          ),
           pending: true,
           pendingMessage: `${turn.actor} is picking an avatar to move...`,
         };
@@ -178,6 +249,31 @@ export default function Playground({
         };
       }
       case "kill": {
+        const playerIdMap = getPlayerAvatarIDMap(playersData);
+        if (
+          playerIdMap[turn.avatarID!] &&
+          playerIdMap[turn.avatarID!].nickname === turn.actor
+        ) {
+          return {
+            subject: turn.actor,
+            message: (
+              <span>
+                <span>
+                  <b>{turn.actor}</b>
+                </span>
+                <span>
+                  <b style={{ color: "#F56C6C" }}> committed suicide</b>
+                </span>
+                <span> in </span>
+                <span style={{ color: roomColorMapping[turn.fromRoom!] }}>
+                  {roomColorNameMapping[turn.fromRoom!]} Room
+                </span>
+              </span>
+            ),
+            pending: false,
+            pendingMessage: null,
+          };
+        }
         return {
           subject: turn.actor,
           message: (
@@ -199,8 +295,8 @@ export default function Playground({
               <span>
                 ,{" "}
                 {playersAvatars.includes(turn.avatarID!)
-                  ? `who is an assassin!!!`
-                  : "who is an innocent :("}
+                  ? `who is an assassin!`
+                  : "who is an innocent!"}
               </span>
             </span>
           ),
@@ -247,12 +343,18 @@ export default function Playground({
       const msg = generateTurnMessage(turn);
       if (msg && !msg.pending) {
         msg && msgs.push(msg);
+      } else if (msg && msg.pending && msg.message) {
+        msgs.push(msg);
       }
     });
     return msgs;
   }
 
   useEffect(() => {
+    turns.sort((a, b) => {
+      if (a.turn > b.turn) return 1;
+      return statusPrecedentMap[a.status] - statusPrecedentMap[b.status];
+    });
     turns.forEach((turn) => {
       const msg = generateTurnMessage(turn);
       if (msg && msg.pending) {
@@ -278,19 +380,31 @@ export default function Playground({
       }}
     >
       <div className="playground">
-        {!isMobileOnly && (
-          <div className="title">
-            <Typography.Title level={1} code copyable>
-              {localStorage.getItem("room_id")}
-            </Typography.Title>
-            <Typography.Title level={4} disabled>
-              Copy to share the Party ID with friends!
-            </Typography.Title>
+        {isMobileOnly && (
+          <div
+            className={
+              "mobile-side-panel-wrapper" +
+              (currentTheme === "light" ? " dark-bg" : " light-bg")
+            }
+            onClick={() => {
+              setMobileTimelineVisible(true);
+            }}
+          >
+            HISTORY - TIMELINE
           </div>
         )}
-        {isMobileOnly && !gameStarted && (
+        {!gameStarted && (
           <div className="title">
-            <Typography.Title level={1} code copyable>
+            <Typography.Title
+              level={1}
+              code
+              copyable={{
+                text:
+                  window.location.href.replace("play", "") +
+                  "?party=" +
+                  localStorage.getItem("room_id"),
+              }}
+            >
               {localStorage.getItem("room_id")}
             </Typography.Title>
             <Typography.Text disabled>
@@ -298,7 +412,6 @@ export default function Playground({
             </Typography.Text>
           </div>
         )}
-        {isMobileOnly && gameStarted && <></>}
         <Spin
           spinning={!gameStarted}
           indicator={<LoadingOutlined />}
@@ -307,32 +420,30 @@ export default function Playground({
           <div className={isMobileOnly ? "main-board-mobile" : "main-board"}>
             {renderStats()}
             <Room ref={roomRef} onClearAction={onClearAction} muted={muted} />
-            <div
-              className={
-                (isMobileOnly ? "timeline-mobile" : "timeline") +
-                (currentTheme === "light" ? " light-bg" : " dark-bg")
-              }
-            >
+            {!isMobileOnly && (
               <div
                 className={
-                  (isMobileOnly
-                    ? "gradient-overlay-mobile"
-                    : "gradient-overlay") +
-                  (currentTheme === "light"
-                    ? " light-gradient"
-                    : " dark-gradient")
+                  "timeline" +
+                  (currentTheme === "light" ? " light-bg" : " dark-bg")
                 }
-              ></div>
-              <div
-                className={isMobileOnly ? "scrollable-mobile" : "scrollable"}
               >
-                <Timeline mode="left" pending={pendingMsg} reverse>
-                  {renderTimelineItems().map((message, idx) => (
-                    <Timeline.Item key={idx}>{message.message}</Timeline.Item>
-                  ))}
-                </Timeline>
+                <div
+                  className={
+                    "gradient-overlay" +
+                    (currentTheme === "light"
+                      ? " light-gradient"
+                      : " dark-gradient")
+                  }
+                ></div>
+                <div className={"scrollable"}>
+                  <Timeline mode="left" pending={pendingMsg} reverse>
+                    {renderTimelineItems().map((message, idx) => (
+                      <Timeline.Item key={idx}>{message.message}</Timeline.Item>
+                    ))}
+                  </Timeline>
+                </div>
               </div>
-            </div>
+            )}
           </div>
           <div style={{ display: "flex", justifyContent: "center" }}>
             <Action
@@ -346,6 +457,27 @@ export default function Playground({
             />
           </div>
         </Spin>
+        {isMobileOnly && (
+          <Drawer
+            className={
+              (currentTheme === "light" ? " light-bg" : " dark-bg") +
+              " mobile-timeline"
+            }
+            title="HISTORY - TIMELINE"
+            placement="right"
+            width={"80vw"}
+            visible={isMobileTimelineShown}
+            onClose={() => {
+              setMobileTimelineVisible(false);
+            }}
+          >
+            <Timeline mode="left" pending={pendingMsg} reverse>
+              {renderTimelineItems().map((message, idx) => (
+                <Timeline.Item key={idx}>{message.message}</Timeline.Item>
+              ))}
+            </Timeline>
+          </Drawer>
+        )}
       </div>
     </PlaygroundContext.Provider>
   );

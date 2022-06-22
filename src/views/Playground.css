@@ -5,6 +5,7 @@
 }
 
 .main-board {
+  margin-top: 60px;
   display: flex;
   justify-content: space-between;
 }
@@ -23,7 +24,7 @@
   overflow-y: hidden;
   min-height: 70vh;
   height: 70vh;
-  display: block;
+  display: flexbox;
   background-color: rgba(255, 255, 255, 0.5);
   backdrop-filter: blur(7px);
 }
@@ -45,14 +46,14 @@
 
 .stats-mobile {
   display: block;
-  margin-bottom: 5px;
+  margin-bottom: 15px;
   text-align: center;
   background-color: rgba(255, 255, 255, 0);
 }
 
 .stats-mobile-dark {
   display: block;
-  margin-bottom: 16px;
+  margin-bottom: 15px;
   text-align: center;
   background-color: rgba(63, 63, 63, 0s);
 }
@@ -72,27 +73,13 @@
   font-size: 16px;
 }
 
-.timeline-mobile div {
-  font-size: 12px;
-}
-
-.timeline-mobile {
-  position: relative;
-  margin: 20px;
-  border-radius: 10px;
-  box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.2);
-  height: 90px;
+.mobile-timeline .ant-drawer-content {
+  border-radius: 20px 0 0 20px !important;
 }
 
 .scrollable {
-  padding: 50px;
+  padding: 30px;
   height: 70vh;
-  overflow-y: auto;
-}
-
-.scrollable-mobile {
-  padding: 20px;
-  height: 90px;
   overflow-y: auto;
 }
 
@@ -147,7 +134,7 @@
 }
 
 .dark-bg {
-  background-color: rgba(93, 93, 93, 0.5);
+  background-color: rgba(93, 93, 93, 0.7);
   backdrop-filter: blur(7px);
 }
 
@@ -166,4 +153,29 @@
     rgba(36, 36, 36, 0.9),
     rgb(36, 36, 36)
   );
+}
+
+.mobile-side-panel-wrapper {
+  width: 15px;
+  height: 120px;
+  position: fixed;
+  z-index: 1;
+  right: 0;
+  top: 30%;
+  writing-mode: vertical-rl;
+  font-size: 8px;
+  color: white;
+  text-align: center;
+  border-radius: 7px 0 0 7px;
+  box-shadow: -2px 0px 10px rgba(0, 0, 0, 0.2);
+  opacity: 0.6;
+  transform: scale(1);
+  transition: 0.2s;
+}
+
+.mobile-side-panel-wrapper:hover {
+  transform: scale(1.1);
+  opacity: 1;
+  box-shadow: -2px 0px 10px rgba(0, 0, 0, 0.4);
+  transition: 0.2s;
 }

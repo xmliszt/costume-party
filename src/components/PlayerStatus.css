@@ -1,16 +1,13 @@
 .player-status {
-  padding: 50px;
   position: relative;
-  height: 50%;
+  height: auto;
+  max-height: 70%;
+  overflow: auto;
+  margin-top: 10px;
 }
 
-.scrollable-list::-webkit-scrollbar {
+.player-status::-webkit-scrollbar {
   display: none;
-}
-
-.scrollable-list {
-  overflow-y: auto;
-  height: 100%;
 }
 
 .light-gradient-up {

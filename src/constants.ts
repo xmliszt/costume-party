@@ -84,7 +84,7 @@ export const statusPrecedentMap: { [key: string]: number } = {
   picking: 1,
   moving: 2,
   killing: 1,
+  kill: 2,
+  skip: 2,
   dead: 999,
-  kill: 999,
-  skip: 999,
 };
