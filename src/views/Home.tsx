@@ -323,7 +323,7 @@ export default function Home({
                       setCapacity(val);
                     }}
                   >
-                    {[2, 3, 4, 5, 6, 7, 8].map((i) => (
+                    {[2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => (
                       <Select.Option key={i} value={i}>
                         {i}
                       </Select.Option>
