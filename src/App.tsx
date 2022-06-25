@@ -56,7 +56,7 @@ function App(): React.ReactElement {
       },
       content: (
         <Carousel autoplay dotPosition="bottom">
-          {[0, 1, 2, 3, 4].map((n) => (
+          {[0, 1, 2, 3, 4, 5, 6].map((n) => (
             <Image
               src={`${process.env.PUBLIC_URL}/rules/${n}.jpg`}
               preview={true}

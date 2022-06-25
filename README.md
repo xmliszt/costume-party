@@ -1,6 +1,6 @@
 # Welcome To Costume Party 🎉
 
-You are an assassin who has been invited to a costume party. However, your rivals are also invited to the same party! Due to the costumes you all are wearing, you do not know anyone’s identity except your own. Move around in the party, interact with the people in the party, and find out who is your rival assassin, and...
+You are an assassin who has been invited to a costume party. However, your rivals are also invited to the same party! Due to the costumes you all are wearing, you do not know anyone’s identity except your own. Move around in the party, interact with the people in the party, and find out who are your rival assassins, and...
 
 <div align="center"><b style="font-size: 20px; color: #ff6060">KILL THEM ALL 😈 🔫</b></div>
 
@@ -11,6 +11,10 @@ Grab your party ticket at https://costume-party.web.app and have some fun!
 ![1.jpg](./public/rules/3.jpg)
 
 ![2.jpg](./public/rules/4.jpg)
+
+![3.jpg](./public/rules/5.jpg)
+
+![4.jpg](./public/rules/6.jpg)
 
 # References
 
@@ -42,3 +46,12 @@ The sound used in the game come from the followings:
 - In-game rules can be checked at "Help"
 - Animations and highlights to guide the players to choose
 - Integration with Firebase Firestore and snapshot listeners
+
+## Release V1.1
+
+- Bugfixes
+- Relocate timeline as side-panel drawer for mobile version
+- Add notification dialog box on top to notify players' movements
+- Animated end-game scene
+- Sharable room code as clickable link which will automatically fill up room code for the user
+- Dead players will have "dead" status shown to them
